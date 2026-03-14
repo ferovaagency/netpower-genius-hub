@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Bot, Loader2, Sparkles, ShoppingCart, ExternalLink, CreditCard } from "lucide-react";
+import { X, Send, Bot, Loader2, Sparkles, ShoppingCart, ExternalLink, CreditCard, MessageCircle } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { useCart } from "@/contexts/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
