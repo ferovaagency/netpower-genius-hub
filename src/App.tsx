@@ -16,6 +16,7 @@ import QuotePage from "./pages/QuotePage";
 import ContactPage from "./pages/ContactPage";
 import BrandsPage from "./pages/BrandsPage";
 import AboutPage from "./pages/AboutPage";
+import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
