@@ -1,27 +1,52 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { CartProvider } from "@/contexts/CartContext";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import HomePage from "./pages/HomePage";
+import ShopPage from "./pages/ShopPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CartPage from "./pages/CartPage";
+import QuotePage from "./pages/QuotePage";
+import ContactPage from "./pages/ContactPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/tienda" element={<ShopPage />} />
+                  <Route path="/producto/:slug" element={<ProductDetailPage />} />
+                  <Route path="/carrito" element={<CartPage />} />
+                  <Route path="/cotizacion" element={<QuotePage />} />
+                  <Route path="/contacto" element={<ContactPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+              <WhatsAppButton />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
