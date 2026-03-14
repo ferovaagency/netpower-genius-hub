@@ -300,7 +300,7 @@ export default function AIChatWidget() {
   const renderMessageContent = (msg: Msg) => {
     if (msg.role === "user") return msg.content;
 
-    const parts = parseProductMarkers(msg.content);
+    const parts = parseMarkers(msg.content);
     return (
       <>
         {parts.map((part, idx) => {
@@ -314,13 +314,27 @@ export default function AIChatWidget() {
               </div>
             );
           }
+          if ("type" in part && part.type === "whatsapp") {
+            return (
+              <a
+                key={idx}
+                href="https://wa.me/573018417895?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="my-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold hover:opacity-90 transition shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {part.label}
+              </a>
+            );
+          }
           return (
             <MiniProductCard
               key={idx}
-              product={part}
-              onAddToCart={() => handleAddToCart(part)}
-              onViewProduct={() => handleViewProduct(part)}
-              onCheckout={() => handleCheckout(part)}
+              product={part as Product}
+              onAddToCart={() => handleAddToCart(part as Product)}
+              onViewProduct={() => handleViewProduct(part as Product)}
+              onCheckout={() => handleCheckout(part as Product)}
             />
           );
         })}
