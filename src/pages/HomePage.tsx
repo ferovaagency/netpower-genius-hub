@@ -97,7 +97,7 @@ export default function HomePage() {
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Productos Destacados</h2>
-              <p className="text-muted-foreground mt-1.5 text-sm">Los más vendidos con las mejores ofertas</p>
+              <p className="text-muted-foreground mt-1.5 text-base">Los más vendidos con las mejores ofertas</p>
             </div>
             <Link to="/tienda" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
               Ver todos <ArrowRight className="w-4 h-4" />
