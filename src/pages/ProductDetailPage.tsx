@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
             href={`https://wa.me/573018417895?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-11 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
+            className="h-11 rounded-lg bg-success text-success-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
           >
             Preguntar por WhatsApp
           </a>
