@@ -1,14 +1,16 @@
 import { Product, Category, Brand } from "@/types/store";
+import { Battery, Zap, Network, Sun, Server, FileKey, Monitor, Cable } from "lucide-react";
+import { createElement } from "react";
 
 export const categories: Category[] = [
-  { id: "1", slug: "baterias-ups", name: "Baterías Para UPS", description: "Baterías de reemplazo para UPS de todas las marcas", image: "", icon: "🔋", productCount: 45 },
-  { id: "2", slug: "ups-accesorios", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", productCount: 68 },
-  { id: "3", slug: "infraestructura-tic", name: "Infraestructura TIC y Accesorios", description: "Equipos de red, switches, routers y cableado estructurado", image: "", icon: "🌐", productCount: 52 },
-  { id: "4", slug: "energia-solar", name: "Energía Solar", description: "Paneles solares, inversores y sistemas fotovoltaicos", image: "", icon: "☀️", productCount: 34 },
-  { id: "5", slug: "servidores", name: "Servidores", description: "Servidores rack, torre y accesorios para data center", image: "", icon: "🖥️", productCount: 28 },
-  { id: "6", slug: "licencias", name: "Licencias", description: "Licencias de software Microsoft, Fortinet, Kaspersky", image: "", icon: "📄", productCount: 41 },
-  { id: "7", slug: "monitores", name: "Monitores", description: "Monitores LED, IPS y gaming de las mejores marcas", image: "", icon: "🖥️", productCount: 36 },
-  { id: "8", slug: "accesorios", name: "Accesorios", description: "Teclados, mouse, cables, adaptadores y más", image: "", icon: "🔌", productCount: 89 },
+  { id: "1", slug: "baterias-ups", name: "Baterías Para UPS", description: "Baterías de reemplazo para UPS de todas las marcas", image: "", icon: "🔋", lucideIcon: createElement(Battery, { className: "w-4 h-4" }), productCount: 45 },
+  { id: "2", slug: "ups-accesorios", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", lucideIcon: createElement(Zap, { className: "w-4 h-4" }), productCount: 68 },
+  { id: "3", slug: "infraestructura-tic", name: "Infraestructura TIC", description: "Equipos de red, switches, routers y cableado estructurado", image: "", icon: "🌐", lucideIcon: createElement(Network, { className: "w-4 h-4" }), productCount: 52 },
+  { id: "4", slug: "energia-solar", name: "Energía Solar", description: "Paneles solares, inversores y sistemas fotovoltaicos", image: "", icon: "☀️", lucideIcon: createElement(Sun, { className: "w-4 h-4" }), productCount: 34 },
+  { id: "5", slug: "servidores", name: "Servidores", description: "Servidores rack, torre y accesorios para data center", image: "", icon: "🖥️", lucideIcon: createElement(Server, { className: "w-4 h-4" }), productCount: 28 },
+  { id: "6", slug: "licencias", name: "Licencias", description: "Licencias de software Microsoft, Fortinet, Kaspersky", image: "", icon: "📄", lucideIcon: createElement(FileKey, { className: "w-4 h-4" }), productCount: 41 },
+  { id: "7", slug: "monitores", name: "Monitores", description: "Monitores LED, IPS y gaming de las mejores marcas", image: "", icon: "🖥️", lucideIcon: createElement(Monitor, { className: "w-4 h-4" }), productCount: 36 },
+  { id: "8", slug: "accesorios", name: "Accesorios", description: "Teclados, mouse, cables, adaptadores y más", image: "", icon: "🔌", lucideIcon: createElement(Cable, { className: "w-4 h-4" }), productCount: 89 },
 ];
 
 export const brands: Brand[] = [
