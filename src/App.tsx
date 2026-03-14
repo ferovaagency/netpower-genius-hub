@@ -16,6 +16,7 @@ import QuotePage from "./pages/QuotePage";
 import ContactPage from "./pages/ContactPage";
 import BrandsPage from "./pages/BrandsPage";
 import AboutPage from "./pages/AboutPage";
+import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                   <Route path="/contacto" element={<ContactPage />} />
                   <Route path="/marcas" element={<BrandsPage />} />
                   <Route path="/nosotros" element={<AboutPage />} />
+                  <Route path="/admin/generador-fichas" element={<ProductSheetGeneratorPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

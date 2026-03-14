@@ -11,7 +11,6 @@ const menuCategories = categories.filter(c => c.slug !== "servidores");
 const navLinks = [
   { label: "Inicio", to: "/" },
   { label: "Tienda", to: "/tienda" },
-  { label: "Cotizaciones", to: "/cotizacion" },
   { label: "Contacto", to: "/contacto" },
 ];
 
@@ -58,7 +57,7 @@ export default function Header() {
         <div className="container mx-auto flex items-center justify-between h-20 px-6">
           {/* Logo — bigger */}
           <Link to="/" className="shrink-0">
-            <img src={logoImg} alt="Netpower IT" className="h-14 md:h-[4.5rem] w-auto" />
+            <img src={logoImg} alt="Netpower IT" className="h-16 md:h-20 w-auto" />
           </Link>
 
           {/* Desktop nav */}

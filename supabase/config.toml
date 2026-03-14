@@ -1,0 +1,5 @@
+[project]
+id = ""
+
+[functions.generate-product-sheet]
+verify_jwt = false
