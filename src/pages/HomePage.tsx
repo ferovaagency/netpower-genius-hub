@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
 import { categories, brands, products } from "@/data/store-data";
+import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ctaBanner from "@/assets/cta-banner.jpg";
@@ -11,6 +12,7 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
 export default function HomePage() {
   const featured = products.filter((p) => p.featured);
+  const { openChat } = useChat();
 
   return (
     <>
@@ -46,9 +48,9 @@ export default function HomePage() {
               <Link to="/tienda" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
                 Ver Tienda <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/cotizacion" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
+              <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
                 Solicitar Cotización
-              </Link>
+              </button>
             </motion.div>
           </motion.div>
         </div>
@@ -118,9 +120,9 @@ export default function HomePage() {
         <div className="container mx-auto px-6 text-center relative z-10">
           <h2 className="text-2xl md:text-3xl font-extrabold text-card mb-3">¿Necesitas cotización empresarial?</h2>
           <p className="text-card/65 mb-7 max-w-md mx-auto text-sm">Nuestro equipo te asesora con soluciones a la medida para tu proyecto TIC</p>
-          <Link to="/cotizacion" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+          <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
             Solicitar Cotización <ArrowRight className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -171,9 +173,9 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-extrabold text-surface-dark-foreground mb-3">¿Proyecto grande? Obtén precios especiales</h2>
           <p className="text-surface-dark-foreground/55 mb-7 max-w-md mx-auto text-sm">Cotizamos proyectos de infraestructura TIC, energía solar y más a nivel empresarial</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Link to="/cotizacion" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+            <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
               Obtener Cotización <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
             <a
               href="https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
               target="_blank"
