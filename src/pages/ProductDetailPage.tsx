@@ -124,12 +124,12 @@ export default function ProductDetailPage() {
                   <Phone className="w-5 h-5" /> Cotizar por WhatsApp
                 </a>
 
-                <Link
-                  to="/cotizacion"
-                  className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
-                >
-                  <FileText className="w-5 h-5" /> Solicitar cotización formal
-                </Link>
+                <button
+                   onClick={() => openChat("quote")}
+                   className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
+                 >
+                   <FileText className="w-5 h-5" /> Solicitar cotización formal
+                 </button>
 
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-primary" /> Precios especiales para volumen</p>
