@@ -6,7 +6,7 @@ export default function ContactPage() {
   return (
     <>
       <Helmet>
-        <title>Contacto – NetPower IT Colombia</title>
+        <title>Contacto – Netpower IT Colombia</title>
         <meta name="description" content="Contáctanos para asesoría en tecnología TIC. Teléfono, email y WhatsApp disponibles." />
         <link rel="canonical" href="https://netpowerit.co/contacto" />
       </Helmet>
@@ -23,10 +23,10 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div className="space-y-6">
             {[
-              { icon: Mail, label: "Email", value: "info@netpowerit.co", href: "mailto:info@netpowerit.co" },
-              { icon: Phone, label: "Teléfono", value: "+57 300 123 4567", href: "tel:+573001234567" },
-              { icon: MapPin, label: "Ubicación", value: "Colombia", href: undefined },
-              { icon: Clock, label: "Horario", value: "Lun-Vie 8:00am - 6:00pm", href: undefined },
+              { icon: Mail, label: "Email", value: "aosorio@netpowerit.co", href: "mailto:aosorio@netpowerit.co" },
+              { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 301 841 7895", href: "tel:+573018417895" },
+              { icon: MapPin, label: "Ubicación", value: "Bogotá, Colombia · Servicio en toda Colombia e internacional", href: undefined },
+              { icon: Clock, label: "Horario", value: "Lun-Vie 8am-6pm | Sáb 9am-1pm", href: undefined },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border shadow-card">
                 <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center shrink-0">
@@ -49,7 +49,7 @@ export default function ContactPage() {
             {[
               { label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
               { label: "Email", type: "email", placeholder: "tu@email.com" },
-              { label: "Teléfono", type: "tel", placeholder: "+57 300 000 0000" },
+              { label: "Teléfono", type: "tel", placeholder: "+57 301 841 7895" },
             ].map(f => (
               <div key={f.label}>
                 <label className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
@@ -60,7 +60,7 @@ export default function ContactPage() {
               <label className="text-sm font-medium text-foreground mb-1 block">Mensaje</label>
               <textarea placeholder="¿En qué podemos ayudarte?" rows={4} className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none" />
             </div>
-            <button type="button" className="w-full h-11 rounded-lg bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg transition-all">
+            <button type="button" className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
               Enviar Mensaje
             </button>
           </form>

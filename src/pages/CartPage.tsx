@@ -2,8 +2,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Trash2, Minus, Plus, ShoppingCart, ArrowRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { formatCOP } from "@/data/store-data";
-import { categories } from "@/data/store-data";
+import { formatCOP, categories } from "@/data/store-data";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
@@ -14,7 +13,7 @@ export default function CartPage() {
   return (
     <>
       <Helmet>
-        <title>Carrito de Compras | NetPower IT</title>
+        <title>Carrito de Compras | Netpower IT</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
@@ -32,7 +31,7 @@ export default function CartPage() {
             <ShoppingCart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <p className="text-lg font-semibold text-foreground mb-2">Tu carrito está vacío</p>
             <p className="text-sm text-muted-foreground mb-6">Agrega productos desde nuestra tienda</p>
-            <Link to="/tienda" className="inline-flex h-10 px-6 items-center gap-2 rounded-full bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg transition-all">
+            <Link to="/tienda" className="inline-flex h-10 px-6 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
               Ir a la Tienda <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -97,7 +96,7 @@ export default function CartPage() {
                   <span className="font-bold text-foreground">Total</span>
                   <span className="text-xl font-extrabold text-foreground">{formatCOP(total)}</span>
                 </div>
-                <button className="w-full h-12 rounded-lg bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
+                <button className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2">
                   Proceder al Pago <ArrowRight className="w-4 h-4" />
                 </button>
                 <Link to="/tienda" className="block text-center text-sm text-primary hover:underline mt-2">
