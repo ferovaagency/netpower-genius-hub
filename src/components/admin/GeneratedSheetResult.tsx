@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, Upload } from "lucide-react";
+import { Copy, Check, Upload, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { GeneratedSheet } from "@/pages/ProductSheetGeneratorPage";
 
