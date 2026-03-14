@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Sparkles, Loader2, Copy, Check, Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { categories, brands } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 
