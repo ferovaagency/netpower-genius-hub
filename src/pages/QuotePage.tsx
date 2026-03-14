@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowRight } from "lucide-react";
+import quoteBanner from "@/assets/quote-banner.jpg";
 
 const types = [
   { icon: "🔋", title: "Protección Eléctrica", desc: "UPS, reguladores y baterías de respaldo", slug: "ups" },
@@ -20,10 +21,12 @@ export default function QuotePage() {
         <link rel="canonical" href="https://netpowerit.co/cotizacion" />
       </Helmet>
 
-      <section className="bg-gradient-primary py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-foreground mb-3">Cotiza tu Proyecto TIC</h1>
-          <p className="text-primary-foreground/70 max-w-lg mx-auto">Asesoría experta para dimensionar la solución ideal según tus necesidades</p>
+      <section className="relative py-16 overflow-hidden">
+        <img src={quoteBanner} alt="Cotizaciones TIC" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-[hsl(0,0%,13%)/0.85]" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-[hsl(0,0%,100%)] mb-3">Cotiza tu Proyecto TIC</h1>
+          <p className="text-[hsl(0,0%,100%)/0.7] max-w-lg mx-auto">Asesoría experta para dimensionar la solución ideal según tus necesidades</p>
         </div>
       </section>
 
@@ -32,11 +35,16 @@ export default function QuotePage() {
           {types.map(t => (
             <div key={t.slug} className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all p-6 flex flex-col">
               <span className="text-4xl mb-4">{t.icon}</span>
-              <h2 className="text-lg font-bold text-card-foreground mb-1">{t.title}</h2>
+              <h2 className="text-lg font-bold text-foreground mb-1">{t.title}</h2>
               <p className="text-sm text-muted-foreground mb-6 flex-1">{t.desc}</p>
-              <button className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:text-secondary transition">
+              <a
+                href={`https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20de%20${encodeURIComponent(t.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:text-secondary transition"
+              >
                 Iniciar cotización <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
             </div>
           ))}
         </div>
