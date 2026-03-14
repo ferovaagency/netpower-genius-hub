@@ -41,6 +41,7 @@ const App = () => (
                   <Route path="/contacto" element={<ContactPage />} />
                   <Route path="/marcas" element={<BrandsPage />} />
                   <Route path="/nosotros" element={<AboutPage />} />
+                  <Route path="/admin/generador-fichas" element={<ProductSheetGeneratorPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
