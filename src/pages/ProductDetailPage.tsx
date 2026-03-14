@@ -212,7 +212,20 @@ export default function ProductDetailPage() {
             ))}
           </div>
           <div className="py-8">
-            {activeTab === "desc" && <p className="text-muted-foreground leading-relaxed max-w-3xl">{product.description}</p>}
+            {activeTab === "desc" && (
+              <div
+                className="prose prose-sm max-w-3xl text-muted-foreground
+                  [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-6 [&_h2]:mb-3
+                  [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-5 [&_h3]:mb-2
+                  [&_h4]:text-base [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-1.5
+                  [&_p]:text-base [&_p]:leading-relaxed [&_p]:mb-3
+                  [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3
+                  [&_li]:text-base [&_li]:mb-1
+                  [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:bg-accent/30 [&_blockquote]:py-3 [&_blockquote]:pr-4 [&_blockquote]:rounded-r-lg
+                  [&_strong]:text-foreground"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            )}
             {activeTab === "specs" && (
               <div className="max-w-2xl">
                 {Object.entries(product.specs).map(([k, v]) => (
