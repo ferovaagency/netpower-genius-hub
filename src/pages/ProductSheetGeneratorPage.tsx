@@ -69,8 +69,16 @@ export default function ProductSheetGeneratorPage() {
         body: JSON.stringify({ productName, brand, category, sku, specs }),
       });
 
+      if (!response.ok) {
+        let errMsg = `Error ${response.status}`;
+        try {
+          const data = await response.json();
+          errMsg = data.error || errMsg;
+        } catch { /* non-JSON response */ }
+        if (response.status === 404) errMsg = "La función aún no está desplegada. Espera unos segundos y reintenta.";
+        throw new Error(errMsg);
+      }
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Error del servidor");
       if (data?.error) throw new Error(data.error);
       if (data?.data) setResult(data.data);
     } catch (e: any) {
