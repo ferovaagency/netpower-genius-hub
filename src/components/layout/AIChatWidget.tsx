@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Bot, Loader2, MessageSquare } from "lucide-react";
+import { X, Send, Bot, Loader2, MessageSquare, Sparkles } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -32,11 +32,8 @@ export default function AIChatWidget() {
     }
   }, [isOpen]);
 
-  // Auto-greet or quote mode init
   useEffect(() => {
     if (!isOpen) return;
-
-    // If opening in quote mode (fresh or switching)
     if (mode === "quote" && (!initialized || prevModeRef.current !== mode)) {
       setMessages([]);
       setInitialized(true);
@@ -44,15 +41,12 @@ export default function AIChatWidget() {
       sendToAI([], "Quiero cotizar un proyecto");
       return;
     }
-
-    // First open general
     if (!initialized) {
       setInitialized(true);
       prevModeRef.current = mode;
       sendToAI([], "Hola");
       return;
     }
-
     prevModeRef.current = mode;
   }, [isOpen, mode]);
 
@@ -60,7 +54,6 @@ export default function AIChatWidget() {
     const userMsg: Msg = { role: "user", content: userText };
     const allMessages = [...history, userMsg];
 
-    // Only show user message if it's not an auto-greeting
     if (userText !== "Hola" || history.length > 0) {
       setMessages(allMessages);
     }
@@ -79,7 +72,7 @@ export default function AIChatWidget() {
       });
 
       if (!resp.ok || !resp.body) {
-        let errMsg = "Error al conectar con el asesor";
+        let errMsg = "Error al conectar con el asesor. Intenta de nuevo.";
         try {
           const data = await resp.json();
           errMsg = data.error || errMsg;
@@ -130,7 +123,6 @@ export default function AIChatWidget() {
         }
       }
 
-      // Flush remaining
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split("\n")) {
           if (!raw) continue;
@@ -160,7 +152,6 @@ export default function AIChatWidget() {
     sendToAI(messages, text);
   };
 
-  // Filter out the initial hidden "Hola" user message
   const visibleMessages = messages.filter((m, i) => {
     if (i === 0 && m.role === "user" && m.content === "Hola") return false;
     return true;
@@ -168,14 +159,45 @@ export default function AIChatWidget() {
 
   return (
     <>
-      {/* Chat toggle button */}
-      <button
-        onClick={toggleChat}
-        className="fixed bottom-6 right-24 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-        aria-label="Chat con asesor IA"
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-7 h-7" />}
-      </button>
+      {/* Attractive floating chat button */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed bottom-6 right-24 z-50 flex flex-col items-end gap-2"
+          >
+            {/* Tooltip bubble */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.4 }}
+              className="bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg max-w-[200px] relative"
+            >
+              <p className="text-xs font-semibold text-foreground">¿Necesitas ayuda? 💬</p>
+              <p className="text-[10px] text-muted-foreground">Chatea con Neti, tu asesor IA</p>
+              <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
+            </motion.div>
+
+            {/* Button with pulse */}
+            <button
+              onClick={toggleChat}
+              className="relative w-16 h-16 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center shadow-button hover:scale-110 transition-transform group"
+              aria-label="Chat con asesor IA"
+            >
+              {/* Pulse ring */}
+              <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" />
+              <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
+              <div className="relative z-10 flex items-center justify-center">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              {/* Online dot */}
+              <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-success border-2 border-card" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chat window */}
       <AnimatePresence>
@@ -185,16 +207,18 @@ export default function AIChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[70vh] bg-card rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[70vh] bg-card rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
+            <div className="bg-gradient-primary px-4 py-3 flex items-center gap-3 shrink-0">
               <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center">
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-primary-foreground">Neti · Asesor IA</p>
-                <p className="text-xs text-primary-foreground/70">NetPower IT</p>
+                <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-success inline-block" /> En línea
+                </p>
               </div>
               <button onClick={closeChat} className="p-1 text-primary-foreground/70 hover:text-primary-foreground transition">
                 <X className="w-5 h-5" />

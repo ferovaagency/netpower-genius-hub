@@ -99,8 +99,12 @@ export default function ProductDetailPage() {
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Image */}
-          <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative">
-            <span className="text-8xl">{category?.icon || "📦"}</span>
+          <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative overflow-hidden">
+            {product.images && product.images.length > 0 && product.images[0] ? (
+              <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-8xl">{category?.icon || "📦"}</span>
+            )}
             {!isServer && discount && (
               <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-destructive text-destructive-foreground text-sm font-bold">
                 -{discount}%

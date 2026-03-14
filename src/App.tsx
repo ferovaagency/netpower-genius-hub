@@ -51,6 +51,7 @@ const App = () => (
                 <Footer />
                 <WhatsAppButton />
                 <AIChatWidget />
+                <SocialProofPopup />
               </div>
             </BrowserRouter>
           </TooltipProvider>
