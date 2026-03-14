@@ -10,9 +10,10 @@ interface Props {
   price: string;
   onPublish: () => void;
   publishing?: boolean;
+  isEdit?: boolean;
 }
 
-export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing }: Props) {
+export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing, isEdit }: Props) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
