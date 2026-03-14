@@ -166,7 +166,7 @@ export default function ShopPage() {
                   href={`https://wa.me/573018417895?text=${encodeURIComponent(`Hola, busco: ${searchQuery}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold hover:opacity-90 transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-success text-success-foreground text-sm font-semibold hover:opacity-90 transition"
                 >
                   Preguntar por WhatsApp
                 </a>

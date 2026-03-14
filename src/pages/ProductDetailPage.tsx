@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe } from "lucide-react";
-import { products, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
+import { products, categories, brands, formatCOP, getDiscountPercentage, findProductBySlug } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
@@ -11,7 +11,7 @@ const WHATSAPP_NUMBER = "573018417895";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const product = products.find(p => p.slug === slug);
+  const product = findProductBySlug(slug || "");
   const { addItem } = useCart();
   const { openChat } = useChat();
   const [qty, setQty] = useState(1);
@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
             href={`https://wa.me/573018417895?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-11 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
+            className="h-11 rounded-lg bg-success text-success-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
           >
             Preguntar por WhatsApp
           </a>
@@ -135,7 +135,7 @@ export default function ProductDetailPage() {
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-12 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
+                  className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
                 >
                   <Phone className="w-5 h-5" /> Cotizar por WhatsApp
                 </a>
@@ -168,24 +168,37 @@ export default function ProductDetailPage() {
                   {product.stock > 5 ? "✓ En stock" : product.stock > 0 ? `⚠ Solo ${product.stock} disponibles` : "✕ Agotado"}
                 </p>
 
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
-                    <button onClick={() => setQty(qty + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
-                      <Plus className="w-4 h-4" />
+                {product.stock > 0 ? (
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                      <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
+                      <button
+                        onClick={() => setQty(Math.min(product.stock, qty + 1))}
+                        className="w-10 h-10 flex items-center justify-center hover:bg-muted transition"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => addItem(product, qty)}
+                      className="flex-1 h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-5 h-5" /> Agregar al carrito
                     </button>
                   </div>
-                  <button
-                    onClick={() => addItem(product, qty)}
-                    disabled={product.stock === 0}
-                    className="flex-1 h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                ) : (
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-4"
                   >
-                    <ShoppingCart className="w-5 h-5" /> Agregar al carrito
-                  </button>
-                </div>
+                    <MessageCircle className="w-5 h-5" /> Preguntar disponibilidad por WhatsApp
+                  </a>
+                )}
 
                 <div className="flex flex-wrap gap-3 mb-8">
                   <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">

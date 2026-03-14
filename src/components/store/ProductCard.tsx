@@ -13,6 +13,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const isServer = category?.slug === "servidores";
 
   const waMessage = encodeURIComponent(`Hola Netpower IT, consulto precio: ${product.name} (${product.sku})`);
+  const waStockMessage = encodeURIComponent(`Hola Netpower IT, ¿tienen disponibilidad de ${product.name} (${product.sku})?`);
 
   return (
     <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">
@@ -95,14 +96,24 @@ export default function ProductCard({ product }: { product: Product }) {
             <MessageCircle className="w-4 h-4" /> Cotizar
           </a>
         ) : (
-          <button
-            onClick={() => addItem(product)}
-            disabled={product.stock === 0}
-            className="mt-3 w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Agregar al carrito
-          </button>
+          product.stock > 0 ? (
+            <button
+              onClick={() => addItem(product)}
+              className="mt-3 w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Agregar al carrito
+            </button>
+          ) : (
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waStockMessage}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 w-full h-10 rounded-lg bg-success text-success-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+            >
+              <MessageCircle className="w-4 h-4" /> Consultar por WhatsApp
+            </a>
+          )
         )}
       </div>
     </div>

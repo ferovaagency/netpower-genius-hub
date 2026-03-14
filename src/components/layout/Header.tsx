@@ -38,9 +38,11 @@ export default function Header() {
     setSearchOpen(false);
   }, [location.pathname]);
 
-  const filtered = searchQuery.length > 1 ?
-  products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5) :
-  [];
+  const filtered = searchQuery.length > 1
+    ? products
+        .filter((p) => p.active && p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice(0, 5)
+    : [];
 
   return (
     <header className="sticky top-0 z-50">

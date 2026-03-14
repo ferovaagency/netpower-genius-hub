@@ -159,3 +159,109 @@ export const getDiscountPercentage = (price: number, salePrice: number | null): 
   if (!salePrice || salePrice >= price) return null;
   return Math.round(((price - salePrice) / price) * 100);
 };
+
+const PRODUCT_STORAGE_KEY = "netpower-products-v1";
+
+const cloneProduct = (product: Product): Product => ({
+  ...product,
+  images: Array.isArray(product.images) ? [...product.images] : [],
+  specs: { ...(product.specs || {}) },
+});
+
+const cloneProducts = (list: Product[]): Product[] => list.map(cloneProduct);
+
+const persistProducts = () => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
+};
+
+const hydrateProducts = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(PRODUCT_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    products.splice(0, products.length, ...cloneProducts(parsed as Product[]));
+  } catch (error) {
+    console.error("No se pudo cargar catálogo persistido:", error);
+  }
+};
+
+hydrateProducts();
+
+export const findProductById = (productId: string): Product | undefined => {
+  return products.find((product) => product.id === productId);
+};
+
+export const findProductBySlug = (slug: string): Product | undefined => {
+  return products.find((product) => product.slug === slug);
+};
+
+export const upsertProduct = (product: Product, matchByName = false): { product: Product; updated: boolean } => {
+  const normalizedName = product.name.trim().toLowerCase();
+  const existingIndex = products.findIndex((item) =>
+    item.id === product.id ||
+    item.slug === product.slug ||
+    (matchByName && item.name.trim().toLowerCase() === normalizedName)
+  );
+
+  if (existingIndex >= 0) {
+    const existingId = products[existingIndex].id;
+    products[existingIndex] = { ...cloneProduct(product), id: existingId };
+    persistProducts();
+    return { product: products[existingIndex], updated: true };
+  }
+
+  products.push(cloneProduct(product));
+  persistProducts();
+  return { product: products[products.length - 1], updated: false };
+};
+
+export const updateProductById = (productId: string, updates: Partial<Product>): Product | null => {
+  const index = products.findIndex((product) => product.id === productId);
+  if (index < 0) return null;
+
+  products[index] = {
+    ...products[index],
+    ...updates,
+    id: products[index].id,
+    specs: updates.specs ? { ...updates.specs } : products[index].specs,
+    images: updates.images ? [...updates.images] : products[index].images,
+  };
+
+  persistProducts();
+  return products[index];
+};
+
+export const setProductActiveState = (productId: string, active: boolean): Product | null => {
+  return updateProductById(productId, { active });
+};
+
+export const deleteProductById = (productId: string): boolean => {
+  const nextProducts = products.filter((product) => product.id !== productId);
+  if (nextProducts.length === products.length) return false;
+
+  products.splice(0, products.length, ...nextProducts);
+  persistProducts();
+  return true;
+};
+
+export const decreaseInventory = (soldItems: Array<{ productId: string; quantity: number }>) => {
+  let changed = false;
+
+  soldItems.forEach(({ productId, quantity }) => {
+    const index = products.findIndex((product) => product.id === productId);
+    if (index < 0) return;
+
+    const safeQuantity = Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : 0;
+    const nextStock = Math.max(0, products[index].stock - safeQuantity);
+
+    if (nextStock !== products[index].stock) {
+      products[index] = { ...products[index], stock: nextStock };
+      changed = true;
+    }
+  });
+
+  if (changed) persistProducts();
+};

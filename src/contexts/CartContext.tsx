@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import { CartItem, Product } from "@/types/store";
 import { toast } from "sonner";
+import { findProductById } from "@/data/store-data";
 
 interface CartContextType {
   items: CartItem[];
@@ -19,47 +20,100 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const saved = localStorage.getItem("netpower-cart");
       return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   });
 
-  const persist = (newItems: CartItem[]) => {
+  const persist = useCallback((newItems: CartItem[]) => {
     setItems(newItems);
     localStorage.setItem("netpower-cart", JSON.stringify(newItems));
-  };
-
-  const addItem = useCallback((product: Product, quantity = 1) => {
-    setItems(prev => {
-      const existing = prev.find(i => i.product.id === product.id);
-      const next = existing
-        ? prev.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i)
-        : [...prev, { product, quantity }];
-      localStorage.setItem("netpower-cart", JSON.stringify(next));
-      return next;
-    });
-    toast.success(`${product.name} agregado al carrito`);
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setItems(prev => {
-      const next = prev.filter(i => i.product.id !== productId);
-      localStorage.setItem("netpower-cart", JSON.stringify(next));
-      return next;
-    });
-  }, []);
+  const addItem = useCallback(
+    (product: Product, quantity = 1) => {
+      const liveProduct = findProductById(product.id);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    if (quantity < 1) return;
-    setItems(prev => {
-      const next = prev.map(i => i.product.id === productId ? { ...i, quantity } : i);
-      localStorage.setItem("netpower-cart", JSON.stringify(next));
-      return next;
-    });
-  }, []);
+      if (!liveProduct || !liveProduct.active) {
+        toast.error("Este producto ya no está disponible en la tienda");
+        return;
+      }
 
-  const clearCart = useCallback(() => persist([]), []);
+      if (liveProduct.stock <= 0) {
+        toast.error("Producto agotado. Pregunta disponibilidad por WhatsApp");
+        return;
+      }
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + (i.product.salePrice || i.product.price) * i.quantity, 0);
+      const safeQty = Math.max(1, Math.floor(quantity));
+      const existing = items.find((item) => item.product.id === product.id);
+      const currentQty = existing?.quantity || 0;
+      const nextQty = Math.min(liveProduct.stock, currentQty + safeQty);
+
+      if (nextQty === currentQty) {
+        toast.error("No hay más unidades disponibles para agregar");
+        return;
+      }
+
+      const nextItems = existing
+        ? items.map((item) => (item.product.id === product.id ? { ...item, product: liveProduct, quantity: nextQty } : item))
+        : [...items, { product: liveProduct, quantity: nextQty }];
+
+      persist(nextItems);
+
+      if (nextQty < currentQty + safeQty) {
+        toast.warning(`Se ajustó al stock disponible (${liveProduct.stock} unidades)`);
+      } else {
+        toast.success(`${liveProduct.name} agregado al carrito`);
+      }
+    },
+    [items, persist]
+  );
+
+  const removeItem = useCallback(
+    (productId: string) => {
+      const next = items.filter((item) => item.product.id !== productId);
+      persist(next);
+    },
+    [items, persist]
+  );
+
+  const updateQuantity = useCallback(
+    (productId: string, quantity: number) => {
+      const existing = items.find((item) => item.product.id === productId);
+      if (!existing || quantity < 1) return;
+
+      const liveProduct = findProductById(productId);
+      const maxStock = liveProduct?.stock ?? existing.product.stock;
+
+      if (maxStock <= 0) {
+        toast.error("Producto agotado");
+        return;
+      }
+
+      const normalizedQty = Math.min(Math.max(1, Math.floor(quantity)), maxStock);
+      const next = items.map((item) =>
+        item.product.id === productId
+          ? {
+              ...item,
+              product: liveProduct || existing.product,
+              quantity: normalizedQty,
+            }
+          : item
+      );
+
+      persist(next);
+
+      if (normalizedQty !== quantity) {
+        toast.warning(`Cantidad ajustada al stock disponible (${maxStock})`);
+      }
+    },
+    [items, persist]
+  );
+
+  const clearCart = useCallback(() => persist([]), [persist]);
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + (item.product.salePrice || item.product.price) * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
