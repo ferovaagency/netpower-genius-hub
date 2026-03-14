@@ -18,7 +18,11 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">
       {/* Image area */}
       <div className="relative aspect-square bg-muted/50 flex items-center justify-center overflow-hidden">
-        <div className="text-4xl">{category?.icon || "📦"}</div>
+        {product.images && product.images.length > 0 && product.images[0] ? (
+          <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain p-4" />
+        ) : (
+          <div className="text-4xl">{category?.icon || "📦"}</div>
+        )}
 
         {!isServer && discount && (
           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">

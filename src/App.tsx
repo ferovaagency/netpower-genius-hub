@@ -10,6 +10,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import AIChatWidget from "@/components/layout/AIChatWidget";
+import SocialProofPopup from "@/components/layout/SocialProofPopup";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
@@ -51,6 +52,7 @@ const App = () => (
                 <Footer />
                 <WhatsAppButton />
                 <AIChatWidget />
+                <SocialProofPopup />
               </div>
             </BrowserRouter>
           </TooltipProvider>

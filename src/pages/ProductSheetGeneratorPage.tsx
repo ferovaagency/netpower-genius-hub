@@ -219,20 +219,27 @@ export default function ProductSheetGeneratorPage() {
                       <DollarSign className="w-3 h-3 inline mr-1" />Precio (COP) *
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={price}
-                      onChange={e => setPrice(e.target.value)}
-                      placeholder="Ej: 489900"
+                      onChange={e => {
+                        const v = e.target.value.replace(/[^0-9]/g, "");
+                        setPrice(v);
+                      }}
+                      placeholder="Ej: 489900 (sin puntos ni comas)"
                       className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                     />
+                    <p className="text-[10px] text-muted-foreground mt-1">Ingresa solo números sin puntos ni comas. Ej: 489900</p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Precio oferta (COP)</label>
                     <input
-                      type="number"
+                      type="text"
                       value={salePrice}
-                      onChange={e => setSalePrice(e.target.value)}
-                      placeholder="Opcional"
+                      onChange={e => {
+                        const v = e.target.value.replace(/[^0-9]/g, "");
+                        setSalePrice(v);
+                      }}
+                      placeholder="Opcional (sin puntos)"
                       className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                     />
                   </div>

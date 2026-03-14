@@ -18,10 +18,22 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "warranty" | "shipping">("desc");
 
   if (!product) {
+    const waMessage = encodeURIComponent(`Hola NetPower IT, estoy buscando el producto "${slug}" pero no lo encuentro en la tienda. ¿Está disponible?`);
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
+      <div className="container mx-auto px-4 py-20 text-center max-w-md">
         <h1 className="text-2xl font-bold text-foreground mb-2">Producto no encontrado</h1>
-        <Link to="/tienda" className="text-primary hover:underline text-sm">Volver a la tienda</Link>
+        <p className="text-sm text-muted-foreground mb-6">¿Buscas un producto que no aparece? Pregúntanos si está disponible.</p>
+        <div className="flex flex-col gap-3">
+          <a
+            href={`https://wa.me/573018417895?text=${waMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-11 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
+          >
+            Preguntar por WhatsApp
+          </a>
+          <Link to="/tienda" className="text-primary hover:underline text-sm">Volver a la tienda</Link>
+        </div>
       </div>
     );
   }
@@ -87,8 +99,12 @@ export default function ProductDetailPage() {
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Image */}
-          <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative">
-            <span className="text-8xl">{category?.icon || "📦"}</span>
+          <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative overflow-hidden">
+            {product.images && product.images.length > 0 && product.images[0] ? (
+              <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-8xl">{category?.icon || "📦"}</span>
+            )}
             {!isServer && discount && (
               <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-destructive text-destructive-foreground text-sm font-bold">
                 -{discount}%
