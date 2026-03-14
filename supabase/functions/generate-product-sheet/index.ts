@@ -19,35 +19,49 @@ serve(async (req) => {
       ? Object.entries(specs).map(([k, v]) => `${k}: ${v}`).join(", ")
       : "";
 
-    const systemPrompt = `Eres un redactor técnico experto en productos de tecnología, infraestructura TIC, UPS, energía solar y equipos de cómputo para el mercado colombiano. Generas fichas de producto profesionales y detalladas para una tienda e-commerce llamada NetPower IT.
+    const systemPrompt = `Eres un redactor técnico experto en productos de tecnología, infraestructura TIC, UPS, energía solar y equipos de cómputo para el mercado colombiano. Generas fichas de producto profesionales, amigables y fáciles de leer para una tienda e-commerce llamada NetPower IT.
 
 GUÍA EDITORIAL:
-- Escribe en español colombiano profesional
+- Escribe en español colombiano profesional pero cercano y amigable
 - Mínimo 800 palabras en la descripción
 - Usa terminología técnica precisa pero accesible
 - Enfócate en beneficios reales y casos de uso
 - Incluye datos técnicos verificables
 - No inventes especificaciones, usa solo las proporcionadas
+- Usa un tono conversacional y cercano, evitando ser excesivamente formal
 
-ESTRUCTURA DE LA FICHA:
-1. DESCRIPCIÓN EXTENSA (mín 800 palabras): Descripción detallada del producto con beneficios, casos de uso, comparativas con la competencia, público objetivo y escenarios de implementación.
-2. DESCRIPCIÓN CORTA (1 línea): Resumen técnico conciso para listados.
-3. TABLA DE ESPECIFICACIONES: Tabla markdown con todas las especificaciones técnicas.
-4. BENEFICIOS CLAVE: Lista de 5-7 beneficios reales del producto.
-5. PREGUNTAS FRECUENTES: 4-5 FAQs relevantes con respuestas detalladas.
-6. META TÍTULO: Máximo 60 caracteres, con keyword principal.
-7. META DESCRIPCIÓN: Máximo 160 caracteres, orientada a conversión.
+ESTRUCTURA DE LA DESCRIPCIÓN (usa formato HTML con etiquetas h2, h3, h4, párrafos y listas):
+La descripción DEBE usar etiquetas HTML para estructurar el contenido:
+- <h2> para secciones principales
+- <h3> para subsecciones
+- <h4> para puntos específicos
+- <p> para párrafos (máximo 3-4 líneas por párrafo para facilitar la lectura)
+- <ul><li> para listas de beneficios
+- <strong> para destacar datos importantes
+- <blockquote> para el testimonio
 
-Responde SOLO en formato JSON con esta estructura exacta:
+Secciones obligatorias de la descripción:
+1. Párrafo introductorio enganchador (2-3 líneas)
+2. <h2>¿Por qué elegir [producto]?</h2> - Beneficios principales en lenguaje amigable
+3. <h2>Características técnicas destacadas</h2> - Desglose técnico accesible con h3 para cada característica
+4. <h2>¿Para quién es ideal?</h2> - Casos de uso y público objetivo
+5. <h2>Escenarios de implementación</h2> - Ejemplos prácticos de uso
+6. <h2>Lo que dicen nuestros clientes</h2> - UN testimonio inventado pero realista de un cliente colombiano (nombre, ciudad, cargo), en blockquote
+7. <h2>¿Por qué comprar en NetPower IT?</h2> - Breve cierre con ventajas de comprar con nosotros
+
+RESPUESTA JSON:
 {
-  "description": "...",
-  "shortDesc": "...",
+  "description": "HTML con h2, h3, h4, p, ul, li, blockquote...",
+  "shortDesc": "Resumen técnico conciso de 1 línea",
   "specs": {"key": "value"},
-  "benefits": ["..."],
+  "benefits": ["beneficio 1", "beneficio 2", ...],
   "faqs": [{"question": "...", "answer": "..."}],
-  "metaTitle": "...",
-  "metaDesc": "..."
-}`;
+  "metaTitle": "Máx 60 chars con keyword",
+  "metaDesc": "Máx 160 chars orientada a conversión",
+  "suggestedImageSearch": "término de búsqueda sugerido para encontrar imagen del producto"
+}
+
+Responde SOLO en formato JSON válido con esta estructura exacta.`;
 
     const userPrompt = `Genera la ficha de producto para:
 - Producto: ${productName}
@@ -96,13 +110,10 @@ Responde SOLO en formato JSON con esta estructura exacta:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON from the response
     let parsed;
     try {
-      // Try direct parse first
       parsed = JSON.parse(content);
     } catch {
-      // Try extracting JSON from markdown code block
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[1].trim());

@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Sparkles, Loader2, Copy, Check, Plus, Trash2 } from "lucide-react";
-import { categories, brands } from "@/data/store-data";
+import { Sparkles, Loader2, Copy, Check, Plus, Trash2, Upload, DollarSign, Image as ImageIcon } from "lucide-react";
+import { categories, brands, products as storeProducts } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import GeneratedSheetResult from "@/components/admin/GeneratedSheetResult";
 
 interface SpecEntry {
   key: string;
   value: string;
 }
 
-interface GeneratedSheet {
+export interface GeneratedSheet {
   description: string;
   shortDesc: string;
   specs: Record<string, string>;
@@ -17,18 +20,22 @@ interface GeneratedSheet {
   faqs: { question: string; answer: string }[];
   metaTitle: string;
   metaDesc: string;
+  suggestedImageSearch?: string;
 }
 
 export default function ProductSheetGeneratorPage() {
+  const navigate = useNavigate();
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [sku, setSku] = useState("");
+  const [price, setPrice] = useState("");
+  const [salePrice, setSalePrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [specEntries, setSpecEntries] = useState<SpecEntry[]>([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GeneratedSheet | null>(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState<string | null>(null);
 
   const addSpec = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
   const removeSpec = (i: number) => setSpecEntries(specEntries.filter((_, idx) => idx !== i));
@@ -55,7 +62,7 @@ export default function ProductSheetGeneratorPage() {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      
+
       if (!supabaseUrl || !supabaseKey) {
         throw new Error("Lovable Cloud no está configurado. Activa Cloud primero.");
       }
@@ -88,21 +95,40 @@ export default function ProductSheetGeneratorPage() {
     }
   };
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
-  };
+  const handlePublish = () => {
+    if (!result) return;
 
-  const CopyBtn = ({ text, id }: { text: string; id: string }) => (
-    <button
-      onClick={() => copyToClipboard(text, id)}
-      className="p-1.5 rounded-md hover:bg-muted transition text-muted-foreground hover:text-foreground"
-      title="Copiar"
-    >
-      {copied === id ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-    </button>
-  );
+    const selectedCategory = categories.find(c => c.name === category);
+    const selectedBrand = brands.find(b => b.name === brand);
+    const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    const newId = String(storeProducts.length + 1 + Math.floor(Math.random() * 1000));
+
+    const newProduct = {
+      id: newId,
+      slug,
+      name: productName,
+      description: result.description,
+      shortDesc: result.shortDesc,
+      price: Number(price) || 0,
+      salePrice: salePrice ? Number(salePrice) : null,
+      sku: sku || `SKU-${newId}`,
+      stock: 10,
+      images: imageUrl ? [imageUrl] : [],
+      categoryId: selectedCategory?.id || "1",
+      brandId: selectedBrand?.id || "1",
+      specs: result.specs,
+      metaTitle: result.metaTitle,
+      metaDesc: result.metaDesc,
+      active: true,
+      featured: false,
+    };
+
+    storeProducts.push(newProduct as any);
+    toast.success("¡Producto publicado exitosamente!", {
+      description: `"${productName}" ya está visible en la tienda.`,
+    });
+    navigate(`/producto/${slug}`);
+  };
 
   return (
     <>
@@ -112,7 +138,7 @@ export default function ProductSheetGeneratorPage() {
       </Helmet>
 
       <div className="container mx-auto px-6 py-10">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -120,13 +146,13 @@ export default function ProductSheetGeneratorPage() {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold text-foreground">Generador de Fichas con IA</h1>
-              <p className="text-sm text-muted-foreground">Crea descripciones técnicas profesionales automáticamente</p>
+              <p className="text-base text-muted-foreground">Crea descripciones técnicas profesionales automáticamente</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Form */}
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-card">
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-card h-fit">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-5">Datos del Producto</h2>
 
               <div className="space-y-4">
@@ -175,6 +201,51 @@ export default function ProductSheetGeneratorPage() {
                     placeholder="Ej: BX1500M-LM60"
                     className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                   />
+                </div>
+
+                {/* Price fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                      <DollarSign className="w-3 h-3 inline mr-1" />Precio (COP) *
+                    </label>
+                    <input
+                      type="number"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
+                      placeholder="Ej: 489900"
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Precio oferta (COP)</label>
+                    <input
+                      type="number"
+                      value={salePrice}
+                      onChange={e => setSalePrice(e.target.value)}
+                      placeholder="Opcional"
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Image URL */}
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto *
+                  </label>
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={e => setImageUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/imagen-producto.jpg"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  />
+                  {imageUrl && (
+                    <div className="mt-2 rounded-lg border border-border overflow-hidden bg-muted/30">
+                      <img src={imageUrl} alt="Preview" className="w-full h-32 object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Specs */}
@@ -243,8 +314,8 @@ export default function ProductSheetGeneratorPage() {
                     className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card"
                   >
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                    <p className="text-sm font-semibold text-foreground">Generando ficha de producto...</p>
-                    <p className="text-xs text-muted-foreground mt-1">Esto puede tomar 15-30 segundos</p>
+                    <p className="text-base font-semibold text-foreground">Generando ficha de producto...</p>
+                    <p className="text-sm text-muted-foreground mt-1">Esto puede tomar 15-30 segundos</p>
                   </motion.div>
                 )}
 
@@ -255,110 +326,18 @@ export default function ProductSheetGeneratorPage() {
                     className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center"
                   >
                     <Sparkles className="w-8 h-8 text-muted-foreground/40 mb-3" />
-                    <p className="text-sm text-muted-foreground">Completa los datos del producto y genera la ficha</p>
+                    <p className="text-base text-muted-foreground">Completa los datos del producto y genera la ficha</p>
                   </motion.div>
                 )}
 
                 {!loading && result && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-4"
-                  >
-                    {/* Short desc */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Descripción Corta</h3>
-                        <CopyBtn text={result.shortDesc} id="short" />
-                      </div>
-                      <p className="text-sm text-foreground">{result.shortDesc}</p>
-                    </div>
-
-                    {/* Description */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Descripción Completa</h3>
-                        <CopyBtn text={result.description} id="desc" />
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto">
-                        {result.description}
-                      </p>
-                    </div>
-
-                    {/* Specs */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Especificaciones</h3>
-                        <CopyBtn text={JSON.stringify(result.specs, null, 2)} id="specs" />
-                      </div>
-                      <div className="divide-y divide-border">
-                        {Object.entries(result.specs).map(([k, v]) => (
-                          <div key={k} className="flex py-2 text-xs">
-                            <span className="w-2/5 font-medium text-foreground">{k}</span>
-                            <span className="w-3/5 text-muted-foreground">{v}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Benefits */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Beneficios</h3>
-                        <CopyBtn text={result.benefits.join("\n")} id="benefits" />
-                      </div>
-                      <ul className="space-y-1.5">
-                        {result.benefits.map((b, i) => (
-                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                            <span className="text-primary mt-0.5">✓</span> {b}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* FAQs */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Preguntas Frecuentes</h3>
-                      <div className="space-y-3">
-                        {result.faqs.map((faq, i) => (
-                          <div key={i}>
-                            <p className="text-xs font-semibold text-foreground mb-1">{faq.question}</p>
-                            <p className="text-xs text-muted-foreground">{faq.answer}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* SEO */}
-                    <div className="bg-card rounded-xl border border-border p-4 shadow-card">
-                      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">SEO</h3>
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">Meta Título</p>
-                            <p className="text-xs font-medium text-foreground">{result.metaTitle}</p>
-                          </div>
-                          <CopyBtn text={result.metaTitle} id="meta-title" />
-                        </div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">Meta Descripción</p>
-                            <p className="text-xs text-foreground">{result.metaDesc}</p>
-                          </div>
-                          <CopyBtn text={result.metaDesc} id="meta-desc" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Copy all */}
-                    <button
-                      onClick={() => copyToClipboard(JSON.stringify(result, null, 2), "all")}
-                      className="w-full h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition"
-                    >
-                      {copied === "all" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {copied === "all" ? "¡Copiado!" : "Copiar ficha completa (JSON)"}
-                    </button>
-                  </motion.div>
+                  <GeneratedSheetResult
+                    result={result}
+                    imageUrl={imageUrl}
+                    productName={productName}
+                    price={price}
+                    onPublish={handlePublish}
+                  />
                 )}
               </AnimatePresence>
             </div>

@@ -91,6 +91,8 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     zoom: 0.85;
+    font-size: 17px;
+    line-height: 1.7;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
