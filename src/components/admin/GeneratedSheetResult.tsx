@@ -12,7 +12,7 @@ interface Props {
   publishing?: boolean;
 }
 
-export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish }: Props) {
+export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing }: Props) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
