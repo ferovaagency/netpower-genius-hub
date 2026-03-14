@@ -58,7 +58,9 @@ RESPUESTA JSON:
   "faqs": [{"question": "...", "answer": "..."}],
   "metaTitle": "Máx 60 chars con keyword",
   "metaDesc": "Máx 160 chars orientada a conversión",
-  "suggestedImageSearch": "término de búsqueda sugerido para encontrar imagen del producto"
+  "suggestedImageSearch": "término de búsqueda sugerido para encontrar imagen del producto",
+  "detectedBrand": "Marca detectada del nombre del producto (ej: APC, CDP, HP, Samsung, Logitech, Epson, Dahua, Hikvision, ADATA, AOC, Brother, Targus, Powest, Wattana, Genius, Caixun, Xkim). Si no se reconoce, usa la marca más probable.",
+  "detectedCategory": "Categoría detectada (una de: Baterías Para UPS, UPS y Accesorios, Infraestructura TIC, Energía Solar, Servidores, Licencias, Monitores, Accesorios)"
 }
 
 Responde SOLO en formato JSON válido con esta estructura exacta.`;

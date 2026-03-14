@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Search, Menu, X, Phone, ChevronDown } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useChat } from "@/contexts/ChatContext";
 import { products, categories } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-netpower-it.png";
@@ -16,6 +17,7 @@ const navLinks = [
 
 export default function Header() {
   const { totalItems } = useCart();
+  const { openChat } = useChat();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -151,9 +153,9 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Link to="/cotizacion" className="hidden sm:inline-flex h-10 px-6 items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-button">
+            <button onClick={() => openChat("quote")} className="hidden sm:inline-flex h-10 px-6 items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-button">
               Cotizar Proyecto
-            </Link>
+            </button>
 
             <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden p-2 text-foreground hover:text-primary transition">
               <Search className="w-5 h-5" />
@@ -212,12 +214,12 @@ export default function Header() {
               <a href="tel:+573018417895" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
                 <Phone className="w-4 h-4" /> +57 301 841 7895
               </a>
-              <Link
-              to="/cotizacion"
-              className="mt-2 py-3 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold text-center">
+              <button
+              onClick={() => openChat("quote")}
+              className="mt-2 py-3 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold text-center w-full">
               
                 Cotizar Proyecto
-              </Link>
+              </button>
             </nav>
           </motion.div>
         }

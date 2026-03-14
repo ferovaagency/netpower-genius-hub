@@ -98,8 +98,17 @@ export default function ProductSheetGeneratorPage() {
   const handlePublish = () => {
     if (!result) return;
 
-    const selectedCategory = categories.find(c => c.name === category);
-    const selectedBrand = brands.find(b => b.name === brand);
+    // Use manually selected or AI-detected brand/category
+    const detectedBrand = (result as any).detectedBrand;
+    const detectedCategory = (result as any).detectedCategory;
+
+    const selectedCategory = categories.find(c => c.name === category)
+      || categories.find(c => c.name === detectedCategory)
+      || categories[0];
+    const selectedBrand = brands.find(b => b.name === brand)
+      || brands.find(b => b.name === detectedBrand)
+      || brands[0];
+
     const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     const newId = String(storeProducts.length + 1 + Math.floor(Math.random() * 1000));
 
@@ -114,8 +123,8 @@ export default function ProductSheetGeneratorPage() {
       sku: sku || `SKU-${newId}`,
       stock: 10,
       images: imageUrl ? [imageUrl] : [],
-      categoryId: selectedCategory?.id || "1",
-      brandId: selectedBrand?.id || "1",
+      categoryId: selectedCategory.id,
+      brandId: selectedBrand.id,
       specs: result.specs,
       metaTitle: result.metaTitle,
       metaDesc: result.metaDesc,

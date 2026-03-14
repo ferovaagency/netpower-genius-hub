@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe } from "lucide-react";
 import { products, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
+import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
 
 const WHATSAPP_NUMBER = "573018417895";
@@ -12,6 +13,7 @@ export default function ProductDetailPage() {
   const { slug } = useParams();
   const product = products.find(p => p.slug === slug);
   const { addItem } = useCart();
+  const { openChat } = useChat();
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "warranty" | "shipping">("desc");
 
@@ -122,12 +124,12 @@ export default function ProductDetailPage() {
                   <Phone className="w-5 h-5" /> Cotizar por WhatsApp
                 </a>
 
-                <Link
-                  to="/cotizacion"
-                  className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
-                >
-                  <FileText className="w-5 h-5" /> Solicitar cotización formal
-                </Link>
+                <button
+                   onClick={() => openChat("quote")}
+                   className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
+                 >
+                   <FileText className="w-5 h-5" /> Solicitar cotización formal
+                 </button>
 
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-primary" /> Precios especiales para volumen</p>
@@ -170,9 +172,9 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 mb-8">
-                  <Link to="/cotizacion" className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
+                  <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
                     <FileText className="w-4 h-4" /> Solicitar cotización
-                  </Link>
+                  </button>
                   <a
                     href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
                     target="_blank"
@@ -212,7 +214,20 @@ export default function ProductDetailPage() {
             ))}
           </div>
           <div className="py-8">
-            {activeTab === "desc" && <p className="text-muted-foreground leading-relaxed max-w-3xl">{product.description}</p>}
+            {activeTab === "desc" && (
+              <div
+                className="prose prose-sm max-w-3xl text-muted-foreground
+                  [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-6 [&_h2]:mb-3
+                  [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-5 [&_h3]:mb-2
+                  [&_h4]:text-base [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-1.5
+                  [&_p]:text-base [&_p]:leading-relaxed [&_p]:mb-3
+                  [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3
+                  [&_li]:text-base [&_li]:mb-1
+                  [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:bg-accent/30 [&_blockquote]:py-3 [&_blockquote]:pr-4 [&_blockquote]:rounded-r-lg
+                  [&_strong]:text-foreground"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            )}
             {activeTab === "specs" && (
               <div className="max-w-2xl">
                 {Object.entries(product.specs).map(([k, v]) => (
