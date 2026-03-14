@@ -23,10 +23,10 @@ function buildCatalogContext(): string {
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]] markers in AI text
-function parseProductMarkers(text: string): (string | Product)[] {
-  const parts: (string | Product)[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]/g;
+// Parse [[PRODUCT:slug]] and [[WHATSAPP:text]] markers in AI text
+function parseMarkers(text: string): (string | Product | { type: "whatsapp"; label: string })[] {
+  const parts: (string | Product | { type: "whatsapp"; label: string })[] = [];
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -34,12 +34,13 @@ function parseProductMarkers(text: string): (string | Product)[] {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    const slug = match[1].trim();
-    const product = products.find((p) => p.slug === slug);
-    if (product) {
-      parts.push(product);
+    if (match[0].startsWith("[[PRODUCT:")) {
+      const slug = match[1].trim();
+      const product = products.find((p) => p.slug === slug);
+      if (product) parts.push(product);
+      else parts.push(match[0]);
     } else {
-      parts.push(match[0]);
+      parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
     }
     lastIndex = match.index + match[0].length;
   }
