@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Bot, Loader2, Sparkles, ShoppingCart, ExternalLink, CreditCard } from "lucide-react";
+import { X, Send, Bot, Loader2, Sparkles, ShoppingCart, ExternalLink, CreditCard, MessageCircle } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { useCart } from "@/contexts/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,10 +23,10 @@ function buildCatalogContext(): string {
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]] markers in AI text
-function parseProductMarkers(text: string): (string | Product)[] {
-  const parts: (string | Product)[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]/g;
+// Parse [[PRODUCT:slug]] and [[WHATSAPP:text]] markers in AI text
+function parseMarkers(text: string): (string | Product | { type: "whatsapp"; label: string })[] {
+  const parts: (string | Product | { type: "whatsapp"; label: string })[] = [];
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -34,12 +34,13 @@ function parseProductMarkers(text: string): (string | Product)[] {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    const slug = match[1].trim();
-    const product = products.find((p) => p.slug === slug);
-    if (product) {
-      parts.push(product);
+    if (match[0].startsWith("[[PRODUCT:")) {
+      const slug = match[1].trim();
+      const product = products.find((p) => p.slug === slug);
+      if (product) parts.push(product);
+      else parts.push(match[0]);
     } else {
-      parts.push(match[0]);
+      parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
     }
     lastIndex = match.index + match[0].length;
   }
@@ -299,7 +300,7 @@ export default function AIChatWidget() {
   const renderMessageContent = (msg: Msg) => {
     if (msg.role === "user") return msg.content;
 
-    const parts = parseProductMarkers(msg.content);
+    const parts = parseMarkers(msg.content);
     return (
       <>
         {parts.map((part, idx) => {
@@ -313,13 +314,27 @@ export default function AIChatWidget() {
               </div>
             );
           }
+          if ("type" in part && part.type === "whatsapp") {
+            return (
+              <a
+                key={idx}
+                href="https://wa.me/573018417895?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="my-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold hover:opacity-90 transition shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {part.label}
+              </a>
+            );
+          }
           return (
             <MiniProductCard
               key={idx}
-              product={part}
-              onAddToCart={() => handleAddToCart(part)}
-              onViewProduct={() => handleViewProduct(part)}
-              onCheckout={() => handleCheckout(part)}
+              product={part as Product}
+              onAddToCart={() => handleAddToCart(part as Product)}
+              onViewProduct={() => handleViewProduct(part as Product)}
+              onCheckout={() => handleCheckout(part as Product)}
             />
           );
         })}

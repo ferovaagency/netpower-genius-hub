@@ -10,9 +10,10 @@ interface Props {
   price: string;
   onPublish: () => void;
   publishing?: boolean;
+  isEdit?: boolean;
 }
 
-export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing }: Props) {
+export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing, isEdit }: Props) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -146,9 +147,9 @@ export default function GeneratedSheetResult({ result, imageUrl, productName, pr
         className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 transition shadow-button disabled:opacity-50"
       >
         {publishing ? (
-          <><Loader2 className="w-5 h-5 animate-spin" /> Publicando...</>
+          <><Loader2 className="w-5 h-5 animate-spin" /> {isEdit ? "Actualizando..." : "Publicando..."}</>
         ) : (
-          <><Upload className="w-5 h-5" /> Publicar producto en la tienda</>
+          <><Upload className="w-5 h-5" /> {isEdit ? "Actualizar producto" : "Publicar producto en la tienda"}</>
         )}
       </button>
       {!price && (

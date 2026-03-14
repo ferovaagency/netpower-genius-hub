@@ -96,9 +96,9 @@ export default function CartPage() {
                   <span className="font-bold text-foreground">Total</span>
                   <span className="text-xl font-extrabold text-foreground">{formatCOP(total)}</span>
                 </div>
-                <button className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                <Link to="/checkout" className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2">
                   Proceder al Pago <ArrowRight className="w-4 h-4" />
-                </button>
+                </Link>
                 <Link to="/tienda" className="block text-center text-sm text-primary hover:underline mt-2">
                   Continuar comprando
                 </Link>
