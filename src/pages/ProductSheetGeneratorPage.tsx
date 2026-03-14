@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Sparkles, Loader2, Copy, Check, Plus, Trash2, Upload, DollarSign, Image as ImageIcon } from "lucide-react";
+import { Sparkles, Loader2, Plus, Trash2, DollarSign, Image as ImageIcon } from "lucide-react";
 import { categories, brands, products as storeProducts } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,7 @@ export default function ProductSheetGeneratorPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [specEntries, setSpecEntries] = useState<SpecEntry[]>([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [result, setResult] = useState<GeneratedSheet | null>(null);
   const [error, setError] = useState("");
 
@@ -63,15 +64,11 @@ export default function ProductSheetGeneratorPage() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Lovable Cloud no está configurado. Activa Cloud primero.");
-      }
-
       const response = await fetch(`${supabaseUrl}/functions/v1/generate-product-sheet`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseKey}`,
+          Authorization: `Bearer ${supabaseKey}`,
         },
         body: JSON.stringify({ productName, brand, category, sku, specs }),
       });
@@ -81,7 +78,7 @@ export default function ProductSheetGeneratorPage() {
         try {
           const data = await response.json();
           errMsg = data.error || errMsg;
-        } catch { /* non-JSON response */ }
+        } catch {}
         if (response.status === 404) errMsg = "La función aún no está desplegada. Espera unos segundos y reintenta.";
         throw new Error(errMsg);
       }
@@ -95,48 +92,85 @@ export default function ProductSheetGeneratorPage() {
     }
   };
 
-  const handlePublish = () => {
+  // Download external image to our storage and get local URL
+  const downloadImageToStorage = async (externalUrl: string, slug: string): Promise<string> => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const resp = await fetch(`${supabaseUrl}/functions/v1/download-product-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ imageUrl: externalUrl, fileName: slug }),
+      });
+
+      if (!resp.ok) throw new Error("Failed to download image");
+      const data = await resp.json();
+      return data.url || externalUrl;
+    } catch (e) {
+      console.error("Image download failed, using original URL:", e);
+      return externalUrl;
+    }
+  };
+
+  const handlePublish = async () => {
     if (!result) return;
+    setPublishing(true);
 
-    // Use manually selected or AI-detected brand/category
-    const detectedBrand = (result as any).detectedBrand;
-    const detectedCategory = (result as any).detectedCategory;
+    try {
+      const detectedBrand = (result as any).detectedBrand;
+      const detectedCategory = (result as any).detectedCategory;
 
-    const selectedCategory = categories.find(c => c.name === category)
-      || categories.find(c => c.name === detectedCategory)
-      || categories[0];
-    const selectedBrand = brands.find(b => b.name === brand)
-      || brands.find(b => b.name === detectedBrand)
-      || brands[0];
+      const selectedCategory = categories.find(c => c.name === category)
+        || categories.find(c => c.name === detectedCategory)
+        || categories[0];
+      const selectedBrand = brands.find(b => b.name === brand)
+        || brands.find(b => b.name === detectedBrand)
+        || brands[0];
 
-    const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    const newId = String(storeProducts.length + 1 + Math.floor(Math.random() * 1000));
+      const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const newId = String(storeProducts.length + 1 + Math.floor(Math.random() * 1000));
 
-    const newProduct = {
-      id: newId,
-      slug,
-      name: productName,
-      description: result.description,
-      shortDesc: result.shortDesc,
-      price: Number(price) || 0,
-      salePrice: salePrice ? Number(salePrice) : null,
-      sku: sku || `SKU-${newId}`,
-      stock: 10,
-      images: imageUrl ? [imageUrl] : [],
-      categoryId: selectedCategory.id,
-      brandId: selectedBrand.id,
-      specs: result.specs,
-      metaTitle: result.metaTitle,
-      metaDesc: result.metaDesc,
-      active: true,
-      featured: false,
-    };
+      // Download image to our storage if external URL provided
+      let finalImageUrl = "";
+      if (imageUrl) {
+        toast.info("Descargando imagen al servidor...");
+        finalImageUrl = await downloadImageToStorage(imageUrl, slug);
+      }
 
-    storeProducts.push(newProduct as any);
-    toast.success("¡Producto publicado exitosamente!", {
-      description: `"${productName}" ya está visible en la tienda.`,
-    });
-    navigate(`/producto/${slug}`);
+      const newProduct = {
+        id: newId,
+        slug,
+        name: productName,
+        description: result.description,
+        shortDesc: result.shortDesc,
+        price: Number(price) || 0,
+        salePrice: salePrice ? Number(salePrice) : null,
+        sku: sku || `SKU-${newId}`,
+        stock: 10,
+        images: finalImageUrl ? [finalImageUrl] : [],
+        categoryId: selectedCategory.id,
+        brandId: selectedBrand.id,
+        specs: result.specs,
+        metaTitle: result.metaTitle,
+        metaDesc: result.metaDesc,
+        active: true,
+        featured: false,
+      };
+
+      storeProducts.push(newProduct as any);
+      toast.success("¡Producto publicado exitosamente!", {
+        description: `"${productName}" ya está visible en la tienda.`,
+      });
+      navigate(`/producto/${slug}`);
+    } catch (e: any) {
+      toast.error("Error al publicar: " + (e.message || "Intenta de nuevo"));
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
@@ -148,7 +182,6 @@ export default function ProductSheetGeneratorPage() {
 
       <div className="container mx-auto px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -167,35 +200,21 @@ export default function ProductSheetGeneratorPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nombre del producto *</label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={e => setProductName(e.target.value)}
-                    placeholder="Ej: UPS APC Back-UPS 1500VA"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
+                  <input type="text" value={productName} onChange={e => setProductName(e.target.value)} placeholder="Ej: UPS APC Back-UPS 1500VA" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Marca</label>
-                    <select
-                      value={brand}
-                      onChange={e => setBrand(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    >
-                      <option value="">Seleccionar...</option>
+                    <select value={brand} onChange={e => setBrand(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
+                      <option value="">Auto-detectar IA</option>
                       {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoría</label>
-                    <select
-                      value={category}
-                      onChange={e => setCategory(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    >
-                      <option value="">Seleccionar...</option>
+                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
+                      <option value="">Auto-detectar IA</option>
                       {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
@@ -203,60 +222,29 @@ export default function ProductSheetGeneratorPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">SKU</label>
-                  <input
-                    type="text"
-                    value={sku}
-                    onChange={e => setSku(e.target.value)}
-                    placeholder="Ej: BX1500M-LM60"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                  />
+                  <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="Ej: BX1500M-LM60" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                 </div>
 
-                {/* Price fields */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                       <DollarSign className="w-3 h-3 inline mr-1" />Precio (COP) *
                     </label>
-                    <input
-                      type="text"
-                      value={price}
-                      onChange={e => {
-                        const v = e.target.value.replace(/[^0-9]/g, "");
-                        setPrice(v);
-                      }}
-                      placeholder="Ej: 489900 (sin puntos ni comas)"
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-1">Ingresa solo números sin puntos ni comas. Ej: 489900</p>
+                    <input type="text" value={price} onChange={e => setPrice(e.target.value.replace(/[^0-9]/g, ""))} placeholder="489900" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Solo números sin puntos ni comas. Ej: 489900</p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Precio oferta (COP)</label>
-                    <input
-                      type="text"
-                      value={salePrice}
-                      onChange={e => {
-                        const v = e.target.value.replace(/[^0-9]/g, "");
-                        setSalePrice(v);
-                      }}
-                      placeholder="Opcional (sin puntos)"
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
+                    <input type="text" value={salePrice} onChange={e => setSalePrice(e.target.value.replace(/[^0-9]/g, ""))} placeholder="Opcional" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                   </div>
                 </div>
 
-                {/* Image URL */}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto *
+                    <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto
                   </label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                    placeholder="https://ejemplo.com/imagen-producto.jpg"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                  />
+                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://ejemplo.com/imagen.jpg" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                  <p className="text-[10px] text-muted-foreground mt-1">La imagen se descargará automáticamente a nuestro servidor al publicar</p>
                   {imageUrl && (
                     <div className="mt-2 rounded-lg border border-border overflow-hidden bg-muted/30">
                       <img src={imageUrl} alt="Preview" className="w-full h-32 object-contain" onError={e => (e.currentTarget.style.display = "none")} />
@@ -264,7 +252,6 @@ export default function ProductSheetGeneratorPage() {
                   )}
                 </div>
 
-                {/* Specs */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-semibold text-muted-foreground">Especificaciones conocidas</label>
@@ -275,20 +262,8 @@ export default function ProductSheetGeneratorPage() {
                   <div className="space-y-2">
                     {specEntries.map((s, i) => (
                       <div key={i} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={s.key}
-                          onChange={e => updateSpec(i, "key", e.target.value)}
-                          placeholder="Ej: Potencia"
-                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                        />
-                        <input
-                          type="text"
-                          value={s.value}
-                          onChange={e => updateSpec(i, "value", e.target.value)}
-                          placeholder="Ej: 1500VA"
-                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                        />
+                        <input type="text" value={s.key} onChange={e => updateSpec(i, "key", e.target.value)} placeholder="Ej: Potencia" className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                        <input type="text" value={s.value} onChange={e => updateSpec(i, "value", e.target.value)} placeholder="Ej: 1500VA" className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                         {specEntries.length > 1 && (
                           <button onClick={() => removeSpec(i)} className="p-2 text-muted-foreground hover:text-destructive transition">
                             <Trash2 className="w-3.5 h-3.5" />
@@ -301,20 +276,8 @@ export default function ProductSheetGeneratorPage() {
 
                 {error && <p className="text-xs text-destructive font-medium">{error}</p>}
 
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading}
-                  className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" /> Generar Ficha con IA
-                    </>
-                  )}
+                <button onClick={handleGenerate} disabled={loading} className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                  {loading ? (<><Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...</>) : (<><Sparkles className="w-4 h-4" /> Generar Ficha con IA</>)}
                 </button>
               </div>
             </div>
@@ -323,12 +286,7 @@ export default function ProductSheetGeneratorPage() {
             <div className="space-y-5">
               <AnimatePresence mode="wait">
                 {loading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card"
-                  >
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
                     <p className="text-base font-semibold text-foreground">Generando ficha de producto...</p>
                     <p className="text-sm text-muted-foreground mt-1">Esto puede tomar 15-30 segundos</p>
@@ -336,11 +294,7 @@ export default function ProductSheetGeneratorPage() {
                 )}
 
                 {!loading && !result && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center"
-                  >
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center">
                     <Sparkles className="w-8 h-8 text-muted-foreground/40 mb-3" />
                     <p className="text-base text-muted-foreground">Completa los datos del producto y genera la ficha</p>
                   </motion.div>
@@ -353,6 +307,7 @@ export default function ProductSheetGeneratorPage() {
                     productName={productName}
                     price={price}
                     onPublish={handlePublish}
+                    publishing={publishing}
                   />
                 )}
               </AnimatePresence>
