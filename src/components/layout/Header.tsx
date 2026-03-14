@@ -153,9 +153,9 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Link to="/cotizacion" className="hidden sm:inline-flex h-10 px-6 items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-button">
+            <button onClick={() => openChat("quote")} className="hidden sm:inline-flex h-10 px-6 items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-button">
               Cotizar Proyecto
-            </Link>
+            </button>
 
             <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden p-2 text-foreground hover:text-primary transition">
               <Search className="w-5 h-5" />
