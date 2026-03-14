@@ -11,7 +11,6 @@ const menuCategories = categories.filter(c => c.slug !== "servidores");
 const navLinks = [
   { label: "Inicio", to: "/" },
   { label: "Tienda", to: "/tienda" },
-  { label: "Cotizaciones", to: "/cotizacion" },
   { label: "Contacto", to: "/contacto" },
 ];
 
