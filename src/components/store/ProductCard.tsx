@@ -13,6 +13,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const isServer = category?.slug === "servidores";
 
   const waMessage = encodeURIComponent(`Hola Netpower IT, consulto precio: ${product.name} (${product.sku})`);
+  const waStockMessage = encodeURIComponent(`Hola Netpower IT, ¿tienen disponibilidad de ${product.name} (${product.sku})?`);
 
   return (
     <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">

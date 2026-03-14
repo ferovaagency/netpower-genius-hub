@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ShieldCheck, Truck, CreditCard, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { formatCOP, categories } from "@/data/store-data";
+import { formatCOP, categories, findProductById, decreaseInventory } from "@/data/store-data";
 import { toast } from "sonner";
 
 export default function CheckoutPage() {

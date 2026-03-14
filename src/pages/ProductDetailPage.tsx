@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe } from "lucide-react";
-import { products, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
+import { products, categories, brands, formatCOP, getDiscountPercentage, findProductBySlug } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
