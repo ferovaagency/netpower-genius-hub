@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Zap, Star } from "lucide-react";
-import { categories, brands, products, formatCOP, getDiscountPercentage } from "@/data/store-data";
+import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star } from "lucide-react";
+import { categories, brands, products } from "@/data/store-data";
 import ProductCard from "@/components/store/ProductCard";
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
@@ -13,16 +13,16 @@ export default function HomePage() {
   return (
     <>
       <Helmet>
-        <title>NetPower IT – Tu Proveedor #1 de Tecnología TIC en Colombia</title>
+        <title>Netpower IT – Tu Proveedor #1 de Tecnología TIC en Colombia</title>
         <meta name="description" content="UPS, baterías, servidores, infraestructura de red, energía solar y licencias con garantía oficial. Envío a todo Colombia. Cotiza tu proyecto TIC." />
-        <meta property="og:title" content="NetPower IT – Tecnología TIC en Colombia" />
+        <meta property="og:title" content="Netpower IT – Tecnología TIC en Colombia" />
         <meta property="og:description" content="Tu proveedor #1 de UPS, servidores, infraestructura y energía solar en Colombia" />
         <link rel="canonical" href="https://netpowerit.co" />
       </Helmet>
 
       {/* Hero */}
       <section className="relative bg-gradient-hero overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(211_100%_50%/0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(174_95%_34%/0.2),transparent_70%)]" />
         <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
           <motion.div
             initial="hidden"
@@ -31,7 +31,7 @@ export default function HomePage() {
             className="max-w-2xl"
           >
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-foreground/10 backdrop-blur-sm text-primary-foreground/80 text-xs font-medium mb-6">
-              <Zap className="w-3 h-3" /> Distribuidores autorizados en Colombia
+              Distribuidores autorizados en Colombia
             </motion.div>
             <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground leading-[1.1] mb-5">
               Tu proveedor <span className="text-secondary">#1</span> de tecnología TIC en Colombia
@@ -40,10 +40,10 @@ export default function HomePage() {
               UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico especializado.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-              <Link to="/tienda" className="inline-flex h-12 px-8 items-center gap-2 rounded-full bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg hover:scale-[1.02] transition-all">
+              <Link to="/tienda" className="inline-flex h-12 px-8 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
                 Ver Tienda <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-full border-2 border-primary-foreground/30 text-primary-foreground font-semibold hover:bg-primary-foreground/10 backdrop-blur-sm transition">
+              <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-lg border-2 border-primary-foreground/30 text-primary-foreground font-semibold hover:bg-primary-foreground/10 backdrop-blur-sm transition">
                 Solicitar Cotización
               </Link>
             </motion.div>
@@ -103,7 +103,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-3">¿Necesitas cotización empresarial?</h2>
           <p className="text-primary-foreground/70 mb-8 max-w-lg mx-auto">Nuestro equipo te asesora con soluciones a la medida para tu proyecto TIC</p>
-          <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-full bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg hover:scale-[1.02] transition-all">
+          <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-lg bg-secondary text-secondary-foreground font-semibold hover:opacity-90 transition-all">
             Solicitar Cotización <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -113,11 +113,15 @@ export default function HomePage() {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-10">Marcas que Distribuimos</h2>
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4">
             {brands.map(b => (
-              <div key={b.id} className="px-6 py-4 rounded-xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all flex items-center justify-center min-w-[120px]">
-                <span className="font-bold text-sm text-muted-foreground">{b.name}</span>
-              </div>
+              <Link
+                key={b.id}
+                to={`/tienda?marca=${b.slug}`}
+                className="px-6 py-4 rounded-xl bg-card border border-border shadow-card hover:shadow-card-hover hover:border-primary/40 transition-all flex items-center justify-center min-w-[120px] group"
+              >
+                <span className="font-bold text-sm text-muted-foreground group-hover:text-primary transition">{b.name}</span>
+              </Link>
             ))}
           </div>
         </div>
@@ -151,7 +155,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { name: "Carlos Gómez", company: "TechSolutions SAS", text: "Excelente servicio y rapidez en la entrega. Los UPS APC que compramos funcionan perfecto." },
-              { name: "María Rodríguez", company: "Hospital San José", text: "El equipo de NetPower IT nos asesoró con la solución de energía ideal para nuestro centro de datos." },
+              { name: "María Rodríguez", company: "Hospital San José", text: "El equipo de Netpower IT nos asesoró con la solución de energía ideal para nuestro centro de datos." },
               { name: "Andrés López", company: "Grupo Empresarial ALR", text: "Precios competitivos y garantía oficial. Llevamos 3 años comprando con ellos sin problemas." },
             ].map((t, i) => (
               <div key={i} className="p-6 rounded-xl bg-card border border-border shadow-card">
@@ -172,7 +176,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-extrabold text-surface-dark-foreground mb-3">¿Proyecto grande? Obtén precios especiales</h2>
           <p className="text-surface-dark-foreground/60 mb-8 max-w-lg mx-auto">Cotizamos proyectos de infraestructura TIC, energía solar y más a nivel empresarial</p>
-          <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-full bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg hover:scale-[1.02] transition-all">
+          <Link to="/cotizacion" className="inline-flex h-12 px-8 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
             Obtener Cotización <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

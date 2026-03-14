@@ -1,10 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe } from "lucide-react";
 import { products, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
 import ProductCard from "@/components/store/ProductCard";
+
+const WHATSAPP_NUMBER = "573018417895";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -26,6 +28,7 @@ export default function ProductDetailPage() {
   const brand = brands.find(b => b.id === product.brandId);
   const discount = getDiscountPercentage(product.price, product.salePrice);
   const related = products.filter(p => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4);
+  const isServer = category?.slug === "servidores";
 
   const tabs = [
     { key: "desc", label: "Descripción" },
@@ -33,6 +36,8 @@ export default function ProductDetailPage() {
     { key: "warranty", label: "Garantía" },
     { key: "shipping", label: "Envío" },
   ] as const;
+
+  const waMessage = encodeURIComponent(`Hola Netpower IT, consulto disponibilidad y precio: ${product.name} (${product.sku})`);
 
   return (
     <>
@@ -47,7 +52,7 @@ export default function ProductDetailPage() {
           description: product.description,
           sku: product.sku,
           brand: { "@type": "Brand", name: brand?.name },
-          offers: {
+          offers: isServer ? undefined : {
             "@type": "Offer",
             price: (product.salePrice || product.price),
             priceCurrency: "COP",
@@ -70,12 +75,19 @@ export default function ProductDetailPage() {
           <span className="text-foreground font-medium truncate">{product.name}</span>
         </nav>
 
+        {/* Server banner */}
+        {isServer && (
+          <div className="mb-6 p-4 rounded-lg bg-accent border border-primary/20 text-sm text-accent-foreground">
+            Los servidores tienen precio diferenciado según configuración y volumen. Escríbenos y te asesoramos.
+          </div>
+        )}
+
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Image */}
           <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative">
             <span className="text-8xl">{category?.icon || "📦"}</span>
-            {discount && (
+            {!isServer && discount && (
               <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-destructive text-destructive-foreground text-sm font-bold">
                 -{discount}%
               </span>
@@ -93,63 +105,96 @@ export default function ProductDetailPage() {
             <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-2">{product.name}</h1>
             <p className="text-muted-foreground mb-6">{product.shortDesc}</p>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-3xl font-extrabold text-foreground">{formatCOP(product.salePrice || product.price)}</span>
-              {product.salePrice && (
-                <span className="text-lg text-muted-foreground line-through">{formatCOP(product.price)}</span>
-              )}
-            </div>
-            <p className={`text-sm font-medium mb-6 ${product.stock > 5 ? "text-success" : product.stock > 0 ? "text-secondary" : "text-destructive"}`}>
-              {product.stock > 5 ? "✓ En stock" : product.stock > 0 ? `⚠ Solo ${product.stock} disponibles` : "✕ Agotado"}
-            </p>
-
-            {/* Quantity + Add to cart */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <button
-                onClick={() => addItem(product, qty)}
-                disabled={product.stock === 0}
-                className="flex-1 h-12 rounded-lg bg-gradient-secondary text-secondary-foreground font-semibold shadow-button hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <ShoppingCart className="w-5 h-5" /> Agregar al carrito
-              </button>
-            </div>
-
-            {/* Secondary actions */}
-            <div className="flex flex-wrap gap-3 mb-8">
-              <Link to="/cotizacion" className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
-                <FileText className="w-4 h-4" /> Solicitar cotización
-              </Link>
-              <a
-                href={`https://wa.me/573001234567?text=Hola, consulto disponibilidad: ${product.name} (${product.sku})`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 px-4 rounded-lg border border-border text-sm font-medium flex items-center gap-2 hover:bg-accent transition"
-              >
-                <MessageCircle className="w-4 h-4" /> WhatsApp
-              </a>
-            </div>
-
-            {/* Trust */}
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { icon: Truck, text: "Envío a todo Colombia" },
-                { icon: ShieldCheck, text: "Garantía oficial" },
-              ].map((t, i) => (
-                <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-accent text-xs font-medium text-accent-foreground">
-                  <t.icon className="w-4 h-4 text-primary" /> {t.text}
+            {isServer ? (
+              /* Server: No price, WhatsApp CTA */
+              <>
+                <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-semibold mb-6 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  Precio a consultar — Cotiza con nuestros expertos
                 </div>
-              ))}
-            </div>
+
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
+                >
+                  <Phone className="w-5 h-5" /> Cotizar por WhatsApp
+                </a>
+
+                <Link
+                  to="/cotizacion"
+                  className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
+                >
+                  <FileText className="w-5 h-5" /> Solicitar cotización formal
+                </Link>
+
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-primary" /> Precios especiales para volumen</p>
+                  <p className="flex items-center gap-2"><Wrench className="w-4 h-4 text-primary" /> Asesoría técnica incluida</p>
+                  <p className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-primary" /> Garantía oficial del fabricante</p>
+                  <p className="flex items-center gap-2"><Wrench className="w-4 h-4 text-primary" /> Instalación y configuración disponible</p>
+                  <p className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Servicio en toda Colombia e internacional</p>
+                </div>
+              </>
+            ) : (
+              /* Normal product */
+              <>
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="text-3xl font-extrabold text-foreground">{formatCOP(product.salePrice || product.price)}</span>
+                  {product.salePrice && (
+                    <span className="text-lg text-muted-foreground line-through">{formatCOP(product.price)}</span>
+                  )}
+                </div>
+                <p className={`text-sm font-medium mb-6 ${product.stock > 5 ? "text-success" : product.stock > 0 ? "text-secondary" : "text-destructive"}`}>
+                  {product.stock > 5 ? "✓ En stock" : product.stock > 0 ? `⚠ Solo ${product.stock} disponibles` : "✕ Agotado"}
+                </p>
+
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
+                    <button onClick={() => setQty(qty + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => addItem(product, qty)}
+                    disabled={product.stock === 0}
+                    className="flex-1 h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <ShoppingCart className="w-5 h-5" /> Agregar al carrito
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-3 mb-8">
+                  <Link to="/cotizacion" className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
+                    <FileText className="w-4 h-4" /> Solicitar cotización
+                  </Link>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-10 px-4 rounded-lg border border-border text-sm font-medium flex items-center gap-2 hover:bg-accent transition"
+                  >
+                    <MessageCircle className="w-4 h-4" /> WhatsApp
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: Truck, text: "Envío a todo Colombia" },
+                    { icon: ShieldCheck, text: "Garantía oficial" },
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-accent text-xs font-medium text-accent-foreground">
+                      <t.icon className="w-4 h-4 text-primary" /> {t.text}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

@@ -15,7 +15,7 @@ export default function QuotePage() {
   return (
     <>
       <Helmet>
-        <title>Cotizaciones – Proyectos TIC a la Medida | NetPower IT</title>
+        <title>Cotizaciones – Proyectos TIC a la Medida | Netpower IT</title>
         <meta name="description" content="Cotiza tu proyecto de tecnología TIC con asesoría experta. UPS, infraestructura de red, energía solar, servidores y licencias." />
         <link rel="canonical" href="https://netpowerit.co/cotizacion" />
       </Helmet>
@@ -44,10 +44,10 @@ export default function QuotePage() {
         <div className="mt-12 text-center">
           <p className="text-muted-foreground text-sm">¿Prefieres hablar con un asesor directamente?</p>
           <a
-            href="https://wa.me/573001234567?text=Hola, necesito cotizar un proyecto TIC"
+            href="https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-full bg-gradient-secondary text-secondary-foreground text-sm font-semibold shadow-button hover:shadow-lg transition-all"
+            className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all"
           >
             Chatear por WhatsApp
           </a>

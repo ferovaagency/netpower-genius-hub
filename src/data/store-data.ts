@@ -3,7 +3,7 @@ import { Product, Category, Brand } from "@/types/store";
 export const categories: Category[] = [
   { id: "1", slug: "baterias-ups", name: "Baterías Para UPS", description: "Baterías de reemplazo para UPS de todas las marcas", image: "", icon: "🔋", productCount: 45 },
   { id: "2", slug: "ups-accesorios", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", productCount: 68 },
-  { id: "3", slug: "infraestructura-tic", name: "Infraestructura TIC", description: "Equipos de red, switches, routers y cableado estructurado", image: "", icon: "🌐", productCount: 52 },
+  { id: "3", slug: "infraestructura-tic", name: "Infraestructura TIC y Accesorios", description: "Equipos de red, switches, routers y cableado estructurado", image: "", icon: "🌐", productCount: 52 },
   { id: "4", slug: "energia-solar", name: "Energía Solar", description: "Paneles solares, inversores y sistemas fotovoltaicos", image: "", icon: "☀️", productCount: 34 },
   { id: "5", slug: "servidores", name: "Servidores", description: "Servidores rack, torre y accesorios para data center", image: "", icon: "🖥️", productCount: 28 },
   { id: "6", slug: "licencias", name: "Licencias", description: "Licencias de software Microsoft, Fortinet, Kaspersky", image: "", icon: "📄", productCount: 41 },
@@ -26,6 +26,9 @@ export const brands: Brand[] = [
   { id: "12", slug: "brother", name: "Brother", logo: "" },
   { id: "13", slug: "targus", name: "Targus", logo: "" },
   { id: "14", slug: "wattana", name: "Wattana", logo: "" },
+  { id: "15", slug: "genius", name: "Genius", logo: "" },
+  { id: "16", slug: "caixun", name: "Caixun", logo: "" },
+  { id: "17", slug: "xkim", name: "Xkim", logo: "" },
 ];
 
 export const products: Product[] = [
