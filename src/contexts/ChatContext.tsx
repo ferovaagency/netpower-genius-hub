@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
+
 interface ChatContextType {
   isOpen: boolean;
   mode: "general" | "quote";
