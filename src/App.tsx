@@ -42,6 +42,7 @@ const App = () => (
                     <Route path="/tienda" element={<ShopPage />} />
                     <Route path="/producto/:slug" element={<ProductDetailPage />} />
                     <Route path="/carrito" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/cotizacion" element={<QuotePage />} />
                     <Route path="/contacto" element={<ContactPage />} />
                     <Route path="/marcas" element={<BrandsPage />} />
