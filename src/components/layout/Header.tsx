@@ -17,6 +17,7 @@ const navLinks = [
 
 export default function Header() {
   const { totalItems } = useCart();
+  const { openChat } = useChat();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
