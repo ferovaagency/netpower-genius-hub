@@ -1,1 +1,4 @@
 project_id = "uyqroiydexhdazxzrypd"
+
+[functions.generate-product-sheet]
+verify_jwt = false
