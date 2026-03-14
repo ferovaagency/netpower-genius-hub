@@ -10,7 +10,7 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
 export default function HomePage() {
-  const featured = products.filter(p => p.featured);
+  const featured = products.filter((p) => p.featured);
 
   return (
     <>
@@ -31,8 +31,8 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className="max-w-xl"
-          >
+            className="max-w-xl">
+            
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
               <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
             </motion.div>
@@ -74,19 +74,19 @@ export default function HomePage() {
             <p className="text-muted-foreground mt-2 text-sm">Todo para tu infraestructura TIC</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categories.map((cat, i) => (
-              <motion.div key={cat.id} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.04 }}>
+            {categories.map((cat, i) =>
+            <motion.div key={cat.id} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.04 }}>
                 <Link to={`/tienda?categoria=${cat.slug}`} className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-card-hover transition-all">
                   <span className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-primary shrink-0">
                     {cat.lucideIcon}
                   </span>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm text-card-foreground group-hover:text-primary transition truncate">{cat.name}</h3>
-                    <p className="text-xs text-muted-foreground">{cat.productCount} productos</p>
+                    <p className="text-muted-foreground text-base">{cat.productCount} productos</p>
                   </div>
                 </Link>
               </motion.div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -104,9 +104,9 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {featured.slice(0, 8).map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+            {featured.slice(0, 8).map((p) =>
+            <ProductCard key={p.id} product={p} />
+            )}
           </div>
         </div>
       </section>
@@ -129,15 +129,15 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Marcas que Distribuimos</h2>
           <div className="flex flex-wrap justify-center gap-3">
-            {brands.map(b => (
-              <Link
-                key={b.id}
-                to={`/tienda?marca=${b.slug}`}
-                className="px-5 py-3 rounded-lg bg-card border border-border/60 hover:border-primary/40 hover:shadow-card-hover transition-all flex items-center justify-center group"
-              >
+            {brands.map((b) =>
+            <Link
+              key={b.id}
+              to={`/tienda?marca=${b.slug}`}
+              className="px-5 py-3 rounded-lg bg-card border border-border/60 hover:border-primary/40 hover:shadow-card-hover transition-all flex items-center justify-center group">
+              
                 <span className="font-bold text-xs text-muted-foreground group-hover:text-primary transition tracking-wide uppercase">{b.name}</span>
               </Link>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -148,11 +148,11 @@ export default function HomePage() {
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Lo que Dicen Nuestros Clientes</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-              { name: "Carlos Gómez", company: "TechSolutions SAS, Bogotá", text: "Excelente servicio y rapidez en la entrega. Los UPS APC que compramos funcionan perfecto." },
-              { name: "María Rodríguez", company: "Hospital San José, Medellín", text: "El equipo de Netpower IT nos asesoró con la solución de energía ideal para nuestro centro de datos." },
-              { name: "Andrés López", company: "Grupo Empresarial ALR, Cali", text: "Precios competitivos y garantía oficial. Llevamos 3 años comprando con ellos sin problemas." },
-            ].map((t, i) => (
-              <div key={i} className="p-5 rounded-xl bg-background border border-border/60">
+            { name: "Carlos Gómez", company: "TechSolutions SAS, Bogotá", text: "Excelente servicio y rapidez en la entrega. Los UPS APC que compramos funcionan perfecto." },
+            { name: "María Rodríguez", company: "Hospital San José, Medellín", text: "El equipo de Netpower IT nos asesoró con la solución de energía ideal para nuestro centro de datos." },
+            { name: "Andrés López", company: "Grupo Empresarial ALR, Cali", text: "Precios competitivos y garantía oficial. Llevamos 3 años comprando con ellos sin problemas." }].
+            map((t, i) =>
+            <div key={i} className="p-5 rounded-xl bg-background border border-border/60">
                 <div className="flex gap-0.5 mb-3">
                   {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-secondary fill-secondary" />)}
                 </div>
@@ -160,7 +160,7 @@ export default function HomePage() {
                 <p className="font-semibold text-sm text-foreground">{t.name}</p>
                 <p className="text-xs text-muted-foreground">{t.company}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -178,13 +178,13 @@ export default function HomePage() {
               href="https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-surface-dark-foreground/25 text-surface-dark-foreground font-semibold hover:bg-surface-dark-foreground/10 transition text-sm"
-            >
+              className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-surface-dark-foreground/25 text-surface-dark-foreground font-semibold hover:bg-surface-dark-foreground/10 transition text-sm">
+              
               Chatear por WhatsApp
             </a>
           </div>
         </div>
       </section>
-    </>
-  );
+    </>);
+
 }
