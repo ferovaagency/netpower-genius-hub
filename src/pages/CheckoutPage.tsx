@@ -29,13 +29,28 @@ export default function CheckoutPage() {
     if (!isValid) { toast.error("Completa todos los campos obligatorios"); return; }
     setLoading(true);
 
-    // Build WhatsApp message with order details
-    const itemLines = items.map(i => {
-      const p = i.product;
-      return `• ${p.name} (x${i.quantity}) - ${formatCOP((p.salePrice || p.price) * i.quantity)}`;
-    }).join("\n");
+    const stockIssue = items.find((item) => {
+      const latest = findProductById(item.product.id);
+      return !latest || !latest.active || latest.stock < item.quantity;
+    });
 
-    const msg = `🛒 *NUEVO PEDIDO - NetPower IT*\n\n` +
+    if (stockIssue) {
+      setLoading(false);
+      toast.error(`No hay inventario suficiente para "${stockIssue.product.name}". Ajusta tu carrito.`);
+      navigate("/carrito");
+      return;
+    }
+
+    // Build WhatsApp message with order details
+    const itemLines = items
+      .map((i) => {
+        const p = i.product;
+        return `• ${p.name} (x${i.quantity}) - ${formatCOP((p.salePrice || p.price) * i.quantity)}`;
+      })
+      .join("\n");
+
+    const msg =
+      `🛒 *NUEVO PEDIDO - NetPower IT*\n\n` +
       `👤 *Cliente:* ${form.name}\n📧 ${form.email}\n📱 ${form.phone}\n🪪 ${form.idType} ${form.idNumber}\n\n` +
       `📍 *Envío:*\n${form.address}\n${form.city}, ${form.department}\n\n` +
       `📦 *Productos:*\n${itemLines}\n\n` +
@@ -45,6 +60,7 @@ export default function CheckoutPage() {
     const waUrl = `https://wa.me/573018417895?text=${encodeURIComponent(msg)}`;
 
     setTimeout(() => {
+      decreaseInventory(items.map((item) => ({ productId: item.product.id, quantity: item.quantity })));
       setLoading(false);
       clearCart();
       window.open(waUrl, "_blank");
