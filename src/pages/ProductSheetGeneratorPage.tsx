@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Sparkles, Loader2, Plus, Trash2, DollarSign, Image as ImageIcon, Edit3 } from "lucide-react";
-import { categories, brands, products as storeProducts } from "@/data/store-data";
+import { Sparkles, Loader2, Plus, Trash2, DollarSign, Image as ImageIcon, Edit3, Power } from "lucide-react";
+import {
+  categories,
+  brands,
+  products as storeProducts,
+  upsertProduct,
+  updateProductById,
+  setProductActiveState,
+  deleteProductById,
+} from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import GeneratedSheetResult from "@/components/admin/GeneratedSheetResult";
+import type { Product } from "@/types/store";
 
 interface SpecEntry {
   key: string;
@@ -25,17 +34,26 @@ export interface GeneratedSheet {
 
 type TabMode = "create" | "edit";
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 export default function ProductSheetGeneratorPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>("create");
 
-  // Create mode state
+  // Create/Edit shared state
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
+  const [stock, setStock] = useState("10");
   const [imageUrl, setImageUrl] = useState("");
   const [specEntries, setSpecEntries] = useState<SpecEntry[]>([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +63,16 @@ export default function ProductSheetGeneratorPage() {
 
   // Edit mode state
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [editSearch, setEditSearch] = useState("");
+
+  const selectedProduct = selectedProductId ? storeProducts.find((p) => p.id === selectedProductId) : undefined;
+  const matchingProducts =
+    tab === "edit" && editSearch.trim().length >= 2
+      ? storeProducts
+          .filter((p) => p.name.toLowerCase().includes(editSearch.trim().toLowerCase()))
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .slice(0, 8)
+      : [];
 
   const addSpec = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
   const removeSpec = (i: number) => setSpecEntries(specEntries.filter((_, idx) => idx !== i));
@@ -54,37 +82,47 @@ export default function ProductSheetGeneratorPage() {
     setSpecEntries(updated);
   };
 
-  // Load existing product data into form
   const loadProduct = (productId: string) => {
     setSelectedProductId(productId);
-    const p = storeProducts.find(pr => pr.id === productId);
+    const p = storeProducts.find((pr) => pr.id === productId);
     if (!p) return;
+
     setProductName(p.name);
     setSku(p.sku);
     setPrice(String(p.price));
     setSalePrice(p.salePrice ? String(p.salePrice) : "");
+    setStock(String(p.stock));
     setImageUrl(p.images?.[0] || "");
-    const cat = categories.find(c => c.id === p.categoryId);
-    const br = brands.find(b => b.id === p.brandId);
+
+    const cat = categories.find((c) => c.id === p.categoryId);
+    const br = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
     setCategory(cat?.name || "");
+
     const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
+    setEditSearch(p.name);
     setResult(null);
     setError("");
   };
 
   const handleGenerate = async () => {
+    if (tab === "edit" && !selectedProductId) {
+      setError("Busca y selecciona un producto para editar.");
+      return;
+    }
+
     if (!productName.trim()) {
       setError("Ingresa el nombre del producto");
       return;
     }
+
     setLoading(true);
     setError("");
     setResult(null);
 
     const specs: Record<string, string> = {};
-    specEntries.forEach(s => {
+    specEntries.forEach((s) => {
       if (s.key.trim() && s.value.trim()) specs[s.key.trim()] = s.value.trim();
     });
 
@@ -106,10 +144,13 @@ export default function ProductSheetGeneratorPage() {
         try {
           const data = await response.json();
           errMsg = data.error || errMsg;
-        } catch {}
+        } catch {
+          // no-op
+        }
         if (response.status === 404) errMsg = "La función aún no está desplegada. Espera unos segundos y reintenta.";
         throw new Error(errMsg);
       }
+
       const data = await response.json();
       if (data?.error) throw new Error(data.error);
       if (data?.data) setResult(data.data);
@@ -145,69 +186,69 @@ export default function ProductSheetGeneratorPage() {
 
   const handlePublish = async () => {
     if (!result) return;
+    if (tab === "edit" && !selectedProductId) {
+      toast.error("Selecciona el producto a editar");
+      return;
+    }
+
     setPublishing(true);
 
     try {
       const detectedBrand = (result as any).detectedBrand;
       const detectedCategory = (result as any).detectedCategory;
 
-      const selectedCategory = categories.find(c => c.name === category)
-        || categories.find(c => c.name === detectedCategory)
-        || categories[0];
-      const selectedBrand = brands.find(b => b.name === brand)
-        || brands.find(b => b.name === detectedBrand)
-        || brands[0];
+      const selectedCategory = categories.find((c) => c.name === category) || categories.find((c) => c.name === detectedCategory) || categories[0];
+      const selectedBrand = brands.find((b) => b.name === brand) || brands.find((b) => b.name === detectedBrand) || brands[0];
 
-      const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const slug = slugify(productName);
+      const parsedPrice = Number(price) || 0;
+      const parsedSalePrice = salePrice ? Number(salePrice) : null;
+      const parsedStock = Number.isFinite(Number(stock)) ? Math.max(0, Math.floor(Number(stock))) : 0;
 
-      // Download image if external URL provided
-      let finalImageUrl = "";
+      let finalImageUrl = imageUrl;
       if (imageUrl) {
         toast.info("Descargando imagen al servidor...");
         finalImageUrl = await downloadImageToStorage(imageUrl, slug);
       }
 
       if (tab === "edit" && selectedProductId) {
-        // Update existing product
-        const existingIdx = storeProducts.findIndex(p => p.id === selectedProductId);
-        if (existingIdx >= 0) {
-          const existing = storeProducts[existingIdx];
-          storeProducts[existingIdx] = {
-            ...existing,
-            name: productName,
-            description: result.description,
-            shortDesc: result.shortDesc,
-            price: Number(price) || existing.price,
-            salePrice: salePrice ? Number(salePrice) : existing.salePrice,
-            sku: sku || existing.sku,
-            images: finalImageUrl ? [finalImageUrl] : existing.images,
-            categoryId: selectedCategory.id,
-            brandId: selectedBrand.id,
-            specs: result.specs,
-            metaTitle: result.metaTitle,
-            metaDesc: result.metaDesc,
-            slug,
-          };
-          toast.success("¡Producto actualizado!", {
-            description: `"${productName}" ha sido actualizado exitosamente.`,
-          });
-          navigate(`/producto/${slug}`);
-          return;
-        }
+        const updated = updateProductById(selectedProductId, {
+          name: productName,
+          description: result.description,
+          shortDesc: result.shortDesc,
+          price: parsedPrice,
+          salePrice: parsedSalePrice,
+          stock: parsedStock,
+          sku: sku || selectedProduct?.sku || `SKU-${Date.now()}`,
+          images: finalImageUrl ? [finalImageUrl] : selectedProduct?.images || [],
+          categoryId: selectedCategory.id,
+          brandId: selectedBrand.id,
+          specs: result.specs,
+          metaTitle: result.metaTitle,
+          metaDesc: result.metaDesc,
+          slug,
+          active: selectedProduct?.active ?? true,
+        });
+
+        if (!updated) throw new Error("No se encontró el producto a editar");
+
+        toast.success("¡Producto actualizado!", {
+          description: `"${productName}" fue actualizado y guardado.`,
+        });
+        navigate(`/producto/${updated.slug}`);
+        return;
       }
 
-      // Create new product
-      const newId = String(storeProducts.length + 1 + Math.floor(Math.random() * 1000));
-      const newProduct = {
-        id: newId,
+      const newProduct: Product = {
+        id: `custom-${Date.now()}`,
         slug,
         name: productName,
         description: result.description,
         shortDesc: result.shortDesc,
-        price: Number(price) || 0,
-        salePrice: salePrice ? Number(salePrice) : null,
-        sku: sku || `SKU-${newId}`,
-        stock: 10,
+        price: parsedPrice,
+        salePrice: parsedSalePrice,
+        sku: sku || `SKU-${Date.now()}`,
+        stock: parsedStock,
         images: finalImageUrl ? [finalImageUrl] : [],
         categoryId: selectedCategory.id,
         brandId: selectedBrand.id,
@@ -218,20 +259,15 @@ export default function ProductSheetGeneratorPage() {
         featured: false,
       };
 
-      // Check if product with same name exists - update instead
-      const dupIdx = storeProducts.findIndex(p => p.name.toLowerCase() === productName.toLowerCase());
-      if (dupIdx >= 0) {
-        storeProducts[dupIdx] = { ...storeProducts[dupIdx], ...newProduct, id: storeProducts[dupIdx].id };
-        toast.success("¡Producto existente actualizado!", {
-          description: `"${productName}" ya existía y fue actualizado.`,
-        });
-      } else {
-        storeProducts.push(newProduct as any);
-        toast.success("¡Producto publicado exitosamente!", {
-          description: `"${productName}" ya está visible en la tienda.`,
-        });
-      }
-      navigate(`/producto/${slug}`);
+      const { product: savedProduct, updated } = upsertProduct(newProduct, true);
+
+      toast.success(updated ? "¡Producto existente actualizado!" : "¡Producto publicado exitosamente!", {
+        description: updated
+          ? `"${productName}" ya existía y se actualizó con la nueva información.`
+          : `"${productName}" ya está visible en la tienda.`,
+      });
+
+      navigate(`/producto/${savedProduct.slug}`);
     } catch (e: any) {
       toast.error("Error al publicar: " + (e.message || "Intenta de nuevo"));
     } finally {
@@ -239,18 +275,65 @@ export default function ProductSheetGeneratorPage() {
     }
   };
 
+  const handleToggleActive = () => {
+    if (!selectedProductId || !selectedProduct) return;
+
+    const updated = setProductActiveState(selectedProductId, !selectedProduct.active);
+    if (!updated) {
+      toast.error("No se pudo cambiar el estado del producto");
+      return;
+    }
+
+    toast.success(updated.active ? "Producto activado" : "Producto desactivado", {
+      description: `"${updated.name}" ${updated.active ? "volvió" : "dejó"} de mostrarse en la tienda.`,
+    });
+
+    loadProduct(updated.id);
+  };
+
+  const handleDeleteProduct = () => {
+    if (!selectedProductId || !selectedProduct) return;
+
+    const confirmed = window.confirm(`¿Seguro que quieres eliminar "${selectedProduct.name}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    const deleted = deleteProductById(selectedProductId);
+    if (!deleted) {
+      toast.error("No se pudo eliminar el producto");
+      return;
+    }
+
+    toast.success("Producto eliminado", {
+      description: `"${selectedProduct.name}" fue eliminado del catálogo.`,
+    });
+
+    resetForm();
+  };
+
   const resetForm = () => {
-    setProductName(""); setBrand(""); setCategory(""); setSku("");
-    setPrice(""); setSalePrice(""); setImageUrl("");
+    setProductName("");
+    setBrand("");
+    setCategory("");
+    setSku("");
+    setPrice("");
+    setSalePrice("");
+    setStock("10");
+    setImageUrl("");
     setSpecEntries([{ key: "", value: "" }]);
-    setResult(null); setError(""); setSelectedProductId("");
+    setResult(null);
+    setError("");
+    setSelectedProductId("");
+    setEditSearch("");
   };
 
   return (
     <>
       <Helmet>
         <title>Generador de Fichas con IA | NetPower IT</title>
-        <meta name="description" content="Genera fichas de producto profesionales con inteligencia artificial para tu tienda NetPower IT." />
+        <meta
+          name="description"
+          content="Genera fichas de producto profesionales con inteligencia artificial para tu tienda NetPower IT."
+        />
       </Helmet>
 
       <div className="container mx-auto px-6 py-10">
@@ -265,85 +348,182 @@ export default function ProductSheetGeneratorPage() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-1 bg-muted rounded-xl p-1 mb-8 w-fit">
             <button
-              onClick={() => { setTab("create"); resetForm(); }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${tab === "create" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => {
+                setTab("create");
+                resetForm();
+              }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+                tab === "create" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               <Sparkles className="w-4 h-4" /> Crear Nuevo
             </button>
             <button
-              onClick={() => { setTab("edit"); resetForm(); }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${tab === "edit" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => {
+                setTab("edit");
+                resetForm();
+              }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+                tab === "edit" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               <Edit3 className="w-4 h-4" /> Editar Existente
             </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Form */}
             <div className="bg-card rounded-2xl border border-border p-6 shadow-card h-fit">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-5">
                 {tab === "edit" ? "Editar Producto" : "Datos del Producto"}
               </h2>
 
               <div className="space-y-4">
-                {/* Edit mode: product selector */}
                 {tab === "edit" && (
-                  <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Seleccionar producto a editar *</label>
-                    <select
-                      value={selectedProductId}
-                      onChange={e => loadProduct(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-muted-foreground">Buscar producto por nombre *</label>
+                    <input
+                      type="text"
+                      value={editSearch}
+                      onChange={(e) => {
+                        setEditSearch(e.target.value);
+                        setSelectedProductId("");
+                      }}
+                      placeholder="Escribe mínimo 2 letras..."
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+
+                    {editSearch.trim().length >= 2 && (
+                      <div className="rounded-lg border border-border bg-background max-h-56 overflow-y-auto">
+                        {matchingProducts.length > 0 ? (
+                          matchingProducts.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => loadProduct(p.id)}
+                              className="w-full text-left px-3 py-2.5 border-b border-border last:border-b-0 hover:bg-accent transition"
+                            >
+                              <p className="text-sm font-medium text-foreground">{p.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · Stock: {p.stock} · {p.active ? "Activo" : "Inactivo"}
+                              </p>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-3 py-2.5 text-xs text-muted-foreground">No se encontraron productos con ese nombre.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === "edit" && selectedProduct && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      onClick={handleToggleActive}
+                      type="button"
+                      className="h-10 rounded-lg border border-border bg-secondary/10 text-secondary text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2"
                     >
-                      <option value="">-- Selecciona un producto --</option>
-                      {storeProducts.filter(p => p.active).map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                      ))}
-                    </select>
+                      <Power className="w-4 h-4" /> {selectedProduct.active ? "Desactivar producto" : "Activar producto"}
+                    </button>
+                    <button
+                      onClick={handleDeleteProduct}
+                      type="button"
+                      className="h-10 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" /> Eliminar producto
+                    </button>
                   </div>
                 )}
 
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nombre del producto *</label>
-                  <input type="text" value={productName} onChange={e => setProductName(e.target.value)} placeholder="Ej: UPS APC Back-UPS 1500VA" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Ej: UPS APC Back-UPS 1500VA"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Marca</label>
-                    <select value={brand} onChange={e => setBrand(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
+                    <select
+                      value={brand}
+                      onChange={(e) => setBrand(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    >
                       <option value="">Auto-detectar IA</option>
-                      {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                      {brands.map((b) => (
+                        <option key={b.id} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoría</label>
-                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    >
                       <option value="">Auto-detectar IA</option>
-                      {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">SKU</label>
-                  <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="Ej: BX1500M-LM60" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                  <input
+                    type="text"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    placeholder="Ej: BX1500M-LM60"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                       <DollarSign className="w-3 h-3 inline mr-1" />Precio (COP)
                     </label>
-                    <input type="text" value={price} onChange={e => setPrice(e.target.value.replace(/[^0-9]/g, ""))} placeholder="489900" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
-                    <p className="text-[10px] text-muted-foreground mt-1">Solo números, sin puntos ni comas. Ej: 489900</p>
+                    <input
+                      type="text"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="489900"
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Solo números, sin puntos ni comas.</p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Precio oferta (COP)</label>
-                    <input type="text" value={salePrice} onChange={e => setSalePrice(e.target.value.replace(/[^0-9]/g, ""))} placeholder="Opcional" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                    <input
+                      type="text"
+                      value={salePrice}
+                      onChange={(e) => setSalePrice(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="Opcional"
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cantidad disponible</label>
+                    <input
+                      type="text"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="10"
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
                   </div>
                 </div>
 
@@ -351,11 +531,22 @@ export default function ProductSheetGeneratorPage() {
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                     <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto
                   </label>
-                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://ejemplo.com/imagen.jpg" className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
-                  <p className="text-[10px] text-muted-foreground mt-1">La imagen se descargará a nuestro servidor al publicar</p>
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">La imagen se descargará a nuestro servidor al publicar.</p>
                   {imageUrl && (
                     <div className="mt-2 rounded-lg border border-border overflow-hidden bg-muted/30">
-                      <img src={imageUrl} alt="Preview" className="w-full h-32 object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+                      <img
+                        src={imageUrl}
+                        alt="Preview"
+                        className="w-full h-32 object-contain"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
                     </div>
                   )}
                 </div>
@@ -363,17 +554,29 @@ export default function ProductSheetGeneratorPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-semibold text-muted-foreground">Especificaciones conocidas</label>
-                    <button onClick={addSpec} className="text-xs text-primary hover:underline flex items-center gap-1">
+                    <button onClick={addSpec} type="button" className="text-xs text-primary hover:underline flex items-center gap-1">
                       <Plus className="w-3 h-3" /> Agregar
                     </button>
                   </div>
                   <div className="space-y-2">
                     {specEntries.map((s, i) => (
                       <div key={i} className="flex gap-2">
-                        <input type="text" value={s.key} onChange={e => updateSpec(i, "key", e.target.value)} placeholder="Ej: Potencia" className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
-                        <input type="text" value={s.value} onChange={e => updateSpec(i, "value", e.target.value)} placeholder="Ej: 1500VA" className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                        <input
+                          type="text"
+                          value={s.key}
+                          onChange={(e) => updateSpec(i, "key", e.target.value)}
+                          placeholder="Ej: Potencia"
+                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                        />
+                        <input
+                          type="text"
+                          value={s.value}
+                          onChange={(e) => updateSpec(i, "value", e.target.value)}
+                          placeholder="Ej: 1500VA"
+                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                        />
                         {specEntries.length > 1 && (
-                          <button onClick={() => removeSpec(i)} className="p-2 text-muted-foreground hover:text-destructive transition">
+                          <button onClick={() => removeSpec(i)} type="button" className="p-2 text-muted-foreground hover:text-destructive transition">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -384,17 +587,34 @@ export default function ProductSheetGeneratorPage() {
 
                 {error && <p className="text-xs text-destructive font-medium">{error}</p>}
 
-                <button onClick={handleGenerate} disabled={loading} className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                  {loading ? (<><Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...</>) : (<><Sparkles className="w-4 h-4" /> {tab === "edit" ? "Regenerar Ficha con IA" : "Generar Ficha con IA"}</>)}
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  type="button"
+                  className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" /> {tab === "edit" ? "Regenerar Ficha con IA" : "Generar Ficha con IA"}
+                    </>
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Result */}
             <div className="space-y-5">
               <AnimatePresence mode="wait">
                 {loading && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card"
+                  >
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
                     <p className="text-base font-semibold text-foreground">Generando ficha de producto...</p>
                     <p className="text-sm text-muted-foreground mt-1">Esto puede tomar 15-30 segundos</p>
@@ -402,10 +622,16 @@ export default function ProductSheetGeneratorPage() {
                 )}
 
                 {!loading && !result && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center"
+                  >
                     <Sparkles className="w-8 h-8 text-muted-foreground/40 mb-3" />
                     <p className="text-base text-muted-foreground">
-                      {tab === "edit" ? "Selecciona un producto y genera la ficha actualizada" : "Completa los datos del producto y genera la ficha"}
+                      {tab === "edit"
+                        ? "Busca un producto por nombre, selecciónalo y genera la ficha actualizada"
+                        : "Completa los datos del producto y genera la ficha"}
                     </p>
                   </motion.div>
                 )}
