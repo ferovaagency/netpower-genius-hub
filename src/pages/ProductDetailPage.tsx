@@ -11,7 +11,7 @@ const WHATSAPP_NUMBER = "573018417895";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const product = products.find(p => p.slug === slug);
+  const product = findProductBySlug(slug || "");
   const { addItem } = useCart();
   const { openChat } = useChat();
   const [qty, setQty] = useState(1);
