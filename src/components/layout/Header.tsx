@@ -140,13 +140,19 @@ export default function Header() {
                 to={`/producto/${p.slug}`}
                 onClick={() => setSearchQuery("")}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition text-sm">
-                
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-foreground">{p.name}</p>
                       <p className="text-xs text-muted-foreground">{p.shortDesc}</p>
                     </div>
                   </Link>
               )}
+                <Link
+                  to={`/tienda?q=${encodeURIComponent(searchQuery)}`}
+                  onClick={() => setSearchQuery("")}
+                  className="block px-4 py-2.5 text-xs font-semibold text-primary hover:bg-accent transition text-center border-t border-border"
+                >
+                  Ver todos los resultados →
+                </Link>
               </div>
             }
           </div>

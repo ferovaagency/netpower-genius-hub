@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Search } from "lucide-react";
 import { products, categories, brands } from "@/data/store-data";
 import ProductCard from "@/components/store/ProductCard";
 
@@ -10,13 +10,24 @@ type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
 export default function ShopPage() {
   const [searchParams] = useSearchParams();
   const catParam = searchParams.get("categoria");
+  const queryParam = searchParams.get("q") || "";
   const [selectedCategory, setSelectedCategory] = useState(catParam || "");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [sort, setSort] = useState<SortOption>("relevance");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(queryParam);
 
   const filtered = useMemo(() => {
     let list = products.filter(p => p.active);
+    if (searchQuery.trim().length > 1) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.shortDesc.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+      );
+    }
     if (selectedCategory) list = list.filter(p => categories.find(c => c.id === p.categoryId)?.slug === selectedCategory);
     if (selectedBrand) list = list.filter(p => brands.find(b => b.id === p.brandId)?.slug === selectedBrand);
 
@@ -25,9 +36,9 @@ export default function ShopPage() {
       case "price-desc": return [...list].sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
       default: return list;
     }
-  }, [selectedCategory, selectedBrand, sort]);
+  }, [selectedCategory, selectedBrand, sort, searchQuery]);
 
-  const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); };
+  const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); setSearchQuery(""); };
 
   const FilterPanel = () => (
     <div className="space-y-6">
@@ -59,7 +70,7 @@ export default function ShopPage() {
           ))}
         </div>
       </div>
-      {(selectedCategory || selectedBrand) && (
+      {(selectedCategory || selectedBrand || searchQuery) && (
         <button onClick={clearFilters} className="flex items-center gap-1 text-sm text-destructive hover:underline">
           <X className="w-3 h-3" /> Limpiar filtros
         </button>
@@ -83,9 +94,25 @@ export default function ShopPage() {
           <span className="text-foreground font-medium">Tienda</span>
         </nav>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">Tienda</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Search bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar productos..."
+                className="h-9 pl-9 pr-3 w-48 sm:w-64 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
             <select
               value={sort}
               onChange={e => setSort(e.target.value as SortOption)}
@@ -134,7 +161,15 @@ export default function ShopPage() {
             ) : (
               <div className="text-center py-20">
                 <p className="text-lg font-semibold text-foreground mb-2">No se encontraron productos</p>
-                <p className="text-sm text-muted-foreground">Intenta cambiar los filtros de búsqueda</p>
+                <p className="text-sm text-muted-foreground mb-4">Intenta cambiar los filtros de búsqueda</p>
+                <a
+                  href={`https://wa.me/573018417895?text=${encodeURIComponent(`Hola, busco: ${searchQuery}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold hover:opacity-90 transition"
+                >
+                  Preguntar por WhatsApp
+                </a>
               </div>
             )}
           </div>

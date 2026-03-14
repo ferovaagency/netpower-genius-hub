@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, Upload } from "lucide-react";
+import { Copy, Check, Upload, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { GeneratedSheet } from "@/pages/ProductSheetGeneratorPage";
 
@@ -9,9 +9,10 @@ interface Props {
   productName: string;
   price: string;
   onPublish: () => void;
+  publishing?: boolean;
 }
 
-export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish }: Props) {
+export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish, publishing }: Props) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -141,11 +142,14 @@ export default function GeneratedSheetResult({ result, imageUrl, productName, pr
       {/* Publish button */}
       <button
         onClick={onPublish}
-        disabled={!price}
+        disabled={!price || publishing}
         className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 transition shadow-button disabled:opacity-50"
       >
-        <Upload className="w-5 h-5" />
-        Publicar producto en la tienda
+        {publishing ? (
+          <><Loader2 className="w-5 h-5 animate-spin" /> Publicando...</>
+        ) : (
+          <><Upload className="w-5 h-5" /> Publicar producto en la tienda</>
+        )}
       </button>
       {!price && (
         <p className="text-xs text-destructive text-center">Ingresa un precio para poder publicar</p>
