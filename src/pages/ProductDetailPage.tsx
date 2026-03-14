@@ -135,7 +135,7 @@ export default function ProductDetailPage() {
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-12 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
+                  className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
                 >
                   <Phone className="w-5 h-5" /> Cotizar por WhatsApp
                 </a>
