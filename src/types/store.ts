@@ -25,6 +25,7 @@ export interface Category {
   description: string;
   image: string;
   icon: string;
+  lucideIcon?: React.ReactNode;
   productCount: number;
 }
 
