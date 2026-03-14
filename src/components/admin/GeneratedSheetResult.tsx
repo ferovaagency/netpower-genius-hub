@@ -9,6 +9,7 @@ interface Props {
   productName: string;
   price: string;
   onPublish: () => void;
+  publishing?: boolean;
 }
 
 export default function GeneratedSheetResult({ result, imageUrl, productName, price, onPublish }: Props) {
