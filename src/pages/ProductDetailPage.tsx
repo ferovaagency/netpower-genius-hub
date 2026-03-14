@@ -13,6 +13,7 @@ export default function ProductDetailPage() {
   const { slug } = useParams();
   const product = products.find(p => p.slug === slug);
   const { addItem } = useCart();
+  const { openChat } = useChat();
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "warranty" | "shipping">("desc");
 
