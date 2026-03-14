@@ -172,9 +172,9 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 mb-8">
-                  <Link to="/cotizacion" className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
+                  <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
                     <FileText className="w-4 h-4" /> Solicitar cotización
-                  </Link>
+                  </button>
                   <a
                     href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
                     target="_blank"
