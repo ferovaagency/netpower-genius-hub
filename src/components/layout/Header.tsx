@@ -59,9 +59,9 @@ export default function Header() {
       <div className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           {/* Logo */}
-          <Link to="/" className="shrink-0">
-            <img src={logoImg} alt="Netpower IT" className="h-10 md:h-12 w-auto" />
-          </Link>
+        <Link to="/" className="shrink-0">
+          <img src={logoImg} alt="Netpower IT" className="h-12 md:h-14 w-auto" />
+        </Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-6 ml-8">
