@@ -1,5 +1,1 @@
-[project]
-id = ""
-
-[functions.generate-product-sheet]
-verify_jwt = false
+project_id = "uyqroiydexhdazxzrypd"
