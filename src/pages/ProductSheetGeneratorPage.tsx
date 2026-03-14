@@ -53,11 +53,24 @@ export default function ProductSheetGeneratorPage() {
     });
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("generate-product-sheet", {
-        body: { productName, brand, category, sku, specs },
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Lovable Cloud no está configurado. Activa Cloud primero.");
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-product-sheet`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ productName, brand, category, sku, specs }),
       });
 
-      if (fnError) throw new Error(fnError.message);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Error del servidor");
       if (data?.error) throw new Error(data.error);
       if (data?.data) setResult(data.data);
     } catch (e: any) {
