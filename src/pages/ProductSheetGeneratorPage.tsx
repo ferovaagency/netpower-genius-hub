@@ -1,25 +1,24 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Sparkles, Loader2, Plus, Trash2, DollarSign, Image as ImageIcon, Edit3, Power } from "lucide-react";
 import {
-  categories,
-  brands,
-  products as storeProducts,
-  upsertProduct,
-  updateProductById,
-  setProductActiveState,
-  deleteProductById,
-} from "@/data/store-data";
+  Sparkles, Loader2, Plus, Trash2,
+  DollarSign, Image as ImageIcon, Edit3, Power,
+} from "lucide-react";
+import { categories, brands } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import GeneratedSheetResult from "@/components/admin/GeneratedSheetResult";
 import type { Product } from "@/types/store";
+import {
+  upsertProductDB,
+  updateProductDB,
+  deleteProductDB,
+  setProductActiveDB,
+  fetchAllProducts,
+} from "@/hooks/useProducts";
 
-interface SpecEntry {
-  key: string;
-  value: string;
-}
+interface SpecEntry { key: string; value: string }
 
 export interface GeneratedSheet {
   description: string;
@@ -46,35 +45,27 @@ export default function ProductSheetGeneratorPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>("create");
 
-  // Create/Edit shared state
   const [productName, setProductName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("");
-  const [sku, setSku] = useState("");
-  const [price, setPrice] = useState("");
-  const [salePrice, setSalePrice] = useState("");
-  const [stock, setStock] = useState("10");
-  const [imageUrl, setImageUrl] = useState("");
+  const [brand, setBrand]             = useState("");
+  const [category, setCategory]       = useState("");
+  const [sku, setSku]                 = useState("");
+  const [price, setPrice]             = useState("");
+  const [salePrice, setSalePrice]     = useState("");
+  const [stock, setStock]             = useState("10");
+  const [imageUrl, setImageUrl]       = useState("");
   const [specEntries, setSpecEntries] = useState<SpecEntry[]>([{ key: "", value: "" }]);
-  const [loading, setLoading] = useState(false);
-  const [publishing, setPublishing] = useState(false);
-  const [result, setResult] = useState<GeneratedSheet | null>(null);
-  const [error, setError] = useState("");
+  const [loading, setLoading]         = useState(false);
+  const [publishing, setPublishing]   = useState(false);
+  const [result, setResult]           = useState<GeneratedSheet | null>(null);
+  const [error, setError]             = useState("");
 
-  // Edit mode state
-  const [selectedProductId, setSelectedProductId] = useState("");
-  const [editSearch, setEditSearch] = useState("");
+  // Edit mode
+  const [selectedProduct, setSelectedProduct]   = useState<Product | null>(null);
+  const [editSearch, setEditSearch]             = useState("");
+  const [searchResults, setSearchResults]       = useState<Product[]>([]);
+  const [searching, setSearching]               = useState(false);
 
-  const selectedProduct = selectedProductId ? storeProducts.find((p) => p.id === selectedProductId) : undefined;
-  const matchingProducts =
-    tab === "edit" && editSearch.trim().length >= 2
-      ? storeProducts
-          .filter((p) => p.name.toLowerCase().includes(editSearch.trim().toLowerCase()))
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .slice(0, 8)
-      : [];
-
-  const addSpec = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
+  const addSpec    = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
   const removeSpec = (i: number) => setSpecEntries(specEntries.filter((_, idx) => idx !== i));
   const updateSpec = (i: number, field: "key" | "value", val: string) => {
     const updated = [...specEntries];
@@ -82,11 +73,28 @@ export default function ProductSheetGeneratorPage() {
     setSpecEntries(updated);
   };
 
-  const loadProduct = (productId: string) => {
-    setSelectedProductId(productId);
-    const p = storeProducts.find((pr) => pr.id === productId);
-    if (!p) return;
+  // Búsqueda de productos desde Supabase
+  const handleSearchChange = async (value: string) => {
+    setEditSearch(value);
+    setSelectedProduct(null);
+    if (value.trim().length < 2) { setSearchResults([]); return; }
 
+    setSearching(true);
+    try {
+      const all = await fetchAllProducts();
+      const filtered = all
+        .filter((p) => p.name.toLowerCase().includes(value.trim().toLowerCase()))
+        .slice(0, 8);
+      setSearchResults(filtered);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const loadProduct = (p: Product) => {
+    setSelectedProduct(p);
     setProductName(p.name);
     setSku(p.sku);
     setPrice(String(p.price));
@@ -95,27 +103,24 @@ export default function ProductSheetGeneratorPage() {
     setImageUrl(p.images?.[0] || "");
 
     const cat = categories.find((c) => c.id === p.categoryId);
-    const br = brands.find((b) => b.id === p.brandId);
+    const br  = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
     setCategory(cat?.name || "");
 
     const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
     setEditSearch(p.name);
+    setSearchResults([]);
     setResult(null);
     setError("");
   };
 
   const handleGenerate = async () => {
-    if (tab === "edit" && !selectedProductId) {
+    if (tab === "edit" && !selectedProduct) {
       setError("Busca y selecciona un producto para editar.");
       return;
     }
-
-    if (!productName.trim()) {
-      setError("Ingresa el nombre del producto");
-      return;
-    }
+    if (!productName.trim()) { setError("Ingresa el nombre del producto"); return; }
 
     setLoading(true);
     setError("");
@@ -141,12 +146,7 @@ export default function ProductSheetGeneratorPage() {
 
       if (!response.ok) {
         let errMsg = `Error ${response.status}`;
-        try {
-          const data = await response.json();
-          errMsg = data.error || errMsg;
-        } catch {
-          // no-op
-        }
+        try { const d = await response.json(); errMsg = d.error || errMsg; } catch {}
         if (response.status === 404) errMsg = "La función aún no está desplegada. Espera unos segundos y reintenta.";
         throw new Error(errMsg);
       }
@@ -168,10 +168,7 @@ export default function ProductSheetGeneratorPage() {
 
       const resp = await fetch(`${supabaseUrl}/functions/v1/download-product-image`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseKey}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseKey}` },
         body: JSON.stringify({ imageUrl: externalUrl, fileName: slug }),
       });
 
@@ -186,7 +183,7 @@ export default function ProductSheetGeneratorPage() {
 
   const handlePublish = async () => {
     if (!result) return;
-    if (tab === "edit" && !selectedProductId) {
+    if (tab === "edit" && !selectedProduct) {
       toast.error("Selecciona el producto a editar");
       return;
     }
@@ -194,16 +191,22 @@ export default function ProductSheetGeneratorPage() {
     setPublishing(true);
 
     try {
-      const detectedBrand = (result as any).detectedBrand;
+      const detectedBrand    = (result as any).detectedBrand;
       const detectedCategory = (result as any).detectedCategory;
 
-      const selectedCategory = categories.find((c) => c.name === category) || categories.find((c) => c.name === detectedCategory) || categories[0];
-      const selectedBrand = brands.find((b) => b.name === brand) || brands.find((b) => b.name === detectedBrand) || brands[0];
+      const selectedCategory =
+        categories.find((c) => c.name === category) ||
+        categories.find((c) => c.name === detectedCategory) ||
+        categories[0];
+      const selectedBrand =
+        brands.find((b) => b.name === brand) ||
+        brands.find((b) => b.name === detectedBrand) ||
+        brands[0];
 
-      const slug = slugify(productName);
-      const parsedPrice = Number(price) || 0;
+      const slug           = slugify(productName);
+      const parsedPrice    = Number(price) || 0;
       const parsedSalePrice = salePrice ? Number(salePrice) : null;
-      const parsedStock = Number.isFinite(Number(stock)) ? Math.max(0, Math.floor(Number(stock))) : 0;
+      const parsedStock    = Number.isFinite(Number(stock)) ? Math.max(0, Math.floor(Number(stock))) : 0;
 
       let finalImageUrl = imageUrl;
       if (imageUrl) {
@@ -211,59 +214,58 @@ export default function ProductSheetGeneratorPage() {
         finalImageUrl = await downloadImageToStorage(imageUrl, slug);
       }
 
-      if (tab === "edit" && selectedProductId) {
-        const updated = updateProductById(selectedProductId, {
-          name: productName,
+      // ── EDITAR producto existente ──────────────────────────────────────────
+      if (tab === "edit" && selectedProduct) {
+        const updated = await updateProductDB(selectedProduct.id, {
+          name:        productName,
           description: result.description,
-          shortDesc: result.shortDesc,
-          price: parsedPrice,
-          salePrice: parsedSalePrice,
-          stock: parsedStock,
-          sku: sku || selectedProduct?.sku || `SKU-${Date.now()}`,
-          images: finalImageUrl ? [finalImageUrl] : selectedProduct?.images || [],
-          categoryId: selectedCategory.id,
-          brandId: selectedBrand.id,
-          specs: result.specs,
-          metaTitle: result.metaTitle,
-          metaDesc: result.metaDesc,
+          shortDesc:   result.shortDesc,
+          price:       parsedPrice,
+          salePrice:   parsedSalePrice,
+          stock:       parsedStock,
+          sku:         sku || selectedProduct.sku || `SKU-${Date.now()}`,
+          images:      finalImageUrl ? [finalImageUrl] : selectedProduct.images || [],
+          categoryId:  selectedCategory.id,
+          brandId:     selectedBrand.id,
+          specs:       result.specs,
+          metaTitle:   result.metaTitle,
+          metaDesc:    result.metaDesc,
           slug,
-          active: selectedProduct?.active ?? true,
+          active:      selectedProduct.active ?? true,
         });
 
-        if (!updated) throw new Error("No se encontró el producto a editar");
-
         toast.success("¡Producto actualizado!", {
-          description: `"${productName}" fue actualizado y guardado.`,
+          description: `"${productName}" fue actualizado correctamente.`,
         });
         navigate(`/producto/${updated.slug}`);
         return;
       }
 
-      const newProduct: Product = {
-        id: `custom-${Date.now()}`,
+      // ── CREAR producto nuevo ───────────────────────────────────────────────
+      const newProduct: Omit<Product, "id"> = {
         slug,
-        name: productName,
+        name:        productName,
         description: result.description,
-        shortDesc: result.shortDesc,
-        price: parsedPrice,
-        salePrice: parsedSalePrice,
-        sku: sku || `SKU-${Date.now()}`,
-        stock: parsedStock,
-        images: finalImageUrl ? [finalImageUrl] : [],
-        categoryId: selectedCategory.id,
-        brandId: selectedBrand.id,
-        specs: result.specs,
-        metaTitle: result.metaTitle,
-        metaDesc: result.metaDesc,
-        active: true,
-        featured: false,
+        shortDesc:   result.shortDesc,
+        price:       parsedPrice,
+        salePrice:   parsedSalePrice,
+        sku:         sku || `SKU-${Date.now()}`,
+        stock:       parsedStock,
+        images:      finalImageUrl ? [finalImageUrl] : [],
+        categoryId:  selectedCategory.id,
+        brandId:     selectedBrand.id,
+        specs:       result.specs,
+        metaTitle:   result.metaTitle,
+        metaDesc:    result.metaDesc,
+        active:      true,
+        featured:    false,
       };
 
-      const { product: savedProduct, updated } = upsertProduct(newProduct, true);
+      const { product: savedProduct, updated } = await upsertProductDB(newProduct as Product);
 
       toast.success(updated ? "¡Producto existente actualizado!" : "¡Producto publicado exitosamente!", {
         description: updated
-          ? `"${productName}" ya existía y se actualizó con la nueva información.`
+          ? `"${productName}" ya existía y se actualizó.`
           : `"${productName}" ya está visible en la tienda.`,
       });
 
@@ -275,65 +277,50 @@ export default function ProductSheetGeneratorPage() {
     }
   };
 
-  const handleToggleActive = () => {
-    if (!selectedProductId || !selectedProduct) return;
-
-    const updated = setProductActiveState(selectedProductId, !selectedProduct.active);
-    if (!updated) {
-      toast.error("No se pudo cambiar el estado del producto");
-      return;
+  const handleToggleActive = async () => {
+    if (!selectedProduct) return;
+    try {
+      const updated = await setProductActiveDB(selectedProduct.id, !selectedProduct.active);
+      toast.success(updated.active ? "Producto activado" : "Producto desactivado", {
+        description: `"${updated.name}" ${updated.active ? "volvió" : "dejó"} de mostrarse en la tienda.`,
+      });
+      loadProduct(updated);
+    } catch (e: any) {
+      toast.error("No se pudo cambiar el estado: " + e.message);
     }
-
-    toast.success(updated.active ? "Producto activado" : "Producto desactivado", {
-      description: `"${updated.name}" ${updated.active ? "volvió" : "dejó"} de mostrarse en la tienda.`,
-    });
-
-    loadProduct(updated.id);
   };
 
-  const handleDeleteProduct = () => {
-    if (!selectedProductId || !selectedProduct) return;
-
-    const confirmed = window.confirm(`¿Seguro que quieres eliminar "${selectedProduct.name}"? Esta acción no se puede deshacer.`);
+  const handleDeleteProduct = async () => {
+    if (!selectedProduct) return;
+    const confirmed = window.confirm(
+      `¿Seguro que quieres eliminar "${selectedProduct.name}"? Esta acción no se puede deshacer.`
+    );
     if (!confirmed) return;
 
-    const deleted = deleteProductById(selectedProductId);
-    if (!deleted) {
-      toast.error("No se pudo eliminar el producto");
-      return;
+    try {
+      await deleteProductDB(selectedProduct.id);
+      toast.success("Producto eliminado", {
+        description: `"${selectedProduct.name}" fue eliminado del catálogo.`,
+      });
+      resetForm();
+    } catch (e: any) {
+      toast.error("No se pudo eliminar: " + e.message);
     }
-
-    toast.success("Producto eliminado", {
-      description: `"${selectedProduct.name}" fue eliminado del catálogo.`,
-    });
-
-    resetForm();
   };
 
   const resetForm = () => {
-    setProductName("");
-    setBrand("");
-    setCategory("");
-    setSku("");
-    setPrice("");
-    setSalePrice("");
-    setStock("10");
-    setImageUrl("");
+    setProductName(""); setBrand(""); setCategory(""); setSku("");
+    setPrice(""); setSalePrice(""); setStock("10"); setImageUrl("");
     setSpecEntries([{ key: "", value: "" }]);
-    setResult(null);
-    setError("");
-    setSelectedProductId("");
-    setEditSearch("");
+    setResult(null); setError("");
+    setSelectedProduct(null); setEditSearch(""); setSearchResults([]);
   };
 
   return (
     <>
       <Helmet>
         <title>Generador de Fichas con IA | NetPower IT</title>
-        <meta
-          name="description"
-          content="Genera fichas de producto profesionales con inteligencia artificial para tu tienda NetPower IT."
-        />
+        <meta name="description" content="Genera fichas de producto profesionales con inteligencia artificial para tu tienda NetPower IT." />
       </Helmet>
 
       <div className="container mx-auto px-6 py-10">
@@ -349,26 +336,12 @@ export default function ProductSheetGeneratorPage() {
           </div>
 
           <div className="flex gap-1 bg-muted rounded-xl p-1 mb-8 w-fit">
-            <button
-              onClick={() => {
-                setTab("create");
-                resetForm();
-              }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                tab === "create" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+            <button onClick={() => { setTab("create"); resetForm(); }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${tab === "create" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
               <Sparkles className="w-4 h-4" /> Crear Nuevo
             </button>
-            <button
-              onClick={() => {
-                setTab("edit");
-                resetForm();
-              }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                tab === "edit" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+            <button onClick={() => { setTab("edit"); resetForm(); }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${tab === "edit" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
               <Edit3 className="w-4 h-4" /> Editar Existente
             </button>
           </div>
@@ -383,26 +356,21 @@ export default function ProductSheetGeneratorPage() {
                 {tab === "edit" && (
                   <div className="space-y-2">
                     <label className="block text-xs font-semibold text-muted-foreground">Buscar producto por nombre *</label>
-                    <input
-                      type="text"
-                      value={editSearch}
-                      onChange={(e) => {
-                        setEditSearch(e.target.value);
-                        setSelectedProductId("");
-                      }}
+                    <input type="text" value={editSearch}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       placeholder="Escribe mínimo 2 letras..."
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
 
                     {editSearch.trim().length >= 2 && (
                       <div className="rounded-lg border border-border bg-background max-h-56 overflow-y-auto">
-                        {matchingProducts.length > 0 ? (
-                          matchingProducts.map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => loadProduct(p.id)}
-                              className="w-full text-left px-3 py-2.5 border-b border-border last:border-b-0 hover:bg-accent transition"
-                            >
+                        {searching ? (
+                          <p className="px-3 py-2.5 text-xs text-muted-foreground flex items-center gap-2">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Buscando...
+                          </p>
+                        ) : searchResults.length > 0 ? (
+                          searchResults.map((p) => (
+                            <button key={p.id} onClick={() => loadProduct(p)}
+                              className="w-full text-left px-3 py-2.5 border-b border-border last:border-b-0 hover:bg-accent transition">
                               <p className="text-sm font-medium text-foreground">{p.name}</p>
                               <p className="text-xs text-muted-foreground">
                                 SKU: {p.sku} · Stock: {p.stock} · {p.active ? "Activo" : "Inactivo"}
@@ -419,18 +387,12 @@ export default function ProductSheetGeneratorPage() {
 
                 {tab === "edit" && selectedProduct && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      onClick={handleToggleActive}
-                      type="button"
-                      className="h-10 rounded-lg border border-border bg-secondary/10 text-secondary text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2"
-                    >
+                    <button onClick={handleToggleActive} type="button"
+                      className="h-10 rounded-lg border border-border bg-secondary/10 text-secondary text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2">
                       <Power className="w-4 h-4" /> {selectedProduct.active ? "Desactivar producto" : "Activar producto"}
                     </button>
-                    <button
-                      onClick={handleDeleteProduct}
-                      type="button"
-                      className="h-10 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2"
-                    >
+                    <button onClick={handleDeleteProduct} type="button"
+                      className="h-10 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2">
                       <Trash2 className="w-4 h-4" /> Eliminar producto
                     </button>
                   </div>
@@ -438,57 +400,35 @@ export default function ProductSheetGeneratorPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nombre del producto *</label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
+                  <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)}
                     placeholder="Ej: UPS APC Back-UPS 1500VA"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Marca</label>
-                    <select
-                      value={brand}
-                      onChange={(e) => setBrand(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    >
+                    <select value={brand} onChange={(e) => setBrand(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
                       <option value="">Auto-detectar IA</option>
-                      {brands.map((b) => (
-                        <option key={b.id} value={b.name}>
-                          {b.name}
-                        </option>
-                      ))}
+                      {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoría</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    >
+                    <select value={category} onChange={(e) => setCategory(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition">
                       <option value="">Auto-detectar IA</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.name}>
-                          {c.name}
-                        </option>
-                      ))}
+                      {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">SKU</label>
-                  <input
-                    type="text"
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
+                  <input type="text" value={sku} onChange={(e) => setSku(e.target.value)}
                     placeholder="Ej: BX1500M-LM60"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                  />
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -496,34 +436,25 @@ export default function ProductSheetGeneratorPage() {
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                       <DollarSign className="w-3 h-3 inline mr-1" />Precio (COP)
                     </label>
-                    <input
-                      type="text"
-                      value={price}
+                    <input type="text" value={price}
                       onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}
                       placeholder="489900"
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                     <p className="text-[10px] text-muted-foreground mt-1">Solo números, sin puntos ni comas.</p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Precio oferta (COP)</label>
-                    <input
-                      type="text"
-                      value={salePrice}
+                    <input type="text" value={salePrice}
                       onChange={(e) => setSalePrice(e.target.value.replace(/[^0-9]/g, ""))}
                       placeholder="Opcional"
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cantidad disponible</label>
-                    <input
-                      type="text"
-                      value={stock}
+                    <input type="text" value={stock}
                       onChange={(e) => setStock(e.target.value.replace(/[^0-9]/g, ""))}
                       placeholder="10"
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                    />
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                   </div>
                 </div>
 
@@ -531,22 +462,14 @@ export default function ProductSheetGeneratorPage() {
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                     <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto
                   </label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
+                  <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://ejemplo.com/imagen.jpg"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                  />
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                   <p className="text-[10px] text-muted-foreground mt-1">La imagen se descargará a nuestro servidor al publicar.</p>
                   {imageUrl && (
                     <div className="mt-2 rounded-lg border border-border overflow-hidden bg-muted/30">
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        className="w-full h-32 object-contain"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
+                      <img src={imageUrl} alt="Preview" className="w-full h-32 object-contain"
+                        onError={(e) => (e.currentTarget.style.display = "none")} />
                     </div>
                   )}
                 </div>
@@ -561,22 +484,15 @@ export default function ProductSheetGeneratorPage() {
                   <div className="space-y-2">
                     {specEntries.map((s, i) => (
                       <div key={i} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={s.key}
-                          onChange={(e) => updateSpec(i, "key", e.target.value)}
+                        <input type="text" value={s.key} onChange={(e) => updateSpec(i, "key", e.target.value)}
                           placeholder="Ej: Potencia"
-                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                        />
-                        <input
-                          type="text"
-                          value={s.value}
-                          onChange={(e) => updateSpec(i, "value", e.target.value)}
+                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
+                        <input type="text" value={s.value} onChange={(e) => updateSpec(i, "value", e.target.value)}
                           placeholder="Ej: 1500VA"
-                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                        />
+                          className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition" />
                         {specEntries.length > 1 && (
-                          <button onClick={() => removeSpec(i)} type="button" className="p-2 text-muted-foreground hover:text-destructive transition">
+                          <button onClick={() => removeSpec(i)} type="button"
+                            className="p-2 text-muted-foreground hover:text-destructive transition">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -587,20 +503,12 @@ export default function ProductSheetGeneratorPage() {
 
                 {error && <p className="text-xs text-destructive font-medium">{error}</p>}
 
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading}
-                  type="button"
-                  className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
+                <button onClick={handleGenerate} disabled={loading} type="button"
+                  className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                   {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...
-                    </>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Generando ficha...</>
                   ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" /> {tab === "edit" ? "Regenerar Ficha con IA" : "Generar Ficha con IA"}
-                    </>
+                    <><Sparkles className="w-4 h-4" /> {tab === "edit" ? "Regenerar Ficha con IA" : "Generar Ficha con IA"}</>
                   )}
                 </button>
               </div>
@@ -609,24 +517,16 @@ export default function ProductSheetGeneratorPage() {
             <div className="space-y-5">
               <AnimatePresence mode="wait">
                 {loading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card"
-                  >
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="bg-card rounded-2xl border border-border p-10 flex flex-col items-center justify-center text-center shadow-card">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
                     <p className="text-base font-semibold text-foreground">Generando ficha de producto...</p>
                     <p className="text-sm text-muted-foreground mt-1">Esto puede tomar 15-30 segundos</p>
                   </motion.div>
                 )}
-
                 {!loading && !result && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center"
-                  >
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="bg-card rounded-2xl border border-border/50 border-dashed p-10 flex flex-col items-center justify-center text-center">
                     <Sparkles className="w-8 h-8 text-muted-foreground/40 mb-3" />
                     <p className="text-base text-muted-foreground">
                       {tab === "edit"
@@ -635,17 +535,10 @@ export default function ProductSheetGeneratorPage() {
                     </p>
                   </motion.div>
                 )}
-
                 {!loading && result && (
                   <GeneratedSheetResult
-                    result={result}
-                    imageUrl={imageUrl}
-                    productName={productName}
-                    price={price}
-                    onPublish={handlePublish}
-                    publishing={publishing}
-                    isEdit={tab === "edit"}
-                  />
+                    result={result} imageUrl={imageUrl} productName={productName}
+                    price={price} onPublish={handlePublish} publishing={publishing} isEdit={tab === "edit"} />
                 )}
               </AnimatePresence>
             </div>
