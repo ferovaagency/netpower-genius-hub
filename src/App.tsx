@@ -1,3 +1,4 @@
+import LegalPage from "./pages/LegalPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -49,6 +50,7 @@ const App = () => (
                     <Route path="/nosotros" element={<AboutPage />} />
                     <Route path="/admin/generador-fichas" element={<ProductSheetGeneratorPage />} />
                     <Route path="*" element={<NotFound />} />
+                    <Route path="/legal" element={<LegalPage />} />
                   </Routes>
                 </main>
                 <Footer />
