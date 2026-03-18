@@ -179,7 +179,7 @@ export default function BulkProductImporter({ onCompleted }: BulkProductImporter
           <h2 className="text-xl font-bebas">Carga masiva por archivo</h2>
           <p className="text-xs text-muted-foreground">Sube un archivo .csv o .xlsx con columnas como: name, description, price, brand, category, image_url, sku.</p>
         </div>
-        <Badge variant="secondary">Categorías finales: Computadores · Licenciamiento · Servidores</Badge>
+        <Badge variant="secondary">Categorías válidas: 8 · por defecto Accesorios</Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
@@ -191,7 +191,7 @@ export default function BulkProductImporter({ onCompleted }: BulkProductImporter
             accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             onChange={handleFileChange}
           />
-          <p className="text-xs text-muted-foreground">Cada fila representa un producto. Se evita duplicar productos por slug.</p>
+          <p className="text-xs text-muted-foreground">Si la categoría no coincide exactamente con la lista permitida, se asignará Accesorios automáticamente.</p>
         </div>
 
         <Button onClick={handleProcessBulk} disabled={processing || rows.length === 0}>

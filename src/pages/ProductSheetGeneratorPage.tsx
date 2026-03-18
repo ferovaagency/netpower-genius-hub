@@ -477,9 +477,8 @@ export default function ProductSheetGeneratorPage() {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                     >
-                      <option value="">Auto-detectar IA</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                      {ALLOWED_PRODUCT_CATEGORIES.map((categoryOption) => (
+                        <option key={categoryOption} value={categoryOption}>{categoryOption}</option>
                       ))}
                     </select>
                   </div>

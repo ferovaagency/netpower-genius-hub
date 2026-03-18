@@ -107,5 +107,5 @@ export const parseBulkImportFile = async (file: File): Promise<BulkImportRow[]> 
 };
 
 export const inferCategoryForBulkProduct = (row: BulkImportRow) => {
-  return getParentCategory(row.category, row.name, row.description, row.shortDescription, row.notes);
+  return getParentCategory(row.category);
 };

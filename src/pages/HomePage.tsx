@@ -115,7 +115,7 @@ export default function HomePage() {
             <p className="text-muted-foreground mt-2 text-sm">Todo para tu infraestructura TIC</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categories.map((cat, i) =>
+            {categoriesWithCounts.map((cat, i) =>
             <motion.div key={cat.id} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.04 }}>
                 <Link to={`/tienda?categoria=${cat.slug}`} className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-card-hover transition-all">
                   <span className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-primary shrink-0">
