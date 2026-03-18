@@ -208,11 +208,10 @@ export default function ProductSheetGeneratorPage() {
 
     try {
       const detectedBrand = (result as any).detectedBrand;
-      const detectedCategory = (result as any).detectedCategory;
 
       const selectedCategory =
         categories.find((c) => c.name === category) ||
-        categories.find((c) => c.name === detectedCategory) ||
+        categories.find((c) => c.name === DEFAULT_PRODUCT_CATEGORY) ||
         categories[0];
       const selectedBrand =
         brands.find((b) => b.name === brand) ||
