@@ -24,6 +24,8 @@ import BrandsPage from "./pages/BrandsPage";
 import AboutPage from "./pages/AboutPage";
 import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
 import NotFound from "./pages/NotFound";
+import AdminPage from "./pages/AdminPage";
+import MyAccountPage from "./pages/MyAccountPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -58,6 +60,8 @@ const App = () => (
                     <Route path="/admin/generador-fichas" element={<ProductSheetGeneratorPage />} />
                     <Route path="*" element={<NotFound />} />
                     <Route path="/legal" element={<LegalPage />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/mi-cuenta" element={<MyAccountPage />} />
                   </Routes>
                 </main>
                 <Footer />
