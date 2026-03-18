@@ -62,9 +62,9 @@ export default function Footer() {
               <li><Link to="/cotizacion" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Cotizaciones</Link></li>
               <li><Link to="/tienda" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Tienda</Link></li>
               <li><Link to="/marcas" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Marcas</Link></li>
-              <Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition>Términos y Condiciones</Link>
-              <Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition>Política de Cookies</Link>
-              <Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition>Tratamiento de Datos</Link>
+              <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Términos y Condiciones</Link></li>
+              <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Política de Cookies</Link></li>
+              <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Tratamiento de Datos</Link></li>
             </ul>
             <h3 className="font-semibold text-sm uppercase tracking-wider mb-3 text-surface-dark-foreground/80">Marcas</h3>
             <div className="flex flex-wrap gap-1.5">
