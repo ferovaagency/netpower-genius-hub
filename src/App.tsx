@@ -1,6 +1,7 @@
+import React from "react";
 import LegalPage from "./pages/LegalPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -24,6 +25,11 @@ import AboutPage from "./pages/AboutPage";
 import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
 import NotFound from "./pages/NotFound";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
+  return null;
+}
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,6 +42,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <div className="flex flex-col min-h-screen">
+                <ScrollToTop />
                 <Header />
                 <main className="flex-1">
                   <Routes>
