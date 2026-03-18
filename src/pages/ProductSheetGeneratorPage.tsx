@@ -51,7 +51,7 @@ export default function ProductSheetGeneratorPage() {
 
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState(DEFAULT_PRODUCT_CATEGORY);
+  const [category, setCategory] = useState<string>(DEFAULT_PRODUCT_CATEGORY);
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
