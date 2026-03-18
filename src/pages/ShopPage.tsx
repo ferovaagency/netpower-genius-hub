@@ -1,8 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { SlidersHorizontal, X, Search } from "lucide-react";
-import { products, categories, brands } from "@/data/store-data";
+import { categories, brands } from "@/data/store-data";
+import { fetchAllProducts } from "@/hooks/useProducts";
+import type { Product } from "@/types/store";
 import ProductCard from "@/components/store/ProductCard";
 
 type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
@@ -15,10 +17,19 @@ export default function ShopPage() {
   const [selectedBrand, setSelectedBrand] = useState("");
   const [sort, setSort] = useState<SortOption>("relevance");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(queryParam);
+ const [searchQuery, setSearchQuery] = useState(queryParam);
+const [allProducts, setAllProducts] = useState<Product[]>([]);
+const [loadingProducts, setLoadingProducts] = useState(true);
+
+useEffect(() => {
+  fetchAllProducts()
+    .then(data => { if (data && data.length > 0) setAllProducts(data.filter(p => p.active)); })
+    .catch(() => {})
+    .finally(() => setLoadingProducts(false));
+}, []);
 
   const filtered = useMemo(() => {
-    let list = products.filter(p => p.active);
+    let list = allProducts;
     if (searchQuery.trim().length > 1) {
       const q = searchQuery.toLowerCase();
       list = list.filter(p =>
@@ -153,7 +164,11 @@ export default function ShopPage() {
 
           {/* Products grid */}
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground mb-4">{filtered.length} productos encontrados</p>
+         {loadingProducts ? (
+  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    {[...Array(6)].map((_, i) => <div key={i} className="h-72 rounded-xl bg-muted animate-pulse" />)}
+  </div>
+) : <p className="text-sm text-muted-foreground mb-4">{filtered.length} productos encontrados</p>}
             {filtered.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {filtered.map(p => <ProductCard key={p.id} product={p} />)}
