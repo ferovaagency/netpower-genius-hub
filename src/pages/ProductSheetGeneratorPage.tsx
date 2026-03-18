@@ -110,7 +110,7 @@ export default function ProductSheetGeneratorPage() {
     const cat = categories.find((c) => c.id === p.categoryId);
     const br = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
-    setCategory(cat?.name || "");
+    setCategory(cat?.name || DEFAULT_PRODUCT_CATEGORY);
 
     const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
