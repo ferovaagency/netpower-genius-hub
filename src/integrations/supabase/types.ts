@@ -14,7 +14,215 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      availability_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          items: Json
+          status: string
+          suggested_products: Json
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          status?: string
+          suggested_products?: Json
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          status?: string
+          suggested_products?: Json
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          city: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          availability_request_id: string | null
+          created_at: string
+          customer_city: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          items: Json
+          payment_provider: string | null
+          payment_reference: string | null
+          payment_url: string | null
+          reference: string
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          availability_request_id?: string | null
+          created_at?: string
+          customer_city?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          payment_provider?: string | null
+          payment_reference?: string | null
+          payment_url?: string | null
+          reference: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          availability_request_id?: string | null
+          created_at?: string
+          customer_city?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          payment_provider?: string | null
+          payment_reference?: string | null
+          payment_url?: string | null
+          reference?: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_availability_request_id_fkey"
+            columns: ["availability_request_id"]
+            isOneToOne: false
+            referencedRelation: "availability_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          condition: string | null
+          created_at: string
+          description: string | null
+          featured: boolean
+          id: string
+          images: string[]
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          price: number
+          reviews: Json
+          sale_price: number | null
+          short_description: string | null
+          sku: string | null
+          slug: string
+          specs: Json
+          stock: number
+          updated_at: string
+          warranty: string | null
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          images?: string[]
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          price?: number
+          reviews?: Json
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug: string
+          specs?: Json
+          stock?: number
+          updated_at?: string
+          warranty?: string | null
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          images?: string[]
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          price?: number
+          reviews?: Json
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string
+          specs?: Json
+          stock?: number
+          updated_at?: string
+          warranty?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
