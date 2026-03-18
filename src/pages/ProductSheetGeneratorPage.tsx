@@ -24,6 +24,7 @@ import {
   setProductActiveDB,
   fetchAllProducts,
 } from "@/hooks/useProducts";
+import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY } from "@/lib/catalog";
 import { generateSlug } from "@/lib/slug";
 
 interface SpecEntry {
@@ -50,7 +51,7 @@ export default function ProductSheetGeneratorPage() {
 
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<string>(DEFAULT_PRODUCT_CATEGORY);
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
@@ -109,7 +110,7 @@ export default function ProductSheetGeneratorPage() {
     const cat = categories.find((c) => c.id === p.categoryId);
     const br = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
-    setCategory(cat?.name || "");
+    setCategory(cat?.name || DEFAULT_PRODUCT_CATEGORY);
 
     const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
@@ -207,11 +208,10 @@ export default function ProductSheetGeneratorPage() {
 
     try {
       const detectedBrand = (result as any).detectedBrand;
-      const detectedCategory = (result as any).detectedCategory;
 
       const selectedCategory =
         categories.find((c) => c.name === category) ||
-        categories.find((c) => c.name === detectedCategory) ||
+        categories.find((c) => c.name === DEFAULT_PRODUCT_CATEGORY) ||
         categories[0];
       const selectedBrand =
         brands.find((b) => b.name === brand) ||
@@ -324,7 +324,7 @@ export default function ProductSheetGeneratorPage() {
   const resetForm = async () => {
     setProductName("");
     setBrand("");
-    setCategory("");
+    setCategory(DEFAULT_PRODUCT_CATEGORY);
     setSku("");
     setPrice("");
     setSalePrice("");
@@ -477,9 +477,8 @@ export default function ProductSheetGeneratorPage() {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                     >
-                      <option value="">Auto-detectar IA</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                      {ALLOWED_PRODUCT_CATEGORIES.map((categoryOption) => (
+                        <option key={categoryOption} value={categoryOption}>{categoryOption}</option>
                       ))}
                     </select>
                   </div>

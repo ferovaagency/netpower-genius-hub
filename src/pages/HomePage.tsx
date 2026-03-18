@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
 import { categories, brands, products } from "@/data/store-data";
+import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
+import { getParentCategory } from "@/lib/catalog";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ctaBanner from "@/assets/cta-banner.jpg";
 
@@ -13,6 +16,42 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 export default function HomePage() {
   const featured = products.filter((p) => p.featured);
   const { openChat } = useChat();
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
+    Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCategoryCounts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("category, active")
+        .eq("active", true);
+
+      if (error || !data || cancelled) return;
+
+      const nextCounts = Object.fromEntries(categories.map((category) => [category.name, 0])) as Record<string, number>;
+
+      data.forEach((product) => {
+        const normalizedCategory = getParentCategory(product.category);
+        nextCounts[normalizedCategory] = (nextCounts[normalizedCategory] ?? 0) + 1;
+      });
+
+      setCategoryCounts(nextCounts);
+    };
+
+    void loadCategoryCounts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categoriesWithCounts = categories.map((category) => ({
+    ...category,
+    productCount: categoryCounts[category.name] ?? 0,
+  }));
 
   return (
     <>
@@ -76,7 +115,7 @@ export default function HomePage() {
             <p className="text-muted-foreground mt-2 text-sm">Todo para tu infraestructura TIC</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categories.map((cat, i) =>
+            {categoriesWithCounts.map((cat, i) =>
             <motion.div key={cat.id} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.04 }}>
                 <Link to={`/tienda?categoria=${cat.slug}`} className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-card-hover transition-all">
                   <span className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-primary shrink-0">

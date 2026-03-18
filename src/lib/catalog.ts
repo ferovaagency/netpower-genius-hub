@@ -1,10 +1,15 @@
-export const ALLOWED_PRODUCT_CATEGORIES = ["Computadores", "Licenciamiento", "Servidores"] as const;
+export const ALLOWED_PRODUCT_CATEGORIES = [
+  "Baterías Para UPS",
+  "UPS y Accesorios",
+  "Infraestructura TIC",
+  "Energía Solar",
+  "Servidores",
+  "Licencias",
+  "Monitores",
+  "Accesorios",
+] as const;
 
-const CATEGORY_KEYWORDS: Record<(typeof ALLOWED_PRODUCT_CATEGORIES)[number], string[]> = {
-  Computadores: ["computador", "portatil", "laptop", "desktop", "pc", "all in one", "monitor", "teclado", "mouse"],
-  Licenciamiento: ["licencia", "licenciamiento", "software", "microsoft 365", "office", "windows", "antivirus", "suscripcion"],
-  Servidores: ["servidor", "server", "rack", "xeon", "poweredge", "proliant", "blade"],
-};
+export const DEFAULT_PRODUCT_CATEGORY = "Accesorios" as const;
 
 const normalize = (value: string) =>
   value
@@ -13,18 +18,21 @@ const normalize = (value: string) =>
     .replace(/\p{Diacritic}/gu, "")
     .trim();
 
+const CATEGORY_BY_NORMALIZED = Object.fromEntries(
+  ALLOWED_PRODUCT_CATEGORIES.map((category) => [normalize(category), category]),
+) as Record<string, (typeof ALLOWED_PRODUCT_CATEGORIES)[number]>;
+
+export const isAllowedProductCategory = (value: string | null | undefined): value is (typeof ALLOWED_PRODUCT_CATEGORIES)[number] => {
+  if (!value) return false;
+  return normalize(value) in CATEGORY_BY_NORMALIZED;
+};
+
 export const getParentCategory = (...values: Array<string | null | undefined>) => {
-  const haystack = normalize(values.filter(Boolean).join(" "));
-
-  for (const category of ALLOWED_PRODUCT_CATEGORIES) {
-    if (normalize(category) === haystack) return category;
+  for (const value of values) {
+    if (!value) continue;
+    const exactMatch = CATEGORY_BY_NORMALIZED[normalize(value)];
+    if (exactMatch) return exactMatch;
   }
 
-  for (const category of ALLOWED_PRODUCT_CATEGORIES) {
-    if (CATEGORY_KEYWORDS[category].some((keyword) => haystack.includes(normalize(keyword)))) {
-      return category;
-    }
-  }
-
-  return "Computadores";
+  return DEFAULT_PRODUCT_CATEGORY;
 };
