@@ -24,6 +24,7 @@ import {
   setProductActiveDB,
   fetchAllProducts,
 } from "@/hooks/useProducts";
+import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY } from "@/lib/catalog";
 import { generateSlug } from "@/lib/slug";
 
 interface SpecEntry {
@@ -50,7 +51,7 @@ export default function ProductSheetGeneratorPage() {
 
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(DEFAULT_PRODUCT_CATEGORY);
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
