@@ -324,7 +324,7 @@ export default function ProductSheetGeneratorPage() {
   const resetForm = async () => {
     setProductName("");
     setBrand("");
-    setCategory("");
+    setCategory(DEFAULT_PRODUCT_CATEGORY);
     setSku("");
     setPrice("");
     setSalePrice("");
