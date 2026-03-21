@@ -23,10 +23,10 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadCategoryCounts = async () => {
+    const loadProducts = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("category, active")
+        .select("*")
         .eq("active", true);
 
       if (error || !data || cancelled) return;
@@ -39,9 +39,34 @@ export default function HomePage() {
       });
 
       setCategoryCounts(nextCounts);
+
+      // Featured products from DB
+      const feat = data.filter((p: any) => p.featured);
+      if (feat.length > 0) {
+        setFeaturedProducts(feat.map((r: any) => ({
+          id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
+          shortDesc: r.short_description ?? "", price: Number(r.price),
+          salePrice: r.sale_price ? Number(r.sale_price) : null,
+          sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+          categoryId: r.category ?? "", brandId: r.brand ?? "",
+          specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
+          active: true, featured: true,
+        })));
+      } else {
+        // Fallback: show first 8 DB products
+        setFeaturedProducts(data.slice(0, 8).map((r: any) => ({
+          id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
+          shortDesc: r.short_description ?? "", price: Number(r.price),
+          salePrice: r.sale_price ? Number(r.sale_price) : null,
+          sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+          categoryId: r.category ?? "", brandId: r.brand ?? "",
+          specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
+          active: true, featured: false,
+        })));
+      }
     };
 
-    void loadCategoryCounts();
+    void loadProducts();
 
     return () => {
       cancelled = true;
