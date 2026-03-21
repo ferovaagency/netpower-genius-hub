@@ -248,7 +248,7 @@ export default function ProductDetailPage() {
                   </a>
                 )}
 
-                <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex flex-wrap gap-3 mb-4">
                   <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
                     <FileText className="w-4 h-4" /> Solicitar cotización
                   </button>
