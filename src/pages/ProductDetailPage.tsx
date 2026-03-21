@@ -1,21 +1,68 @@
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useState } from "react";
-import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe } from "lucide-react";
-import { products, categories, brands, formatCOP, getDiscountPercentage, findProductBySlug } from "@/data/store-data";
+import { useState, useEffect } from "react";
+import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe, Loader2 } from "lucide-react";
+import { products as staticProducts, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
+import { fetchProductBySlug, fetchAllProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
+import type { Product } from "@/types/store";
 import ProductCard from "@/components/store/ProductCard";
 
 const WHATSAPP_NUMBER = "573018417895";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const product = findProductBySlug(slug || "");
   const { addItem } = useCart();
   const { openChat } = useChat();
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "warranty" | "shipping">("desc");
+  const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) { setLoading(false); return; }
+
+    const load = async () => {
+      setLoading(true);
+      setQty(1);
+
+      // 1. Try Supabase
+      let found = await fetchProductBySlug(slug).catch(() => null);
+
+      // 2. Fallback to static data
+      if (!found) {
+        const staticMatch = staticProducts.find(p => p.slug === slug);
+        if (staticMatch) found = staticMatch;
+      }
+
+      setProduct(found);
+
+      // Load related products
+      if (found) {
+        const allDb = await fetchAllProducts().catch(() => []);
+        const pool = allDb.length > 0 ? allDb : staticProducts;
+        setRelated(
+          pool
+            .filter(p => p.active && p.categoryId === found!.categoryId && p.id !== found!.id)
+            .slice(0, 4)
+        );
+      }
+
+      setLoading(false);
+    };
+
+    load();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!product) {
     const waMessage = encodeURIComponent(`Hola NetPower IT, estoy buscando el producto "${slug}" pero no lo encuentro en la tienda. ¿Está disponible?`);
@@ -38,11 +85,14 @@ export default function ProductDetailPage() {
     );
   }
 
-  const category = categories.find(c => c.id === product.categoryId);
-  const brand = brands.find(b => b.id === product.brandId);
+  // For DB products, categoryId holds the category name text (e.g. "Accesorios")
+  // For static products, categoryId is an ID that maps to categories array
+  const category = categories.find(c => c.id === product.categoryId || c.name === product.categoryId);
+  const brand = brands.find(b => b.id === product.brandId || b.name === product.brandId);
+  const categoryName = category?.name || product.categoryId || "";
+  const brandName = brand?.name || product.brandId || "";
+  const isServer = categoryName.toLowerCase().includes("servidor");
   const discount = getDiscountPercentage(product.price, product.salePrice);
-  const related = products.filter(p => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4);
-  const isServer = category?.slug === "servidores";
 
   const tabs = [
     { key: "desc", label: "Descripción" },
@@ -56,8 +106,8 @@ export default function ProductDetailPage() {
   return (
     <>
       <Helmet>
-        <title>{product.metaTitle}</title>
-        <meta name="description" content={product.metaDesc} />
+        <title>{product.metaTitle || product.name}</title>
+        <meta name="description" content={product.metaDesc || product.shortDesc} />
         <link rel="canonical" href={`https://netpowerit.co/producto/${product.slug}`} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -65,7 +115,7 @@ export default function ProductDetailPage() {
           name: product.name,
           description: product.description,
           sku: product.sku,
-          brand: { "@type": "Brand", name: brand?.name },
+          brand: brandName ? { "@type": "Brand", name: brandName } : undefined,
           offers: isServer ? undefined : {
             "@type": "Offer",
             price: (product.salePrice || product.price),
@@ -82,8 +132,8 @@ export default function ProductDetailPage() {
           <span>/</span>
           <Link to="/tienda" className="hover:text-primary transition">Tienda</Link>
           <span>/</span>
-          {category && <>
-            <Link to={`/tienda?categoria=${category.slug}`} className="hover:text-primary transition">{category.name}</Link>
+          {categoryName && <>
+            <span className="hover:text-primary transition">{categoryName}</span>
             <span>/</span>
           </>}
           <span className="text-foreground font-medium truncate">{product.name}</span>
@@ -115,16 +165,15 @@ export default function ProductDetailPage() {
           {/* Info */}
           <div className="flex flex-col">
             <div className="flex flex-wrap gap-2 mb-3">
-              {brand && <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold">{brand.name}</span>}
-              {category && <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs">{category.name}</span>}
-              <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-mono">SKU: {product.sku}</span>
+              {brandName && <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold">{brandName}</span>}
+              {categoryName && <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs">{categoryName}</span>}
+              {product.sku && <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-mono">SKU: {product.sku}</span>}
             </div>
 
             <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-2">{product.name}</h1>
             <p className="text-muted-foreground mb-6">{product.shortDesc}</p>
 
             {isServer ? (
-              /* Server: No price, WhatsApp CTA */
               <>
                 <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-semibold mb-6 flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
@@ -156,7 +205,6 @@ export default function ProductDetailPage() {
                 </div>
               </>
             ) : (
-              /* Normal product */
               <>
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="text-3xl font-extrabold text-foreground">{formatCOP(product.salePrice || product.price)}</span>
