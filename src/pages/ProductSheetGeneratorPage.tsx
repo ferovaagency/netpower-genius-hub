@@ -47,6 +47,7 @@ type TabMode = "create" | "edit";
 
 export default function ProductSheetGeneratorPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<TabMode>("create");
 
   const [productName, setProductName] = useState("");
