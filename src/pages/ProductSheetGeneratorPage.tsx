@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { categories, brands } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import GeneratedSheetResult from "@/components/admin/GeneratedSheetResult";
 import BulkProductImporter from "@/components/admin/BulkProductImporter";
