@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // ── APROBACIONES ──────────────────────────────────────────────
   const [requests, setRequests] = useState<any[]>([]);
