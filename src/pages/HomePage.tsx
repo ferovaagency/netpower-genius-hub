@@ -14,8 +14,8 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
 export default function HomePage() {
-  const featured = products.filter((p) => p.featured);
   const { openChat } = useChat();
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
   );
