@@ -94,6 +94,14 @@
     font-size: 17px;
     line-height: 1.7;
   }
+  main.flex-1 > * {
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  main.flex-1 > section {
+    max-width: 100%;
+  }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
   }

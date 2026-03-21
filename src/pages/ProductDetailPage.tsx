@@ -147,9 +147,9 @@ export default function ProductDetailPage() {
         )}
 
         {/* Product */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-10">
           {/* Image */}
-          <div className="bg-card rounded-2xl border border-border shadow-card p-8 flex items-center justify-center aspect-square relative overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-card p-6 flex items-center justify-center aspect-square relative overflow-hidden max-h-[420px]">
             {product.images && product.images.length > 0 && product.images[0] ? (
               <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain" />
             ) : (
@@ -248,7 +248,7 @@ export default function ProductDetailPage() {
                   </a>
                 )}
 
-                <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex flex-wrap gap-3 mb-4">
                   <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
                     <FileText className="w-4 h-4" /> Solicitar cotización
                   </button>
@@ -293,7 +293,7 @@ export default function ProductDetailPage() {
           <div className="py-8">
             {activeTab === "desc" && (
               <div
-                className="prose prose-sm max-w-3xl text-muted-foreground
+                className="prose prose-sm max-w-none text-muted-foreground
                   [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-6 [&_h2]:mb-3
                   [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-5 [&_h3]:mb-2
                   [&_h4]:text-base [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-4 [&_h4]:mb-1.5

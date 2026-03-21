@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // ── APROBACIONES ──────────────────────────────────────────────
   const [requests, setRequests] = useState<any[]>([]);
@@ -264,6 +266,9 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2">
                             <button onClick={() => toggleProduct(p.id, p.active)} className="text-xs px-2 py-1 rounded-lg border border-border hover:bg-accent transition">
                               {p.active ? "Desactivar" : "Activar"}
+                            </button>
+                            <button onClick={() => navigate(`/admin/generador-fichas?edit=${p.slug}`)} className="p-1.5 rounded-lg hover:bg-accent transition text-primary" title="Editar">
+                              <Pencil className="w-4 h-4" />
                             </button>
                             <button onClick={() => window.open(`/producto/${p.slug}`, "_blank")} className="p-1.5 rounded-lg hover:bg-accent transition text-muted-foreground">
                               <Eye className="w-4 h-4" />

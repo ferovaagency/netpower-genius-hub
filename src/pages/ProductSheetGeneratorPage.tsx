@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Sparkles,
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { categories, brands } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import GeneratedSheetResult from "@/components/admin/GeneratedSheetResult";
 import BulkProductImporter from "@/components/admin/BulkProductImporter";
@@ -23,6 +23,7 @@ import {
   deleteProductDB,
   setProductActiveDB,
   fetchAllProducts,
+  fetchProductBySlug,
 } from "@/hooks/useProducts";
 import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY } from "@/lib/catalog";
 import { generateSlug } from "@/lib/slug";
@@ -47,6 +48,7 @@ type TabMode = "create" | "edit";
 
 export default function ProductSheetGeneratorPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<TabMode>("create");
 
   const [productName, setProductName] = useState("");
@@ -67,6 +69,18 @@ export default function ProductSheetGeneratorPage() {
   const [editSearch, setEditSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
+
+  // Auto-load product when navigating from admin with ?edit=slug
+  useEffect(() => {
+    const editSlug = searchParams.get("edit");
+    if (!editSlug) return;
+    setTab("edit");
+    (async () => {
+      const product = await fetchProductBySlug(editSlug);
+      if (product) loadProduct(product);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addSpec = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
   const removeSpec = (i: number) => setSpecEntries(specEntries.filter((_, idx) => idx !== i));

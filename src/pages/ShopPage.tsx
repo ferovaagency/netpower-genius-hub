@@ -39,15 +39,21 @@ useEffect(() => {
         p.description.toLowerCase().includes(q)
       );
     }
-    if (selectedCategory) list = list.filter(p => categories.find(c => c.id === p.categoryId)?.slug === selectedCategory);
-    if (selectedBrand) list = list.filter(p => brands.find(b => b.id === p.brandId)?.slug === selectedBrand);
+    if (selectedCategory) list = list.filter(p => {
+      const cat = categories.find(c => c.id === p.categoryId || c.name === p.categoryId);
+      return cat?.slug === selectedCategory;
+    });
+    if (selectedBrand) list = list.filter(p => {
+      const br = brands.find(b => b.id === p.brandId || b.name === p.brandId);
+      return br?.slug === selectedBrand;
+    });
 
     switch (sort) {
       case "price-asc": return [...list].sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
       case "price-desc": return [...list].sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
       default: return list;
     }
-  }, [selectedCategory, selectedBrand, sort, searchQuery]);
+  }, [allProducts, selectedCategory, selectedBrand, sort, searchQuery]);
 
   const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); setSearchQuery(""); };
 
