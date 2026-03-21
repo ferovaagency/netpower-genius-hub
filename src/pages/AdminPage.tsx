@@ -267,6 +267,9 @@ export default function AdminPage() {
                             <button onClick={() => toggleProduct(p.id, p.active)} className="text-xs px-2 py-1 rounded-lg border border-border hover:bg-accent transition">
                               {p.active ? "Desactivar" : "Activar"}
                             </button>
+                            <button onClick={() => navigate(`/admin/generador-fichas?edit=${p.slug}`)} className="p-1.5 rounded-lg hover:bg-accent transition text-primary" title="Editar">
+                              <Pencil className="w-4 h-4" />
+                            </button>
                             <button onClick={() => window.open(`/producto/${p.slug}`, "_blank")} className="p-1.5 rounded-lg hover:bg-accent transition text-muted-foreground">
                               <Eye className="w-4 h-4" />
                             </button>
