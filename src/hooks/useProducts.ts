@@ -25,22 +25,22 @@ const mapRow = (row: any): Product => ({
 
 // Convierte camelCase del tipo Product → snake_case para Supabase
 const mapToRow = (p: Partial<Product>) => ({
-  ...(p.slug        !== undefined && { slug:        p.slug }),
-  ...(p.name        !== undefined && { name:        p.name }),
-  ...(p.description !== undefined && { description: p.description }),
-  ...(p.shortDesc   !== undefined && { short_desc:  p.shortDesc }),
-  ...(p.price       !== undefined && { price:       p.price }),
-  ...(p.salePrice   !== undefined && { sale_price:  p.salePrice }),
-  ...(p.sku         !== undefined && { sku:         p.sku }),
-  ...(p.stock       !== undefined && { stock:       p.stock }),
-  ...(p.images      !== undefined && { images:      p.images }),
-  ...(p.categoryId  !== undefined && { category_id: p.categoryId }),
-  ...(p.brandId     !== undefined && { brand_id:    p.brandId }),
-  ...(p.specs       !== undefined && { specs:       p.specs }),
-  ...(p.metaTitle   !== undefined && { meta_title:  p.metaTitle }),
-  ...(p.metaDesc    !== undefined && { meta_desc:   p.metaDesc }),
-  ...(p.active      !== undefined && { active:      p.active }),
-  ...(p.featured    !== undefined && { featured:    p.featured }),
+  ...(p.slug        !== undefined && { slug:             p.slug }),
+  ...(p.name        !== undefined && { name:             p.name }),
+  ...(p.description !== undefined && { description:      p.description }),
+  ...(p.shortDesc   !== undefined && { short_description: p.shortDesc }),
+  ...(p.price       !== undefined && { price:            p.price }),
+  ...(p.salePrice   !== undefined && { sale_price:       p.salePrice }),
+  ...(p.sku         !== undefined && { sku:              p.sku }),
+  ...(p.stock       !== undefined && { stock:            p.stock }),
+  ...(p.images      !== undefined && { images:           p.images }),
+  ...(p.categoryId  !== undefined && { category:         p.categoryId }),
+  ...(p.brandId     !== undefined && { brand:            p.brandId }),
+  ...(p.specs       !== undefined && { specs:            p.specs }),
+  ...(p.metaTitle   !== undefined && { meta_title:       p.metaTitle }),
+  ...(p.metaDesc    !== undefined && { meta_description: p.metaDesc }),
+  ...(p.active      !== undefined && { active:           p.active }),
+  ...(p.featured    !== undefined && { featured:         p.featured }),
 });
 
 // ─── Hook principal ───────────────────────────────────────────────────────────
