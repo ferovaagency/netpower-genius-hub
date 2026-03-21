@@ -69,6 +69,18 @@ export default function ProductSheetGeneratorPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
 
+  // Auto-load product when navigating from admin with ?edit=slug
+  useEffect(() => {
+    const editSlug = searchParams.get("edit");
+    if (!editSlug) return;
+    setTab("edit");
+    (async () => {
+      const product = await fetchProductBySlug(editSlug);
+      if (product) loadProduct(product);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const addSpec = () => setSpecEntries([...specEntries, { key: "", value: "" }]);
   const removeSpec = (i: number) => setSpecEntries(specEntries.filter((_, idx) => idx !== i));
   const updateSpec = (i: number, field: "key" | "value", val: string) => {
