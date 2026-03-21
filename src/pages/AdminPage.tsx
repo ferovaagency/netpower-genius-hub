@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const { toast } = useToast();
