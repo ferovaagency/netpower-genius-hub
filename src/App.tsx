@@ -26,6 +26,7 @@ import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
 import NotFound from "./pages/NotFound";
 import AdminPage from "./pages/AdminPage";
 import MyAccountPage from "./pages/MyAccountPage";
+import VCardNetpower from "./pages/VCardNetpower";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -62,6 +63,7 @@ const App = () => (
                     <Route path="/legal" element={<LegalPage />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/mi-cuenta" element={<MyAccountPage />} />
+                    <Route path="/contacto-digital" element={<VCardNetpower />} />
                   </Routes>
                 </main>
                 <Footer />
