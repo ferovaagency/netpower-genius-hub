@@ -23,7 +23,13 @@ export default function VCardNetpower() {
       return;
     }
 
-    // 1 — Descargar .vcf
+    // 1 — Abrir WhatsApp PRIMERO (inmediato al clic)
+    const mensaje = encodeURIComponent(
+      `Hola Ana María, soy ${nombre.trim()} fue un gusto conocerte, sigamos en contacto`
+    );
+    window.open(`https://wa.me/${info.whatsapp}?text=${mensaje}`, '_blank');
+
+    // 2 — Descargar .vcf al mismo tiempo
     const vcard = [
       'BEGIN:VCARD',
       'VERSION:3.0',
@@ -49,14 +55,6 @@ export default function VCardNetpower() {
     URL.revokeObjectURL(url);
 
     setListo(true);
-
-    // 2 — Abrir WhatsApp con mensaje prellenado después de 1.2s
-    setTimeout(() => {
-      const mensaje = encodeURIComponent(
-        `Hola Ana María, soy ${nombre.trim()} fue un gusto conocerte, sigamos en contacto`
-      );
-      window.open(`https://wa.me/${info.whatsapp}?text=${mensaje}`, '_blank');
-    }, 1200);
   };
 
   return (
@@ -64,12 +62,10 @@ export default function VCardNetpower() {
       style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #0d1529 50%, #0a0f1e 100%)' }}>
 
       <div className="w-full max-w-xs">
-
-        {/* Card */}
         <div className="rounded-3xl overflow-hidden shadow-2xl"
           style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(160deg, #0f1c38, #0a1428)' }}>
 
-          {/* Franja azul Netpower */}
+          {/* Franja azul */}
           <div className="h-20 relative"
             style={{ background: 'linear-gradient(135deg, #0f3460, #1a5276, #2980b9)' }}>
             <div className="absolute inset-0"
@@ -94,14 +90,12 @@ export default function VCardNetpower() {
           </div>
 
           <div className="px-6 pb-7">
-            {/* Nombre y cargo */}
             <div className="text-center mb-5">
               <h1 className="text-lg font-bold text-white mb-0.5">{info.nombre}</h1>
               <p className="text-sm font-semibold" style={{ color: '#2980b9' }}>{info.cargo}</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{info.empresa}</p>
             </div>
 
-            {/* Datos de contacto */}
             <div className="space-y-1.5 mb-5">
               {[
                 { icon: Phone, text: info.telefono, href: `tel:${info.telefono}` },
@@ -117,10 +111,8 @@ export default function VCardNetpower() {
               ))}
             </div>
 
-            {/* Separador */}
             <div className="mb-5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
 
-            {/* Campo nombre */}
             <div className="mb-3">
               <label className="block text-xs font-semibold mb-2 uppercase tracking-wider"
                 style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -145,7 +137,6 @@ export default function VCardNetpower() {
               )}
             </div>
 
-            {/* Botón principal */}
             <button
               onClick={handleAccion}
               disabled={listo}
@@ -155,34 +146,27 @@ export default function VCardNetpower() {
                   ? 'linear-gradient(135deg, #22c55e, #16a34a)'
                   : 'linear-gradient(135deg, #0f3460, #2980b9)',
                 color: 'white',
-                opacity: listo ? 0.9 : 1,
               }}
             >
-              {listo ? (
-                <><Check className="w-4 h-4" /> ¡Contacto guardado! Abriendo WhatsApp...</>
-              ) : (
-                <><Download className="w-4 h-4" /> Guardar contacto y escribirme</>
-              )}
+              {listo
+                ? <><Check className="w-4 h-4" /> ¡Listo! Revisa WhatsApp</>
+                : <><Download className="w-4 h-4" /> Guardar contacto y escribirme</>
+              }
             </button>
 
             <p className="text-center text-xs mt-3" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              Descarga el contacto y te abre WhatsApp automáticamente
+              Guarda el contacto y te abre WhatsApp al instante
             </p>
           </div>
         </div>
 
-        {/* Botón compartir */}
         <button
           onClick={() => {
             if (navigator.share) {
-              navigator.share({
-                title: 'Ana Maria Osorio — Netpower IT',
-                text: 'CEO de Netpower IT',
-                url: window.location.href,
-              });
+              navigator.share({ title: 'Ana Maria Osorio — Netpower IT', text: 'CEO de Netpower IT', url: window.location.href });
             } else {
               navigator.clipboard.writeText(window.location.href);
-              alert('¡Link copiado al portapapeles!');
+              alert('¡Link copiado!');
             }
           }}
           className="w-full mt-3 py-3 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-all hover:bg-white/5"
