@@ -27,5 +27,5 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-# Sitemap para ayudar a la indexación
+# Sitemap dinámico con productos actualizados
 Sitemap: https://netpowerit.co/sitemap.xml
