@@ -1,18 +1,13 @@
-# Optimización para Ferova Agency - Visibilidad en IA y Buscadores
-User-agent: *
+User-agent: Googlebot
 Allow: /
 
-# Permitir específicamente a los rastreadores de IA más relevantes
+User-agent: Bingbot
+Allow: /
+
 User-agent: GPTBot
 Allow: /
 
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Anthropic-ai
+User-agent: anthropic-ai
 Allow: /
 
 User-agent: Claude-Web
@@ -21,11 +16,14 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: YouBot
+User-agent: Google-Extended
 Allow: /
 
-User-agent: OAI-SearchBot
+User-agent: CCBot
 Allow: /
 
-# Sitemap dinámico con productos actualizados
+User-agent: *
+Allow: /
+Disallow: /admin
+
 Sitemap: https://netpowerit.co/sitemap.xml

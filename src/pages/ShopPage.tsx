@@ -98,9 +98,24 @@ useEffect(() => {
   return (
     <>
       <Helmet>
-        <title>Tienda – Productos de Tecnología TIC | NetPower IT</title>
-        <meta name="description" content="Explora nuestro catálogo de UPS, baterías, servidores, infraestructura de red, energía solar, monitores y accesorios. Envío a todo Colombia." />
+        <title>Tienda de Tecnología TIC | Computadores, Servidores, Redes — Netpower IT</title>
+        <meta name="description" content="Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá." />
         <link rel="canonical" href="https://netpowerit.co/tienda" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "@id": "https://netpowerit.co/tienda#page",
+          "name": "Tienda TIC — Netpower IT",
+          "description": "Computadores, servidores, redes e impresoras para empresas en Colombia",
+          "url": "https://netpowerit.co/tienda",
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Inicio","item":"https://netpowerit.co"},
+              {"@type":"ListItem","position":2,"name":"Tienda","item":"https://netpowerit.co/tienda"}
+            ]
+          }
+        })}</script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">

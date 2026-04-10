@@ -112,16 +112,20 @@ export default function ProductDetailPage() {
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
-          name: product.name,
-          description: product.description,
-          sku: product.sku,
-          brand: brandName ? { "@type": "Brand", name: brandName } : undefined,
-          offers: isServer ? undefined : {
+          "@id": `https://netpowerit.co/producto/${product.slug}#product`,
+          "name": product.name,
+          "description": product.description || product.shortDesc,
+          "sku": product.sku,
+          "brand": { "@type": "Brand", "name": brandName || "Netpower IT" },
+          "image": product.images?.[0] || "https://netpowerit.co/favicon.ico",
+          "offers": {
             "@type": "Offer",
-            price: (product.salePrice || product.price),
-            priceCurrency: "COP",
-            availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-          },
+            "url": `https://netpowerit.co/producto/${product.slug}`,
+            "priceCurrency": "COP",
+            "price": product.salePrice || product.price || "0",
+            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
+          }
         })}</script>
       </Helmet>
 
