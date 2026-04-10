@@ -6,9 +6,24 @@ export default function ContactPage() {
   return (
     <>
       <Helmet>
-        <title>Contacto – Netpower IT Colombia</title>
-        <meta name="description" content="Contáctanos para asesoría en tecnología TIC. Teléfono, email y WhatsApp disponibles." />
+        <title>Contacto | Netpower IT — Tecnología TIC en Bogotá Colombia</title>
+        <meta name="description" content="Contáctenos para cotizar computadores, servidores y equipos de red para su empresa en Colombia. Asesoría especializada TIC." />
         <link rel="canonical" href="https://netpowerit.co/contacto" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "@id": "https://netpowerit.co/contacto#page",
+          "name": "Contacto — Netpower IT",
+          "url": "https://netpowerit.co/contacto",
+          "description": "Contáctenos para asesoría en tecnología TIC para empresas en Colombia",
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Inicio","item":"https://netpowerit.co"},
+              {"@type":"ListItem","position":2,"name":"Contacto","item":"https://netpowerit.co/contacto"}
+            ]
+          }
+        })}</script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">
