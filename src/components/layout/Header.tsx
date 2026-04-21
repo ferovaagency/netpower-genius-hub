@@ -223,8 +223,8 @@ export default function Header() {
                   </Link>
               )}
               </div>
-              <a href="tel:+573018417895" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
-                <Phone className="w-4 h-4" /> +57 301 841 7895
+              <a href="tel:+573018417896" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
+                <Phone className="w-4 h-4" /> +57 301 841 7896
               </a>
               <button
               onClick={() => openChat("quote")}
