@@ -27,7 +27,8 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
-        .eq("active", true);
+        .eq("active", true)
+        .order("created_at", { ascending: false });
 
       if (error || !data || cancelled) return;
 
@@ -40,30 +41,16 @@ export default function HomePage() {
 
       setCategoryCounts(nextCounts);
 
-      // Featured products from DB
-      const feat = data.filter((p: any) => p.featured);
-      if (feat.length > 0) {
-        setFeaturedProducts(feat.map((r: any) => ({
-          id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
-          shortDesc: r.short_description ?? "", price: Number(r.price),
-          salePrice: r.sale_price ? Number(r.sale_price) : null,
-          sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
-          categoryId: r.category ?? "", brandId: r.brand ?? "",
-          specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
-          active: true, featured: true,
-        })));
-      } else {
-        // Fallback: show first 8 DB products
-        setFeaturedProducts(data.slice(0, 8).map((r: any) => ({
-          id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
-          shortDesc: r.short_description ?? "", price: Number(r.price),
-          salePrice: r.sale_price ? Number(r.sale_price) : null,
-          sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
-          categoryId: r.category ?? "", brandId: r.brand ?? "",
-          specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
-          active: true, featured: false,
-        })));
-      }
+      // Featured = los últimos 8 productos subidos (ordenados por created_at desc)
+      setFeaturedProducts(data.slice(0, 8).map((r: any) => ({
+        id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
+        shortDesc: r.short_description ?? "", price: Number(r.price),
+        salePrice: r.sale_price ? Number(r.sale_price) : null,
+        sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+        categoryId: r.category ?? "", brandId: r.brand ?? "",
+        specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
+        active: true, featured: r.featured ?? false,
+      })));
     };
 
     void loadProducts();
@@ -194,16 +181,21 @@ export default function HomePage() {
       <section className="py-14 bg-background">
         <div className="container mx-auto px-6">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Marcas que Distribuimos</h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            {brands.map((b) =>
-            <Link
-              key={b.id}
-              to={`/tienda?marca=${b.slug}`}
-              className="px-5 py-3 rounded-lg bg-card border border-border/60 hover:border-primary/40 hover:shadow-card-hover transition-all flex items-center justify-center group">
-              
-                <span className="font-bold text-xs text-muted-foreground group-hover:text-primary transition tracking-wide uppercase">{b.name}</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {brands.filter((b) => b.logo).map((brand) => (
+              <Link
+                key={brand.id}
+                to={`/tienda?marca=${brand.slug}`}
+                className="flex items-center justify-center p-4 bg-card rounded-xl border border-border hover:border-primary hover:shadow-card-hover transition-all h-20"
+              >
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  className="max-h-10 max-w-[120px] object-contain filter grayscale hover:grayscale-0 transition-all"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
               </Link>
-            )}
+            ))}
           </div>
         </div>
       </section>
