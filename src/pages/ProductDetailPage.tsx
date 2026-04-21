@@ -208,6 +208,34 @@ export default function ProductDetailPage() {
                   <p className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Servicio en toda Colombia e internacional</p>
                 </div>
               </>
+            ) : (!product.stock || product.stock === 0 || !product.price || product.price === 0) ? (
+              <>
+                <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-semibold mb-6 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  Consulte disponibilidad y precio
+                </div>
+
+                <a
+                  href={`https://wa.me/573018417896?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
+                >
+                  <Phone className="w-5 h-5" /> Cotizar por WhatsApp
+                </a>
+
+                <button
+                  onClick={() => openChat("quote")}
+                  className="w-full h-12 rounded-lg border-2 border-primary text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition mb-6"
+                >
+                  <FileText className="w-5 h-5" /> Solicitar cotización formal
+                </button>
+
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-primary" /> Garantía oficial del fabricante</p>
+                  <p className="flex items-center gap-2"><Truck className="w-4 h-4 text-primary" /> Envío a todo Colombia</p>
+                </div>
+              </>
             ) : (
               <>
                 <div className="flex items-baseline gap-3 mb-2">
@@ -216,41 +244,30 @@ export default function ProductDetailPage() {
                     <span className="text-lg text-muted-foreground line-through">{formatCOP(product.price)}</span>
                   )}
                 </div>
-                <p className={`text-sm font-medium mb-6 ${product.stock > 5 ? "text-success" : product.stock > 0 ? "text-secondary" : "text-destructive"}`}>
-                  {product.stock > 5 ? "✓ En stock" : product.stock > 0 ? `⚠ Solo ${product.stock} disponibles` : "✕ Agotado"}
+                <p className={`text-sm font-medium mb-6 ${product.stock > 5 ? "text-success" : "text-secondary"}`}>
+                  {product.stock > 5 ? "✓ En stock" : `⚠ Solo ${product.stock} disponibles`}
                 </p>
 
-                {product.stock > 0 ? (
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                      <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
-                      <button
-                        onClick={() => setQty(Math.min(product.stock, qty + 1))}
-                        className="w-10 h-10 flex items-center justify-center hover:bg-muted transition"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
                     <button
-                      onClick={() => addItem(product, qty)}
-                      className="flex-1 h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                      onClick={() => setQty(Math.min(product.stock, qty + 1))}
+                      className="w-10 h-10 flex items-center justify-center hover:bg-muted transition"
                     >
-                      <ShoppingCart className="w-5 h-5" /> Agregar al carrito
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                ) : (
-                  <a
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-4"
+                  <button
+                    onClick={() => addItem(product, qty)}
+                    className="flex-1 h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
                   >
-                    <MessageCircle className="w-5 h-5" /> Preguntar disponibilidad por WhatsApp
-                  </a>
-                )}
+                    <ShoppingCart className="w-5 h-5" /> Agregar al carrito
+                  </button>
+                </div>
 
                 <div className="flex flex-wrap gap-3 mb-4">
                   <button onClick={() => openChat("quote")} className="flex-1 h-10 rounded-lg border-2 border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition">
