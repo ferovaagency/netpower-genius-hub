@@ -2,6 +2,25 @@ import { Product, Category, Brand } from "@/types/store";
 import { Battery, Zap, Network, Sun, Server, FileKey, Monitor, Cable } from "lucide-react";
 import { createElement } from "react";
 
+import apcLogo from "@/assets/brands/apc.png";
+import cdpLogo from "@/assets/brands/cdp.png";
+import powestLogo from "@/assets/brands/powest.png";
+import hpLogo from "@/assets/brands/hp.png";
+import samsungLogo from "@/assets/brands/samsung.png";
+import logitechLogo from "@/assets/brands/logitech.png";
+import dahuaLogo from "@/assets/brands/dahua.png";
+import hikvisionLogo from "@/assets/brands/hikvision.png";
+import adataLogo from "@/assets/brands/adata.png";
+import aocLogo from "@/assets/brands/aoc.png";
+import brotherLogo from "@/assets/brands/brother.png";
+import targusLogo from "@/assets/brands/targus.png";
+import wattanaLogo from "@/assets/brands/wattana.png";
+import geniusLogo from "@/assets/brands/genius.png";
+import caixunLogo from "@/assets/brands/caixun.png";
+import xkimLogo from "@/assets/brands/xkim.png";
+import satLogo from "@/assets/brands/sat.png";
+import nstarLogo from "@/assets/brands/3nstar.png";
+
 export const categories: Category[] = [
   { id: "1", slug: "baterias-ups", name: "Baterías Para UPS", description: "Baterías de reemplazo para UPS de todas las marcas", image: "", icon: "🔋", lucideIcon: createElement(Battery, { className: "w-4 h-4" }), productCount: 45 },
   { id: "2", slug: "ups-accesorios", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", lucideIcon: createElement(Zap, { className: "w-4 h-4" }), productCount: 68 },
@@ -14,26 +33,26 @@ export const categories: Category[] = [
 ];
 
 export const brands: Brand[] = [
-  { id: "1", slug: "apc", name: "APC", logo: "" },
-  { id: "2", slug: "cdp", name: "CDP", logo: "" },
-  { id: "3", slug: "powest", name: "Powest", logo: "" },
-  { id: "4", slug: "hp", name: "HP", logo: "" },
-  { id: "5", slug: "samsung", name: "Samsung", logo: "" },
-  { id: "6", slug: "logitech", name: "Logitech", logo: "" },
+  { id: "1", slug: "apc", name: "APC", logo: apcLogo },
+  { id: "2", slug: "cdp", name: "CDP", logo: cdpLogo },
+  { id: "3", slug: "powest", name: "Powest", logo: powestLogo },
+  { id: "4", slug: "hp", name: "HP", logo: hpLogo },
+  { id: "5", slug: "samsung", name: "Samsung", logo: samsungLogo },
+  { id: "6", slug: "logitech", name: "Logitech", logo: logitechLogo },
   { id: "7", slug: "epson", name: "Epson", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Epson_logo.svg/512px-Epson_logo.svg.png" },
-  { id: "8", slug: "dahua", name: "Dahua", logo: "" },
-  { id: "9", slug: "hikvision", name: "Hikvision", logo: "" },
-  { id: "10", slug: "adata", name: "ADATA", logo: "" },
-  { id: "11", slug: "aoc", name: "AOC", logo: "" },
-  { id: "12", slug: "brother", name: "Brother", logo: "" },
-  { id: "13", slug: "targus", name: "Targus", logo: "" },
-  { id: "14", slug: "wattana", name: "Wattana", logo: "" },
-  { id: "15", slug: "genius", name: "Genius", logo: "" },
-  { id: "16", slug: "caixun", name: "Caixun", logo: "" },
-  { id: "17", slug: "xkim", name: "Xkim", logo: "" },
+  { id: "8", slug: "dahua", name: "Dahua", logo: dahuaLogo },
+  { id: "9", slug: "hikvision", name: "Hikvision", logo: hikvisionLogo },
+  { id: "10", slug: "adata", name: "ADATA", logo: adataLogo },
+  { id: "11", slug: "aoc", name: "AOC", logo: aocLogo },
+  { id: "12", slug: "brother", name: "Brother", logo: brotherLogo },
+  { id: "13", slug: "targus", name: "Targus", logo: targusLogo },
+  { id: "14", slug: "wattana", name: "Wattana", logo: wattanaLogo },
+  { id: "15", slug: "genius", name: "Genius", logo: geniusLogo },
+  { id: "16", slug: "caixun", name: "Caixun", logo: caixunLogo },
+  { id: "17", slug: "xkim", name: "Xkim", logo: xkimLogo },
   { id: "18", slug: "microsoft", name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/512px-Microsoft_logo.svg.png" },
-  { id: "19", slug: "sat", name: "SAT", logo: "" },
-  { id: "20", slug: "3nstar", name: "3nStar", logo: "" },
+  { id: "19", slug: "sat", name: "SAT", logo: satLogo },
+  { id: "20", slug: "3nstar", name: "3nStar", logo: nstarLogo },
   { id: "21", slug: "dell", name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Dell_Logo.svg/512px-Dell_Logo.svg.png" },
   { id: "22", slug: "hpe", name: "HPE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Hewlett_Packard_Enterprise_logo.svg/512px-Hewlett_Packard_Enterprise_logo.svg.png" },
   { id: "23", slug: "kingston", name: "Kingston", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Kingston_Technology_logo.svg/512px-Kingston_Technology_logo.svg.png" },
