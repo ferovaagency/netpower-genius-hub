@@ -12,6 +12,7 @@ const menuCategories = categories.filter((c) => c.slug !== "servidores");
 const navLinks = [
 { label: "Inicio", to: "/" },
 { label: "Tienda", to: "/tienda" },
+{ label: "Quiénes Somos", to: "/nosotros" },
 { label: "Contacto", to: "/contacto" }];
 
 
@@ -48,10 +49,13 @@ export default function Header() {
     <header className="sticky top-0 z-50">
       {/* Top bar */}
       <div className="bg-surface-dark">
-        <div className="container mx-auto flex items-center justify-between py-1.5 px-6 text-xs text-surface-dark-foreground/80 font-medium">
+        <div className="container mx-auto flex items-center justify-between py-2 px-6 text-xs text-surface-dark-foreground/80 font-medium">
           <span>Envío a todo Colombia · Garantía oficial · Soporte técnico</span>
-          <a href="tel:+573018417895" className="hidden sm:flex items-center gap-1.5 text-secondary hover:text-primary transition">
-            <Phone className="w-3 h-3" /> +57 301 841 7895
+          <a
+            href="tel:+573018417896"
+            className="hidden sm:flex items-center gap-1.5 font-bold text-base md:text-lg text-white hover:text-secondary transition-colors tracking-wide"
+          >
+            <Phone className="w-4 h-4" /> +57 301 841 7896
           </a>
         </div>
       </div>
