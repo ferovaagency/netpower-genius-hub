@@ -20,7 +20,7 @@ export const brands: Brand[] = [
   { id: "4", slug: "hp", name: "HP", logo: "" },
   { id: "5", slug: "samsung", name: "Samsung", logo: "" },
   { id: "6", slug: "logitech", name: "Logitech", logo: "" },
-  { id: "7", slug: "epson", name: "Epson", logo: "" },
+  { id: "7", slug: "epson", name: "Epson", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Epson_logo.svg/512px-Epson_logo.svg.png" },
   { id: "8", slug: "dahua", name: "Dahua", logo: "" },
   { id: "9", slug: "hikvision", name: "Hikvision", logo: "" },
   { id: "10", slug: "adata", name: "ADATA", logo: "" },
@@ -31,6 +31,15 @@ export const brands: Brand[] = [
   { id: "15", slug: "genius", name: "Genius", logo: "" },
   { id: "16", slug: "caixun", name: "Caixun", logo: "" },
   { id: "17", slug: "xkim", name: "Xkim", logo: "" },
+  { id: "18", slug: "microsoft", name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/512px-Microsoft_logo.svg.png" },
+  { id: "19", slug: "sat", name: "SAT", logo: "" },
+  { id: "20", slug: "3nstar", name: "3nStar", logo: "" },
+  { id: "21", slug: "dell", name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Dell_Logo.svg/512px-Dell_Logo.svg.png" },
+  { id: "22", slug: "hpe", name: "HPE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Hewlett_Packard_Enterprise_logo.svg/512px-Hewlett_Packard_Enterprise_logo.svg.png" },
+  { id: "23", slug: "kingston", name: "Kingston", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Kingston_Technology_logo.svg/512px-Kingston_Technology_logo.svg.png" },
+  { id: "24", slug: "lenovo", name: "Lenovo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Lenovo_logo_2015.svg/512px-Lenovo_logo_2015.svg.png" },
+  { id: "25", slug: "teltonika", name: "Teltonika", logo: "https://teltonika-networks.com/wp-content/uploads/2022/01/Teltonika-Networks-Logo.png" },
+  { id: "26", slug: "vertiv", name: "Vertiv", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Vertiv_logo.svg/512px-Vertiv_logo.svg.png" },
 ];
 
 export const products = [];
