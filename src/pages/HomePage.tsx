@@ -135,7 +135,6 @@ export default function HomePage() {
                   </span>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm text-card-foreground group-hover:text-primary transition truncate">{cat.name}</h3>
-                    <p className="text-muted-foreground text-base">{cat.productCount} productos</p>
                   </div>
                 </Link>
               </motion.div>
