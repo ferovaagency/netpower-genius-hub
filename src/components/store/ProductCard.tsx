@@ -4,7 +4,7 @@ import { Product } from "@/types/store";
 import { formatCOP, getDiscountPercentage, categories } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
 
-const WHATSAPP_NUMBER = "573018417895";
+const WHATSAPP_NUMBER = "573018417896";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -13,6 +13,9 @@ export default function ProductCard({ product }: { product: Product }) {
   const isServer = category?.slug === "servidores";
   // Producto sin stock asignado o sin precio → mostrar "Consultar precio" en lugar de Agotado
   const needsQuote = !product.stock || product.stock === 0 || !product.price || product.price === 0;
+  const showQuote = isServer || needsQuote;
+
+  const waMessage = encodeURIComponent(`Hola Netpower IT, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`);
 
   return (
     <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">
@@ -24,19 +27,19 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="text-4xl">{category?.icon || "📦"}</div>
         )}
 
-        {!isServer && discount && (
+        {!showQuote && discount && (
           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
             -{discount}%
           </span>
         )}
 
-        {!isServer && product.stock <= 5 && product.stock > 0 && (
+        {!showQuote && product.stock <= 5 && product.stock > 0 && (
           <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-semibold animate-pulse-soft">
             Últimas unidades
           </span>
         )}
 
-        {isServer && (
+        {showQuote && (
           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold">
             Consultar precio
           </span>
@@ -64,8 +67,8 @@ export default function ProductCard({ product }: { product: Product }) {
         <p className="text-xs text-muted-foreground line-clamp-1">{product.shortDesc}</p>
 
         <div className="mt-auto pt-3">
-          {isServer ? (
-            <p className="text-sm font-semibold text-secondary">Precio a consultar</p>
+          {showQuote ? (
+            <p className="text-sm font-semibold text-secondary">Consulte disponibilidad y precio</p>
           ) : (
             <>
               <div className="flex items-baseline gap-2">
@@ -78,41 +81,30 @@ export default function ProductCard({ product }: { product: Product }) {
                   </span>
                 )}
               </div>
-              <p className={`text-xs mt-1 font-medium ${product.stock > 5 ? "text-success" : product.stock > 0 ? "text-secondary" : "text-destructive"}`}>
-                {product.stock > 5 ? "En stock" : product.stock > 0 ? `Solo ${product.stock} disponibles` : "Agotado"}
+              <p className={`text-xs mt-1 font-medium ${product.stock > 5 ? "text-success" : "text-secondary"}`}>
+                {product.stock > 5 ? "En stock" : `Solo ${product.stock} disponibles`}
               </p>
             </>
           )}
         </div>
 
-        {isServer ? (
+        {showQuote ? (
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 w-full h-10 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+            className="mt-3 w-full h-10 rounded-lg bg-success text-success-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
           >
-            <MessageCircle className="w-4 h-4" /> Cotizar
+            <MessageCircle className="w-4 h-4" /> Cotizar por WhatsApp
           </a>
         ) : (
-          product.stock > 0 ? (
-            <button
-              onClick={() => addItem(product)}
-              className="mt-3 w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Agregar al carrito
-            </button>
-          ) : (
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waStockMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 w-full h-10 rounded-lg bg-success text-success-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
-            >
-              <MessageCircle className="w-4 h-4" /> Consultar por WhatsApp
-            </a>
-          )
+          <button
+            onClick={() => addItem(product)}
+            className="mt-3 w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Agregar al carrito
+          </button>
         )}
       </div>
     </div>
