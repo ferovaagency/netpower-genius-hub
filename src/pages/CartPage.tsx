@@ -7,8 +7,8 @@ import { formatCOP, categories } from "@/data/store-data";
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
 
-  const iva = Math.round(totalPrice * 0.19);
-  const total = totalPrice + iva;
+  const subtotal = totalPrice;
+  const total = subtotal;
 
   return (
     <>
@@ -81,21 +81,20 @@ export default function CartPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium text-foreground">{formatCOP(totalPrice)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">IVA (19%)</span>
-                    <span className="font-medium text-foreground">{formatCOP(iva)}</span>
+                    <span className="font-medium text-foreground">{formatCOP(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Envío</span>
-                    <span className="text-sm text-success font-medium">Calcular en checkout</span>
+                    <span className="text-muted-foreground italic">A calcular</span>
                   </div>
                 </div>
                 <div className="border-t border-border pt-4 flex justify-between">
                   <span className="font-bold text-foreground">Total</span>
-                  <span className="text-xl font-extrabold text-foreground">{formatCOP(total)}</span>
+                  <span className="text-xl font-extrabold text-primary">{formatCOP(total)}</span>
                 </div>
+                <p className="text-[11px] text-muted-foreground">
+                  * Precios incluyen IVA. Envío se calcula al confirmar.
+                </p>
                 <Link to="/checkout" className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2">
                   Proceder al Pago <ArrowRight className="w-4 h-4" />
                 </Link>
