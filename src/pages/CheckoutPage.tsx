@@ -62,9 +62,46 @@ export default function CheckoutPage() {
 
     try {
       const orderRef = `ORD-${Date.now()}`;
-      let receiptUrl: string | null = null;
 
-      // 1. Subir comprobante si aplica
+      const orderItems = items.map((i) => ({
+        productId: i.product.id,
+        name: i.product.name,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.product.salePrice || i.product.price,
+      }));
+
+      const shippingAddress = {
+        address: form.address,
+        city: form.city,
+        department: form.department,
+        idType: form.idType,
+        idNumber: form.idNumber,
+        notes: form.notes,
+      };
+
+      // ─── Wompi: create signed checkout and redirect (NO confirmation here) ───
+      if (paymentMethod === "wompi") {
+        const { data, error } = await supabase.functions.invoke("create-wompi-checkout", {
+          body: {
+            reference: orderRef,
+            amountCOP: total,
+            customer: { name: form.name, email: form.email, phone: form.phone },
+            items: orderItems,
+            shipping_address: shippingAddress,
+            redirectBaseUrl: window.location.origin,
+          },
+        });
+        if (error) throw error;
+        if (!data?.checkoutUrl) throw new Error("No se pudo generar el enlace de pago");
+
+        // Redirect to Wompi — payment must complete there before order is confirmed
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
+      // ─── Manual transfer methods: upload receipt + create order pending_verification ───
+      let receiptUrl: string | null = null;
       if (requiresReceipt && receipt) {
         const ext = receipt.name.split(".").pop() || "bin";
         const filePath = `${orderRef}/comprobante.${ext}`;
@@ -75,15 +112,6 @@ export default function CheckoutPage() {
         receiptUrl = supabase.storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
       }
 
-      // 2. Insertar orden en Supabase
-      const orderItems = items.map((i) => ({
-        productId: i.product.id,
-        name: i.product.name,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.product.salePrice || i.product.price,
-      }));
-
       const { error: orderErr } = await supabase.from("orders").insert({
         reference: orderRef,
         customer_name: form.name,
@@ -92,43 +120,33 @@ export default function CheckoutPage() {
         customer_city: form.city,
         items: orderItems,
         total,
-        status: requiresReceipt ? "pending_verification" : "pending",
+        status: "pending_verification",
         payment_method: paymentMethod,
-        payment_provider: paymentMethod === "wompi" ? "wompi" : "manual",
+        payment_provider: "manual",
         receipt_url: receiptUrl,
-        shipping_address: {
-          address: form.address,
-          city: form.city,
-          department: form.department,
-          idType: form.idType,
-          idNumber: form.idNumber,
-          notes: form.notes,
-        },
+        shipping_address: shippingAddress,
       });
       if (orderErr) throw orderErr;
 
-      // 3. Descontar inventario local (productos estáticos) y limpiar carrito
       decreaseInventory(items.map((item) => ({ productId: item.product.id, quantity: item.quantity })));
 
-      // 4. Construir mensaje WhatsApp
       const itemLines = items
         .map((i) => `• ${i.product.name} (x${i.quantity}) - ${formatCOP((i.product.salePrice || i.product.price) * i.quantity)}`)
         .join("\n");
 
       const methodLabel = {
-        wompi: "Wompi (tarjeta)",
         bancolombia: "Transferencia Bancolombia",
         nequi: "Nequi",
         daviplata: "Daviplata",
-      }[paymentMethod];
+        breb: "Bre-b",
+      }[paymentMethod as "bancolombia" | "nequi" | "daviplata" | "breb"];
 
       const msg =
         `🛒 *NUEVO PEDIDO #${orderRef} - NetPower IT*\n\n` +
         `👤 *Cliente:* ${form.name}\n📧 ${form.email}\n📱 ${form.phone}\n🪪 ${form.idType} ${form.idNumber}\n\n` +
         `📍 *Envío:*\n${form.address}\n${form.city}, ${form.department}\n\n` +
         `📦 *Productos:*\n${itemLines}\n\n` +
-        `💰 Subtotal: ${formatCOP(totalPrice)}\n💰 IVA (19%): ${formatCOP(iva)}\n🚚 Envío: ${shipping === 0 ? "GRATIS" : formatCOP(shipping)}\n` +
-        `💵 *TOTAL: ${formatCOP(total)}*\n\n` +
+        `💵 *TOTAL: ${formatCOP(total)}* (IVA incluido, envío a calcular)\n\n` +
         `💳 *Método:* ${methodLabel}\n` +
         (receiptUrl ? `📎 Comprobante: ${receiptUrl}\n` : "") +
         (form.notes ? `\n📝 Notas: ${form.notes}` : "");
@@ -138,13 +156,8 @@ export default function CheckoutPage() {
       clearCart();
       window.open(waUrl, "_blank");
 
-      if (requiresReceipt) {
-        toast.success("¡Pedido recibido! Verificaremos tu comprobante.");
-        navigate(`/resultado-pago?order=${orderRef}&status=pending`);
-      } else {
-        toast.success("¡Pedido confirmado!");
-        navigate(`/resultado-pago?order=${orderRef}&status=success`);
-      }
+      toast.success("¡Pedido recibido! Verificaremos tu comprobante.");
+      navigate(`/resultado-pago?order=${orderRef}&status=pending`);
     } catch (err: any) {
       console.error("Checkout error:", err);
       toast.error("Error al procesar el pedido. Intenta de nuevo.");
@@ -251,30 +264,46 @@ export default function CheckoutPage() {
             <div className="bg-card rounded-xl border border-border p-6 shadow-card space-y-4">
               <h2 className="font-bold text-foreground text-lg flex items-center gap-2"><CreditCard className="w-5 h-5 text-primary" /> Método de Pago</h2>
               <div className="space-y-3">
-                <PaymentOption value="wompi" icon="💳" title="Wompi" subtitle="Tarjeta crédito o débito — pago inmediato" />
+                <PaymentOption value="wompi" icon="💳" title="Wompi" subtitle="Tarjeta crédito o débito — pago inmediato y verificado" />
                 <PaymentOption value="bancolombia" icon="🏦" title="Transferencia Bancolombia" subtitle="Transfiere y sube tu comprobante" />
                 <PaymentOption value="nequi" icon="📱" title="Nequi" subtitle="Transfiere y sube tu comprobante" />
                 <PaymentOption value="daviplata" icon="📱" title="Daviplata" subtitle="Transfiere y sube tu comprobante" />
+                <PaymentOption value="breb" icon="🔑" title="Bre-b" subtitle="Transfiere con tu llave Bre-b y sube tu comprobante" />
               </div>
 
               {requiresReceipt && (
                 <div className="bg-muted rounded-xl p-4 mt-2 space-y-3">
-                  <p className="font-semibold text-sm text-foreground">Datos para transferencia:</p>
-
                   {paymentMethod === "bancolombia" && (
-                    <div className="text-sm space-y-1 text-muted-foreground">
-                      <p>🏦 Banco: Bancolombia</p>
+                    <div className="text-sm space-y-1.5 text-muted-foreground">
+                      <p className="font-semibold text-foreground">Datos para transferencia:</p>
+                      <p>🏦 Banco: Bancolombia S.A.</p>
                       <p>Tipo: Cuenta de Ahorros</p>
-                      <p>Número: [NUMERO_CUENTA_BANCOLOMBIA]</p>
-                      <p>Titular: [NOMBRE_TITULAR]</p>
-                      <p>NIT/CC: [DOCUMENTO]</p>
+                      <p className="font-mono font-bold text-foreground text-base">Cuenta: 05200002860</p>
+                      <p>Titular: NET POWER IT SAS</p>
+                      <p>NIT: 901.881.682</p>
                     </div>
                   )}
 
-                  {(paymentMethod === "nequi" || paymentMethod === "daviplata") && (
-                    <div className="text-sm space-y-1 text-muted-foreground">
-                      <p>📱 Número: +57 301 841 7896</p>
-                      <p>Titular: [NOMBRE_TITULAR]</p>
+                  {paymentMethod === "nequi" && (
+                    <div className="text-sm space-y-1.5 text-muted-foreground">
+                      <p className="font-semibold text-foreground">Datos para transferencia Nequi:</p>
+                      <p className="font-mono font-bold text-foreground text-base">📱 315 888 5961</p>
+                      <p>Titular: María Calderón</p>
+                    </div>
+                  )}
+
+                  {paymentMethod === "daviplata" && (
+                    <div className="text-sm space-y-1.5 text-muted-foreground">
+                      <p className="font-semibold text-foreground">Datos para transferencia Daviplata:</p>
+                      <p className="font-mono font-bold text-foreground text-base">📱 315 888 5961</p>
+                      <p>Titular: María Calderón</p>
+                    </div>
+                  )}
+
+                  {paymentMethod === "breb" && (
+                    <div className="text-sm space-y-1.5 text-muted-foreground">
+                      <p className="font-semibold text-foreground">Datos para Bre-b:</p>
+                      <p className="font-mono font-bold text-foreground text-base">🔑 Llave: 0091042041</p>
                     </div>
                   )}
 
@@ -322,26 +351,20 @@ export default function CheckoutPage() {
               <div className="border-t border-border pt-3 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium text-foreground">{formatCOP(totalPrice)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">IVA (19%)</span>
-                  <span className="font-medium text-foreground">{formatCOP(iva)}</span>
+                  <span className="font-medium text-foreground">{formatCOP(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Envío</span>
-                  <span className={`font-medium ${shipping === 0 ? "text-success" : "text-foreground"}`}>
-                    {shipping === 0 ? "GRATIS" : formatCOP(shipping)}
-                  </span>
+                  <span className="font-medium text-muted-foreground italic">A calcular</span>
                 </div>
-                {shipping > 0 && (
-                  <p className="text-[10px] text-muted-foreground">Envío gratis en compras mayores a $500.000</p>
-                )}
               </div>
               <div className="border-t border-border pt-3 flex justify-between">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-foreground">{formatCOP(total)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatCOP(total)}</span>
               </div>
+              <p className="text-[10px] text-muted-foreground">
+                * Precios incluyen IVA. Envío se calcula al confirmar.
+              </p>
 
               <button
                 type="submit"
