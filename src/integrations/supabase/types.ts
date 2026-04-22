@@ -96,10 +96,13 @@ export type Database = {
           customer_phone: string | null
           id: string
           items: Json
+          payment_method: string | null
           payment_provider: string | null
           payment_reference: string | null
           payment_url: string | null
+          receipt_url: string | null
           reference: string
+          shipping_address: Json | null
           status: string
           total: number
           updated_at: string
@@ -113,10 +116,13 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           items?: Json
+          payment_method?: string | null
           payment_provider?: string | null
           payment_reference?: string | null
           payment_url?: string | null
+          receipt_url?: string | null
           reference: string
+          shipping_address?: Json | null
           status?: string
           total?: number
           updated_at?: string
@@ -130,10 +136,13 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           items?: Json
+          payment_method?: string | null
           payment_provider?: string | null
           payment_reference?: string | null
           payment_url?: string | null
+          receipt_url?: string | null
           reference?: string
+          shipping_address?: Json | null
           status?: string
           total?: number
           updated_at?: string
@@ -156,6 +165,7 @@ export type Database = {
           condition: string | null
           created_at: string
           description: string | null
+          discount_percent: number | null
           featured: boolean
           id: string
           images: string[]
@@ -169,7 +179,7 @@ export type Database = {
           sku: string | null
           slug: string
           specs: Json
-          stock: number
+          stock: number | null
           updated_at: string
           warranty: string | null
         }
@@ -180,6 +190,7 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           featured?: boolean
           id?: string
           images?: string[]
@@ -193,7 +204,7 @@ export type Database = {
           sku?: string | null
           slug: string
           specs?: Json
-          stock?: number
+          stock?: number | null
           updated_at?: string
           warranty?: string | null
         }
@@ -204,6 +215,7 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           featured?: boolean
           id?: string
           images?: string[]
@@ -217,7 +229,7 @@ export type Database = {
           sku?: string | null
           slug?: string
           specs?: Json
-          stock?: number
+          stock?: number | null
           updated_at?: string
           warranty?: string | null
         }
