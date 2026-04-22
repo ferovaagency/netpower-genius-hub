@@ -1,11 +1,69 @@
+import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+type Status = "loading" | "success" | "pending" | "error";
 
 export default function PaymentResult() {
   const [params] = useSearchParams();
-  const status = params.get("status") || "success";
   const orderId = params.get("order") || "—";
+  const wompiTxId = params.get("id"); // present when Wompi redirects back
+  const explicitStatus = params.get("status"); // 'pending' for manual transfers
+
+  const [status, setStatus] = useState<Status>(
+    wompiTxId ? "loading" : (explicitStatus === "pending" ? "pending" : "loading")
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const verify = async () => {
+      // Manual transfer flow → already explicit
+      if (!wompiTxId && explicitStatus === "pending") {
+        setStatus("pending");
+        return;
+      }
+
+      // Wompi flow → verify against Wompi via edge function (NEVER trust URL alone)
+      if (wompiTxId) {
+        try {
+          const { data, error } = await supabase.functions.invoke("verify-wompi-transaction", {
+            body: { transactionId: wompiTxId, reference: orderId },
+          });
+          if (cancelled) return;
+          if (error) throw error;
+
+          if (data?.status === "APPROVED") setStatus("success");
+          else if (data?.status === "PENDING") setStatus("pending");
+          else setStatus("error");
+        } catch (e) {
+          console.error("Wompi verification failed:", e);
+          if (!cancelled) setStatus("error");
+        }
+        return;
+      }
+
+      // No tx id and no explicit pending → check the order in DB as a fallback
+      if (orderId && orderId !== "—") {
+        const { data } = await supabase
+          .from("orders")
+          .select("status")
+          .eq("reference", orderId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (data?.status === "completed") setStatus("success");
+        else if (data?.status === "pending_verification" || data?.status === "pending") setStatus("pending");
+        else setStatus("error");
+      } else {
+        setStatus("error");
+      }
+    };
+
+    verify();
+    return () => { cancelled = true; };
+  }, [wompiTxId, orderId, explicitStatus]);
 
   return (
     <>
@@ -16,6 +74,13 @@ export default function PaymentResult() {
 
       <div className="container mx-auto px-4 py-16 max-w-xl">
         <div className="bg-card rounded-2xl border border-border shadow-card p-8">
+          {status === "loading" && (
+            <div className="text-center space-y-4 py-8">
+              <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+              <p className="text-muted-foreground">Verificando tu pago…</p>
+            </div>
+          )}
+
           {status === "success" && (
             <div className="text-center space-y-4">
               <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto">
@@ -62,16 +127,25 @@ export default function PaymentResult() {
               <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
                 <AlertCircle className="w-10 h-10 text-destructive" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">Hubo un problema</h1>
-              <p className="text-muted-foreground">No pudimos procesar tu pedido. Intenta de nuevo o contáctanos.</p>
-              <a
-                href="https://wa.me/573018417896"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
-              >
-                Contactar por WhatsApp
-              </a>
+              <h1 className="text-2xl font-bold text-foreground">No pudimos confirmar tu pago</h1>
+              <p className="text-muted-foreground">
+                La transacción no fue aprobada o no pudo verificarse. No se confirmó el pedido.
+                Si ya pagaste, contáctanos con tu número de referencia.
+              </p>
+              {orderId !== "—" && <p className="text-lg font-mono text-foreground">{orderId}</p>}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link to="/checkout" className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
+                  Reintentar pago
+                </Link>
+                <a
+                  href="https://wa.me/573018417896"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
+                >
+                  Contactar por WhatsApp
+                </a>
+              </div>
             </div>
           )}
         </div>
