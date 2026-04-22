@@ -295,6 +295,28 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
+
+            {/* Métodos de pago */}
+            <div className="border border-border rounded-xl p-4 mt-4 space-y-3 bg-muted/30">
+              <h4 className="font-semibold text-sm flex items-center gap-2">💳 Métodos de pago</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { icon: "🏦", label: "Bancolombia" },
+                  { icon: "📱", label: "Nequi" },
+                  { icon: "📱", label: "Daviplata" },
+                  { icon: "💳", label: "Wompi" },
+                ].map((m) => (
+                  <div key={m.label} className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded-lg p-2">
+                    <span>{m.icon}</span>
+                    <span>{m.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-around pt-2 border-t border-border text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-primary" /> Envío a toda Colombia</span>
+                <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-primary" /> Garantía incluida</span>
+              </div>
+            </div>
           </div>
         </div>
 
