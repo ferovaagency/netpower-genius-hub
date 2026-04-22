@@ -171,10 +171,13 @@ export const decreaseInventory = (soldItems: Array<{ productId: string; quantity
     const index = products.findIndex((product) => product.id === productId);
     if (index < 0) return;
 
-    const safeQuantity = Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : 0;
-    const nextStock = Math.max(0, products[index].stock - safeQuantity);
+    const currentStock = products[index].stock;
+    if (currentStock === null || currentStock === undefined) return;
 
-    if (nextStock !== products[index].stock) {
+    const safeQuantity = Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : 0;
+    const nextStock = Math.max(0, currentStock - safeQuantity);
+
+    if (nextStock !== currentStock) {
       products[index] = { ...products[index], stock: nextStock };
       changed = true;
     }
