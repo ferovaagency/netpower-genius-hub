@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.sales-chat]
 verify_jwt = false
+
+[functions.create-wompi-checkout]
+verify_jwt = false
+
+[functions.verify-wompi-transaction]
+verify_jwt = false
