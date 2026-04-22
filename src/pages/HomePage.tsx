@@ -13,12 +13,41 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
+const slides = [
+  {
+    image: heroBanner,
+    badge: null as string | null,
+    title: "Tu proveedor #1 de tecnología TIC",
+    highlight: "#1",
+    subtitle: "UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.",
+    cta: "Ver Tienda",
+    ctaLink: "/tienda",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
+    badge: "5% OFF",
+    title: "¡Descuento Mundialista!",
+    highlight: null as string | null,
+    subtitle: "Descuento especial del 5% en todos los productos comprando directamente en nuestra página web.",
+    cta: "Aprovechar descuento",
+    ctaLink: "/tienda",
+  },
+];
+
 export default function HomePage() {
   const { openChat } = useChat();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
   );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,29 +104,55 @@ export default function HomePage() {
         <link rel="canonical" href="https://netpowerit.co" />
       </Helmet>
 
-      {/* Hero */}
+      {/* Hero Slider */}
       <section className="relative overflow-hidden min-h-[480px] flex items-center">
-        <img src={heroBanner} alt="Tecnología TIC" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent" />
+        {slides.map((slide, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            aria-hidden={idx !== currentSlide}
+          >
+            <img src={slide.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent" />
+          </div>
+        ))}
+
         <div className="container mx-auto px-6 py-20 md:py-24 relative z-10">
           <motion.div
+            key={currentSlide}
             initial="hidden"
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className="max-w-xl">
-            
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
-              <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
-            </motion.div>
+            className="max-w-xl"
+          >
+            {slides[currentSlide].badge && (
+              <motion.span
+                variants={fadeUp}
+                className="inline-block bg-secondary text-secondary-foreground font-black text-2xl md:text-3xl px-5 py-1.5 rounded-full mb-5 animate-pulse"
+              >
+                {slides[currentSlide].badge}
+              </motion.span>
+            )}
+            {!slides[currentSlide].badge && (
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
+                <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
+              </motion.div>
+            )}
             <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
-              Tu proveedor <span className="text-primary">#1</span> de tecnología TIC
+              {slides[currentSlide].highlight ? (
+                <>
+                  Tu proveedor <span className="text-primary">{slides[currentSlide].highlight}</span> de tecnología TIC
+                </>
+              ) : (
+                slides[currentSlide].title
+              )}
             </motion.h1>
             <motion.p variants={fadeUp} className="text-base text-card/70 mb-7 max-w-md leading-relaxed">
-              UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.
+              {slides[currentSlide].subtitle}
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-              <Link to="/tienda" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                Ver Tienda <ArrowRight className="w-4 h-4" />
+              <Link to={slides[currentSlide].ctaLink} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                {slides[currentSlide].cta} <ArrowRight className="w-4 h-4" />
               </Link>
               <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
                 Solicitar Cotización
@@ -105,6 +160,34 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Indicadores */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              aria-label={`Ir al slide ${i + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-card w-8" : "bg-card/40 w-2"}`}
+            />
+          ))}
+        </div>
+
+        {/* Flechas */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+          aria-label="Slide anterior"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl"
+        >
+          ‹
+        </button>
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+          aria-label="Slide siguiente"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl"
+        >
+          ›
+        </button>
       </section>
 
       {/* Trust bar */}

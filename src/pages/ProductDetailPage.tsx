@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
             "url": `https://netpowerit.co/producto/${product.slug}`,
             "priceCurrency": "COP",
             "price": product.salePrice || product.price || "0",
-            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
             "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
           }
         })}</script>
@@ -208,7 +208,7 @@ export default function ProductDetailPage() {
                   <p className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Servicio en toda Colombia e internacional</p>
                 </div>
               </>
-            ) : (!product.stock || product.stock === 0 || !product.price || product.price === 0) ? (
+            ) : (product.stock === null || product.stock === undefined || product.stock === 0 || !product.price || product.price === 0) ? (
               <>
                 <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-semibold mb-6 flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
@@ -244,8 +244,8 @@ export default function ProductDetailPage() {
                     <span className="text-lg text-muted-foreground line-through">{formatCOP(product.price)}</span>
                   )}
                 </div>
-                <p className={`text-sm font-medium mb-6 ${product.stock > 5 ? "text-success" : "text-secondary"}`}>
-                  {product.stock > 5 ? "✓ En stock" : `⚠ Solo ${product.stock} disponibles`}
+                <p className={`text-sm font-medium mb-6 ${(product.stock ?? 0) > 5 ? "text-success" : "text-secondary"}`}>
+                  {(product.stock ?? 0) > 5 ? "✓ En stock" : `⚠ Solo ${product.stock} disponibles`}
                 </p>
 
                 <div className="flex items-center gap-4 mb-4">
@@ -255,7 +255,7 @@ export default function ProductDetailPage() {
                     </button>
                     <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
                     <button
-                      onClick={() => setQty(Math.min(product.stock, qty + 1))}
+                      onClick={() => setQty(Math.min(product.stock ?? qty + 1, qty + 1))}
                       className="w-10 h-10 flex items-center justify-center hover:bg-muted transition"
                     >
                       <Plus className="w-4 h-4" />
@@ -295,6 +295,28 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
+
+            {/* Métodos de pago */}
+            <div className="border border-border rounded-xl p-4 mt-4 space-y-3 bg-muted/30">
+              <h4 className="font-semibold text-sm flex items-center gap-2">💳 Métodos de pago</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { icon: "🏦", label: "Bancolombia" },
+                  { icon: "📱", label: "Nequi" },
+                  { icon: "📱", label: "Daviplata" },
+                  { icon: "💳", label: "Wompi" },
+                ].map((m) => (
+                  <div key={m.label} className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded-lg p-2">
+                    <span>{m.icon}</span>
+                    <span>{m.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-around pt-2 border-t border-border text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-primary" /> Envío a toda Colombia</span>
+                <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-primary" /> Garantía incluida</span>
+              </div>
+            </div>
           </div>
         </div>
 

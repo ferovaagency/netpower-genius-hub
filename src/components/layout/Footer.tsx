@@ -77,7 +77,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-surface-dark-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Métodos de pago aceptados */}
+        <div className="border-t border-surface-dark-foreground/10 pt-6 mt-12">
+          <p className="text-xs text-surface-dark-foreground/50 mb-3 text-center uppercase tracking-wider">
+            Métodos de pago aceptados
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {["🏦 Bancolombia", "📱 Nequi", "📱 Daviplata", "💳 Wompi"].map((m) => (
+              <span key={m} className="text-xs bg-surface-dark-foreground/10 text-surface-dark-foreground/70 px-3 py-1 rounded-full border border-surface-dark-foreground/10">
+                {m}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-surface-dark-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-surface-dark-foreground/40">
             © {new Date().getFullYear()} Netpower IT. Todos los derechos reservados.
           </p>

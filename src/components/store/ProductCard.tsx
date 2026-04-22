@@ -11,8 +11,14 @@ export default function ProductCard({ product }: { product: Product }) {
   const discount = getDiscountPercentage(product.price, product.salePrice);
   const category = categories.find(c => c.id === product.categoryId);
   const isServer = category?.slug === "servidores";
-  // Producto sin stock asignado o sin precio → mostrar "Consultar precio" en lugar de Agotado
-  const needsQuote = !product.stock || product.stock === 0 || !product.price || product.price === 0;
+  // Producto sin stock asignado (null) o sin precio → "Consultar precio"
+  // stock === 0 también se trata como "consultar" para mostrar CTA WhatsApp
+  const needsQuote =
+    product.stock === null ||
+    product.stock === undefined ||
+    product.stock === 0 ||
+    !product.price ||
+    product.price === 0;
   const showQuote = isServer || needsQuote;
 
   const waMessage = encodeURIComponent(`Hola Netpower IT, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`);
@@ -33,7 +39,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
 
-        {!showQuote && product.stock <= 5 && product.stock > 0 && (
+        {!showQuote && product.stock !== null && product.stock <= 5 && product.stock > 0 && (
           <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-semibold animate-pulse-soft">
             Últimas unidades
           </span>
@@ -81,8 +87,8 @@ export default function ProductCard({ product }: { product: Product }) {
                   </span>
                 )}
               </div>
-              <p className={`text-xs mt-1 font-medium ${product.stock > 5 ? "text-success" : "text-secondary"}`}>
-                {product.stock > 5 ? "En stock" : `Solo ${product.stock} disponibles`}
+              <p className={`text-xs mt-1 font-medium ${product.stock !== null && product.stock > 5 ? "text-success" : "text-secondary"}`}>
+                {product.stock !== null && product.stock > 5 ? "En stock" : `Solo ${product.stock} disponibles`}
               </p>
             </>
           )}
@@ -106,6 +112,16 @@ export default function ProductCard({ product }: { product: Product }) {
             Agregar al carrito
           </button>
         )}
+
+        {/* Trust badges */}
+        <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
+          <span className="text-[10px] bg-success/10 text-success border border-success/30 rounded-full px-2 py-0.5 flex items-center gap-1">
+            🚚 Envío a toda Colombia
+          </span>
+          <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 rounded-full px-2 py-0.5 flex items-center gap-1">
+            🛡️ Garantía incluida
+          </span>
+        </div>
       </div>
     </div>
   );

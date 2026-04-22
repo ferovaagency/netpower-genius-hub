@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type { Product } from "@/types/store";
 
 // Convierte snake_case de Supabase → camelCase del tipo Product
+// IMPORTANTE: stock puede ser null = "consultar precio"; 0 = sin stock real; >0 = disponible
 const mapRow = (row: any): Product => ({
   id:          row.id,
   slug:        row.slug,
@@ -12,7 +13,7 @@ const mapRow = (row: any): Product => ({
   price:       Number(row.price),
   salePrice:   row.sale_price ? Number(row.sale_price) : null,
   sku:         row.sku ?? "",
-  stock:       row.stock ?? 0,
+  stock:       row.stock === null || row.stock === undefined ? null : Number(row.stock),
   images:      row.images ?? [],
   categoryId:  row.category ?? row.category_id ?? "",
   brandId:     row.brand ?? row.brand_id ?? "",
