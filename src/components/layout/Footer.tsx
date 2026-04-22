@@ -83,7 +83,7 @@ export default function Footer() {
             Métodos de pago aceptados
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["🏦 Bancolombia", "📱 Nequi", "📱 Daviplata", "💳 Wompi"].map((m) => (
+            {["🏦 Bancolombia", "📱 Nequi", "📱 Daviplata", "🔑 Bre-b", "💳 Wompi"].map((m) => (
               <span key={m} className="text-xs bg-surface-dark-foreground/10 text-surface-dark-foreground/70 px-3 py-1 rounded-full border border-surface-dark-foreground/10">
                 {m}
               </span>

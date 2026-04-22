@@ -304,6 +304,7 @@ export default function ProductDetailPage() {
                   { icon: "🏦", label: "Bancolombia" },
                   { icon: "📱", label: "Nequi" },
                   { icon: "📱", label: "Daviplata" },
+                  { icon: "🔑", label: "Bre-b" },
                   { icon: "💳", label: "Wompi" },
                 ].map((m) => (
                   <div key={m.label} className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded-lg p-2">
