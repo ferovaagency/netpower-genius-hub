@@ -112,6 +112,16 @@ export default function ProductCard({ product }: { product: Product }) {
             Agregar al carrito
           </button>
         )}
+
+        {/* Trust badges */}
+        <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
+          <span className="text-[10px] bg-success/10 text-success border border-success/30 rounded-full px-2 py-0.5 flex items-center gap-1">
+            🚚 Envío a toda Colombia
+          </span>
+          <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 rounded-full px-2 py-0.5 flex items-center gap-1">
+            🛡️ Garantía incluida
+          </span>
+        </div>
       </div>
     </div>
   );
