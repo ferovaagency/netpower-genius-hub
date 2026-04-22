@@ -23,7 +23,20 @@ export default function CheckoutPage() {
 
   // Los precios ya incluyen IVA — no se suma
   const subtotal = totalPrice;
-  const total = subtotal;
+
+  // ─── Descuento Mundialista 5% (transferencias, 1 mayo - 30 junio 2025) ───
+  const DISCOUNT_ACTIVE = true;
+  const DISCOUNT_START = new Date("2025-05-01");
+  const DISCOUNT_END = new Date("2025-06-30T23:59:59");
+  const transferMethods = ["bancolombia", "nequi", "daviplata", "breb"] as const;
+  const today = new Date();
+  const inDateRange = today >= DISCOUNT_START && today <= DISCOUNT_END;
+  const discountApplies =
+    DISCOUNT_ACTIVE &&
+    inDateRange &&
+    (transferMethods as readonly string[]).includes(paymentMethod);
+  const discount = discountApplies ? Math.round(subtotal * 0.05) : 0;
+  const total = subtotal - discount;
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -119,13 +132,15 @@ export default function CheckoutPage() {
         customer_phone: form.phone,
         customer_city: form.city,
         items: orderItems,
+        subtotal,
+        discount_amount: discount,
         total,
         status: "pending_verification",
         payment_method: paymentMethod,
         payment_provider: "manual",
         receipt_url: receiptUrl,
         shipping_address: shippingAddress,
-      });
+      } as never);
       if (orderErr) throw orderErr;
 
       decreaseInventory(items.map((item) => ({ productId: item.product.id, quantity: item.quantity })));
@@ -353,6 +368,29 @@ export default function CheckoutPage() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium text-foreground">{formatCOP(subtotal)}</span>
                 </div>
+
+                {discountApplies && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">🎉 Descuento Mundialista 5%</span>
+                    <span className="font-medium">- {formatCOP(discount)}</span>
+                  </div>
+                )}
+
+                {paymentMethod &&
+                  !discountApplies &&
+                  (transferMethods as readonly string[]).includes(paymentMethod) &&
+                  !inDateRange && (
+                    <div className="text-xs text-muted-foreground bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                      ℹ️ Descuento Mundialista válido del 1 mayo al 30 junio pagando con transferencia.
+                    </div>
+                  )}
+
+                {paymentMethod === "wompi" && (
+                  <div className="text-xs text-muted-foreground bg-orange-50 border border-orange-200 rounded-lg p-2">
+                    ℹ️ El descuento Mundialista no aplica pagando con Wompi.
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Envío</span>
                   <span className="font-medium text-muted-foreground italic">A calcular</span>
