@@ -32,10 +32,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = useCallback(
     (product: Product, quantity = 1) => {
-      const liveProduct = findProductById(product.id);
+      // Para productos de Supabase, findProductById (data local) no encontrará match → usamos el product entrante
+      const liveProduct = findProductById(product.id) || product;
 
-      if (!liveProduct || !liveProduct.active) {
+      if (!liveProduct.active) {
         toast.error("Este producto ya no está disponible en la tienda");
+        return;
+      }
+
+      // stock null/undefined = no asignado → no se puede agregar al carrito (debe cotizar por WhatsApp)
+      if (liveProduct.stock === null || liveProduct.stock === undefined) {
+        toast.error("Este producto requiere cotización. Contáctanos por WhatsApp");
         return;
       }
 
@@ -84,6 +91,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const liveProduct = findProductById(productId);
       const maxStock = liveProduct?.stock ?? existing.product.stock;
+
+      if (maxStock === null || maxStock === undefined) {
+        toast.error("Producto sin stock asignado");
+        return;
+      }
 
       if (maxStock <= 0) {
         toast.error("Producto agotado");
