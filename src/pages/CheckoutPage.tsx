@@ -13,7 +13,7 @@ export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"" | "wompi" | "bancolombia" | "nequi" | "daviplata">("");
+  const [paymentMethod, setPaymentMethod] = useState<"" | "wompi" | "bancolombia" | "nequi" | "daviplata" | "breb">("");
   const [receipt, setReceipt] = useState<File | null>(null);
 
   const [form, setForm] = useState({
@@ -21,14 +21,14 @@ export default function CheckoutPage() {
     address: "", city: "", department: "", notes: "",
   });
 
-  const iva = Math.round(totalPrice * 0.19);
-  const shipping = totalPrice > 500000 ? 0 : 25000;
-  const total = totalPrice + iva + shipping;
+  // Los precios ya incluyen IVA — no se suma
+  const subtotal = totalPrice;
+  const total = subtotal;
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const isFormValid = !!(form.name && form.email && form.phone && form.idNumber && form.address && form.city && form.department);
-  const requiresReceipt = ["bancolombia", "nequi", "daviplata"].includes(paymentMethod);
+  const requiresReceipt = ["bancolombia", "nequi", "daviplata", "breb"].includes(paymentMethod);
 
   const validateStock = () => {
     // Solo bloquea si el producto está en data local Y no cumple. Productos de Supabase pasan.
