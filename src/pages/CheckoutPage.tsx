@@ -4,12 +4,17 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ShieldCheck, Truck, CreditCard, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { formatCOP, categories, findProductById, decreaseInventory } from "@/data/store-data";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const WHATSAPP = "573018417896";
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"" | "wompi" | "bancolombia" | "nequi" | "daviplata">("");
+  const [receipt, setReceipt] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", idType: "CC", idNumber: "",
@@ -22,51 +27,130 @@ export default function CheckoutPage() {
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
-  const isValid = form.name && form.email && form.phone && form.idNumber && form.address && form.city && form.department;
+  const isFormValid = !!(form.name && form.email && form.phone && form.idNumber && form.address && form.city && form.department);
+  const requiresReceipt = ["bancolombia", "nequi", "daviplata"].includes(paymentMethod);
+
+  const validateStock = () => {
+    // Solo bloquea si el producto está en data local Y no cumple. Productos de Supabase pasan.
+    const stockIssue = items.find((item) => {
+      const latest = findProductById(item.product.id);
+      if (!latest) return false; // Producto de Supabase: no validar contra data local
+      if (!latest.active) return true;
+      if (latest.stock === null || latest.stock === undefined) return false; // sin stock asignado: permitido
+      return latest.stock < item.quantity;
+    });
+    return stockIssue;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) { toast.error("Completa todos los campos obligatorios"); return; }
-    setLoading(true);
+    if (!isFormValid) { toast.error("Completa todos los campos obligatorios"); return; }
+    if (!paymentMethod) { toast.error("Selecciona un método de pago"); return; }
+    if (requiresReceipt && !receipt) { toast.error("Sube tu comprobante de pago"); return; }
+    if (requiresReceipt && receipt && receipt.size > 5 * 1024 * 1024) {
+      toast.error("El comprobante no puede superar 5MB"); return;
+    }
 
-    const stockIssue = items.find((item) => {
-      const latest = findProductById(item.product.id);
-      return !latest || !latest.active || latest.stock < item.quantity;
-    });
-
+    const stockIssue = validateStock();
     if (stockIssue) {
-      setLoading(false);
-      toast.error(`No hay inventario suficiente para "${stockIssue.product.name}". Ajusta tu carrito.`);
+      toast.error(`Inventario insuficiente para "${stockIssue.product.name}". Ajusta tu carrito.`);
       navigate("/carrito");
       return;
     }
 
-    // Build WhatsApp message with order details
-    const itemLines = items
-      .map((i) => {
-        const p = i.product;
-        return `• ${p.name} (x${i.quantity}) - ${formatCOP((p.salePrice || p.price) * i.quantity)}`;
-      })
-      .join("\n");
+    setLoading(true);
 
-    const msg =
-      `🛒 *NUEVO PEDIDO - NetPower IT*\n\n` +
-      `👤 *Cliente:* ${form.name}\n📧 ${form.email}\n📱 ${form.phone}\n🪪 ${form.idType} ${form.idNumber}\n\n` +
-      `📍 *Envío:*\n${form.address}\n${form.city}, ${form.department}\n\n` +
-      `📦 *Productos:*\n${itemLines}\n\n` +
-      `💰 Subtotal: ${formatCOP(totalPrice)}\n💰 IVA (19%): ${formatCOP(iva)}\n🚚 Envío: ${shipping === 0 ? "GRATIS" : formatCOP(shipping)}\n` +
-      `💵 *TOTAL: ${formatCOP(total)}*\n\n${form.notes ? `📝 Notas: ${form.notes}` : ""}`;
+    try {
+      const orderRef = `ORD-${Date.now()}`;
+      let receiptUrl: string | null = null;
 
-    const waUrl = `https://wa.me/573018417895?text=${encodeURIComponent(msg)}`;
+      // 1. Subir comprobante si aplica
+      if (requiresReceipt && receipt) {
+        const ext = receipt.name.split(".").pop() || "bin";
+        const filePath = `${orderRef}/comprobante.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("receipts")
+          .upload(filePath, receipt, { upsert: true });
+        if (uploadErr) throw uploadErr;
+        receiptUrl = supabase.storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+      }
 
-    setTimeout(() => {
+      // 2. Insertar orden en Supabase
+      const orderItems = items.map((i) => ({
+        productId: i.product.id,
+        name: i.product.name,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.product.salePrice || i.product.price,
+      }));
+
+      const { error: orderErr } = await supabase.from("orders").insert({
+        reference: orderRef,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        customer_city: form.city,
+        items: orderItems,
+        total,
+        status: requiresReceipt ? "pending_verification" : "pending",
+        payment_method: paymentMethod,
+        payment_provider: paymentMethod === "wompi" ? "wompi" : "manual",
+        receipt_url: receiptUrl,
+        shipping_address: {
+          address: form.address,
+          city: form.city,
+          department: form.department,
+          idType: form.idType,
+          idNumber: form.idNumber,
+          notes: form.notes,
+        },
+      });
+      if (orderErr) throw orderErr;
+
+      // 3. Descontar inventario local (productos estáticos) y limpiar carrito
       decreaseInventory(items.map((item) => ({ productId: item.product.id, quantity: item.quantity })));
-      setLoading(false);
+
+      // 4. Construir mensaje WhatsApp
+      const itemLines = items
+        .map((i) => `• ${i.product.name} (x${i.quantity}) - ${formatCOP((i.product.salePrice || i.product.price) * i.quantity)}`)
+        .join("\n");
+
+      const methodLabel = {
+        wompi: "Wompi (tarjeta)",
+        bancolombia: "Transferencia Bancolombia",
+        nequi: "Nequi",
+        daviplata: "Daviplata",
+      }[paymentMethod];
+
+      const msg =
+        `🛒 *NUEVO PEDIDO #${orderRef} - NetPower IT*\n\n` +
+        `👤 *Cliente:* ${form.name}\n📧 ${form.email}\n📱 ${form.phone}\n🪪 ${form.idType} ${form.idNumber}\n\n` +
+        `📍 *Envío:*\n${form.address}\n${form.city}, ${form.department}\n\n` +
+        `📦 *Productos:*\n${itemLines}\n\n` +
+        `💰 Subtotal: ${formatCOP(totalPrice)}\n💰 IVA (19%): ${formatCOP(iva)}\n🚚 Envío: ${shipping === 0 ? "GRATIS" : formatCOP(shipping)}\n` +
+        `💵 *TOTAL: ${formatCOP(total)}*\n\n` +
+        `💳 *Método:* ${methodLabel}\n` +
+        (receiptUrl ? `📎 Comprobante: ${receiptUrl}\n` : "") +
+        (form.notes ? `\n📝 Notas: ${form.notes}` : "");
+
+      const waUrl = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+
       clearCart();
       window.open(waUrl, "_blank");
-      toast.success("¡Pedido enviado! Te contactaremos para confirmar el pago.");
-      navigate("/");
-    }, 1500);
+
+      if (requiresReceipt) {
+        toast.success("¡Pedido recibido! Verificaremos tu comprobante.");
+        navigate(`/resultado-pago?order=${orderRef}&status=pending`);
+      } else {
+        toast.success("¡Pedido confirmado!");
+        navigate(`/resultado-pago?order=${orderRef}&status=success`);
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error("Error al procesar el pedido. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
@@ -77,6 +161,19 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const PaymentOption = ({ value, icon, title, subtitle }: { value: typeof paymentMethod; icon: string; title: string; subtitle: string }) => (
+    <label className={`flex items-start gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${
+      paymentMethod === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+    }`}>
+      <input type="radio" name="payment" value={value} checked={paymentMethod === value}
+        onChange={() => setPaymentMethod(value)} className="mt-1" />
+      <div>
+        <p className="font-semibold text-foreground">{icon} {title}</p>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+    </label>
+  );
 
   return (
     <>
@@ -149,6 +246,55 @@ export default function CheckoutPage() {
                 <textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="Instrucciones especiales de entrega..." rows={3} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition resize-none" />
               </div>
             </div>
+
+            {/* Método de pago */}
+            <div className="bg-card rounded-xl border border-border p-6 shadow-card space-y-4">
+              <h2 className="font-bold text-foreground text-lg flex items-center gap-2"><CreditCard className="w-5 h-5 text-primary" /> Método de Pago</h2>
+              <div className="space-y-3">
+                <PaymentOption value="wompi" icon="💳" title="Wompi" subtitle="Tarjeta crédito o débito — pago inmediato" />
+                <PaymentOption value="bancolombia" icon="🏦" title="Transferencia Bancolombia" subtitle="Transfiere y sube tu comprobante" />
+                <PaymentOption value="nequi" icon="📱" title="Nequi" subtitle="Transfiere y sube tu comprobante" />
+                <PaymentOption value="daviplata" icon="📱" title="Daviplata" subtitle="Transfiere y sube tu comprobante" />
+              </div>
+
+              {requiresReceipt && (
+                <div className="bg-muted rounded-xl p-4 mt-2 space-y-3">
+                  <p className="font-semibold text-sm text-foreground">Datos para transferencia:</p>
+
+                  {paymentMethod === "bancolombia" && (
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <p>🏦 Banco: Bancolombia</p>
+                      <p>Tipo: Cuenta de Ahorros</p>
+                      <p>Número: [NUMERO_CUENTA_BANCOLOMBIA]</p>
+                      <p>Titular: [NOMBRE_TITULAR]</p>
+                      <p>NIT/CC: [DOCUMENTO]</p>
+                    </div>
+                  )}
+
+                  {(paymentMethod === "nequi" || paymentMethod === "daviplata") && (
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <p>📱 Número: +57 301 841 7896</p>
+                      <p>Titular: [NOMBRE_TITULAR]</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <label className="text-sm font-semibold block text-foreground">📎 Subir comprobante de pago *</label>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+                      className="w-full border border-border rounded-lg p-2 text-sm bg-background"
+                    />
+                    <p className="text-xs text-muted-foreground">Formatos: JPG, PNG o PDF — máximo 5MB</p>
+                  </div>
+
+                  <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-3 text-xs text-foreground">
+                    ⏳ Una vez recibamos y verifiquemos tu comprobante, confirmaremos tu pedido por WhatsApp en máximo 2 horas hábiles.
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Order summary */}
@@ -199,8 +345,8 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={loading || !isValid}
-                className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={loading || !isFormValid || !paymentMethod || (requiresReceipt && !receipt)}
+                className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</>
