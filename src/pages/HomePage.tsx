@@ -13,12 +13,41 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
+const slides = [
+  {
+    image: heroBanner,
+    badge: null as string | null,
+    title: "Tu proveedor #1 de tecnología TIC",
+    highlight: "#1",
+    subtitle: "UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.",
+    cta: "Ver Tienda",
+    ctaLink: "/tienda",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
+    badge: "5% OFF",
+    title: "¡Descuento Mundialista!",
+    highlight: null as string | null,
+    subtitle: "Descuento especial del 5% en todos los productos comprando directamente en nuestra página web.",
+    cta: "Aprovechar descuento",
+    ctaLink: "/tienda",
+  },
+];
+
 export default function HomePage() {
   const { openChat } = useChat();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
   );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
