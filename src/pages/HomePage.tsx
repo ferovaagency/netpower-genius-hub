@@ -17,8 +17,8 @@ const slides = [
   {
     image: heroBanner,
     badge: null as string | null,
-    title: "Tu proveedor #1 de tecnología TIC",
-    highlight: "#1",
+    title: "Protegemos la energía de tu empresa para que tu operación nunca se detenga.",
+    highlight: null as string | null,
     subtitle: "UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.",
     cta: "Ver Tienda",
     ctaLink: "/tienda",
@@ -26,10 +26,10 @@ const slides = [
   {
     image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
     badge: "5% OFF",
-    title: "¡Descuento Mundialista!",
+    title: "¡Descuento Mundialista 5% OFF!",
     highlight: null as string | null,
-    subtitle: "Descuento especial del 5% en todos los productos comprando directamente en nuestra página web.",
-    cta: "Aprovechar descuento",
+    subtitle: "Válido pagando con transferencia bancaria (Bancolombia, Nequi, Daviplata o Bre-b). No aplica con Wompi. Válido del 1 de mayo al 30 de junio de 2025.",
+    cta: "Ver productos",
     ctaLink: "/tienda",
   },
 ];

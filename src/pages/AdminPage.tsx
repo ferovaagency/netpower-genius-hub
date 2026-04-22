@@ -62,6 +62,8 @@ export default function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [prodSearch, setProdSearch] = useState("");
   const [loadingProds, setLoadingProds] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -80,10 +82,40 @@ export default function AdminPage() {
     if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return;
     await supabase.from("products").delete().eq("id", id);
     setProducts(prev => prev.filter(p => p.id !== id));
+    setSelectedIds(prev => prev.filter(x => x !== id));
     toast({ title: "Producto eliminado" });
   };
 
   const filteredProds = products.filter(p => p.name?.toLowerCase().includes(prodSearch.toLowerCase()));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const selectAllVisible = () => {
+    const visibleIds = filteredProds.map(p => p.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`¿Eliminar ${selectedIds.length} producto(s)? Esta acción no se puede deshacer.`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from("products").delete().in("id", selectedIds);
+    if (error) {
+      toast({ title: "Error al eliminar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${selectedIds.length} producto(s) eliminado(s)` });
+      setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
+      setSelectedIds([]);
+    }
+    setBulkDeleting(false);
+  };
 
   // ── PEDIDOS ───────────────────────────────────────────────────
   const [orders, setOrders] = useState<any[]>([]);
@@ -236,11 +268,33 @@ export default function AdminPage() {
               <Search className="w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar por nombre..." value={prodSearch} onChange={e => setProdSearch(e.target.value)} className="max-w-xs" />
             </div>
+
+            {selectedIds.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 mb-4 bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
+                <span className="text-sm font-semibold text-destructive">
+                  {selectedIds.length} producto(s) seleccionado(s)
+                </span>
+                <Button variant="destructive" size="sm" onClick={deleteSelected} disabled={bulkDeleting}>
+                  {bulkDeleting ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Eliminando...</> : <><Trash2 className="w-3 h-3 mr-1" /> Eliminar seleccionados</>}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectedIds([])}>Cancelar</Button>
+              </div>
+            )}
+
             {loadingProds ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div> : (
               <div className="overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
+                      <th className="px-4 py-3 w-10">
+                        <input
+                          type="checkbox"
+                          checked={filteredProds.length > 0 && filteredProds.every(p => selectedIds.includes(p.id))}
+                          onChange={selectAllVisible}
+                          className="rounded cursor-pointer"
+                          aria-label="Seleccionar todos"
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left font-semibold">Producto</th>
                       <th className="px-4 py-3 text-left font-semibold">Precio</th>
                       <th className="px-4 py-3 text-left font-semibold">Estado</th>
@@ -249,7 +303,16 @@ export default function AdminPage() {
                   </thead>
                   <tbody>
                     {filteredProds.map(p => (
-                      <tr key={p.id} className="border-t border-border hover:bg-muted/30">
+                      <tr key={p.id} className={`border-t border-border hover:bg-muted/30 transition-colors ${selectedIds.includes(p.id) ? "bg-destructive/5" : ""}`}>
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(p.id)}
+                            onChange={() => toggleSelect(p.id)}
+                            className="rounded cursor-pointer"
+                            aria-label={`Seleccionar ${p.name}`}
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {p.images?.[0] && <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />}

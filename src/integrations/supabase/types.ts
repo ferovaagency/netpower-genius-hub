@@ -94,6 +94,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          discount_amount: number
           id: string
           items: Json
           payment_method: string | null
@@ -104,6 +105,7 @@ export type Database = {
           reference: string
           shipping_address: Json | null
           status: string
+          subtotal: number | null
           total: number
           updated_at: string
         }
@@ -114,6 +116,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          discount_amount?: number
           id?: string
           items?: Json
           payment_method?: string | null
@@ -124,6 +127,7 @@ export type Database = {
           reference: string
           shipping_address?: Json | null
           status?: string
+          subtotal?: number | null
           total?: number
           updated_at?: string
         }
@@ -134,6 +138,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          discount_amount?: number
           id?: string
           items?: Json
           payment_method?: string | null
@@ -144,6 +149,7 @@ export type Database = {
           reference?: string
           shipping_address?: Json | null
           status?: string
+          subtotal?: number | null
           total?: number
           updated_at?: string
         }
