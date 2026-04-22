@@ -7,7 +7,7 @@ export interface Product {
   price: number;
   salePrice: number | null;
   sku: string;
-  stock: number;
+  stock: number | null;
   images: string[];
   categoryId: string;
   brandId: string;
