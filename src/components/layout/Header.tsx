@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Search, Menu, X, Phone, ChevronDown } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Phone, ChevronDown, ExternalLink } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
-import { products, categories } from "@/data/store-data";
+import { categories } from "@/data/store-data";
+import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-netpower-it.png";
 
 const menuCategories = categories.filter((c) => c.slug !== "servidores");
 
 const navLinks = [
-{ label: "Inicio", to: "/" },
-{ label: "Tienda", to: "/tienda" },
-{ label: "Quiénes Somos", to: "/nosotros" },
-{ label: "Contacto", to: "/contacto" }];
+{ label: "Inicio", path: "/" },
+{ label: "Tienda", path: "/tienda" },
+{ label: "Quiénes Somos", path: "/nosotros" },
+{ label: "Servicios IT", path: "https://avaconit.com/", external: true },
+{ label: "Contacto", path: "/contacto" }];
 
 
 export default function Header() {
@@ -21,10 +23,14 @@ export default function Header() {
   const { openChat } = useChat();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const location = useLocation();
   const catRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -39,11 +45,36 @@ export default function Header() {
     setSearchOpen(false);
   }, [location.pathname]);
 
-  const filtered = searchQuery.length > 1
-    ? products
-        .filter((p) => p.active && p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .slice(0, 5)
-    : [];
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!query.trim() || query.length < 2) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      const { data } = await supabase
+        .from("products")
+        .select("id, slug, name, price, sale_price, images, sku")
+        .eq("active", true)
+        .or(`name.ilike.%${query}%,sku.ilike.%${query}%`)
+        .limit(6);
+      setResults(data || []);
+      setShowResults(true);
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   return (
     <header className="sticky top-0 z-50">
