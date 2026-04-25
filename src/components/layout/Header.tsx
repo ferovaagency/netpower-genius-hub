@@ -237,13 +237,19 @@ export default function Header() {
           
             <nav className="flex flex-col p-5 gap-1">
               {navLinks.map((l) =>
-            <Link
-              key={l.label}
-              to={l.to}
-              className={`py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.to ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`}>
-              
-                  {l.label}
-                </Link>
+                l.external ? (
+                  <a key={l.label} href={l.path} target="_blank" rel="noopener noreferrer" className="py-3 px-4 rounded-lg text-sm font-medium transition text-foreground hover:bg-muted flex items-center gap-1">
+                    {l.label}
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                ) : (
+                  <Link
+                    key={l.label}
+                    to={l.path}
+                    className={`py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.path ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`}>
+                    {l.label}
+                  </Link>
+                )
             )}
               <div className="pl-4 py-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Categorías</p>
@@ -287,9 +293,9 @@ export default function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
               type="text"
-              placeholder="Buscar productos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar productos, SKU..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               autoFocus
               className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-muted/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
             
