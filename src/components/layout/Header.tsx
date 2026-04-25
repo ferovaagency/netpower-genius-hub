@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Search, Menu, X, Phone, ChevronDown } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Phone, ChevronDown, ExternalLink } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
-import { products, categories } from "@/data/store-data";
+import { categories } from "@/data/store-data";
+import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-netpower-it.png";
 
 const menuCategories = categories.filter((c) => c.slug !== "servidores");
 
 const navLinks = [
-{ label: "Inicio", to: "/" },
-{ label: "Tienda", to: "/tienda" },
-{ label: "Quiénes Somos", to: "/nosotros" },
-{ label: "Contacto", to: "/contacto" }];
+{ label: "Inicio", path: "/" },
+{ label: "Tienda", path: "/tienda" },
+{ label: "Quiénes Somos", path: "/nosotros" },
+{ label: "Servicios IT", path: "https://avaconit.com/", external: true },
+{ label: "Contacto", path: "/contacto" }];
 
 
 export default function Header() {
@@ -21,10 +23,14 @@ export default function Header() {
   const { openChat } = useChat();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const location = useLocation();
   const catRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -39,11 +45,36 @@ export default function Header() {
     setSearchOpen(false);
   }, [location.pathname]);
 
-  const filtered = searchQuery.length > 1
-    ? products
-        .filter((p) => p.active && p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .slice(0, 5)
-    : [];
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!query.trim() || query.length < 2) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      const { data } = await supabase
+        .from("products")
+        .select("id, slug, name, price, sale_price, images, sku")
+        .eq("active", true)
+        .or(`name.ilike.%${query}%,sku.ilike.%${query}%`)
+        .limit(6);
+      setResults(data || []);
+      setShowResults(true);
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   return (
     <header className="sticky top-0 z-50">
@@ -73,8 +104,8 @@ export default function Header() {
             {navLinks.slice(0, 2).map((l) =>
             <Link
               key={l.label}
-              to={l.to}
-              className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.to ? "text-primary" : "text-foreground"}`}>
+              to={l.path}
+              className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
               
                 {l.label}
               </Link>
@@ -116,51 +147,57 @@ export default function Header() {
             </div>
 
             {navLinks.slice(2).map((l) =>
-            <Link
-              key={l.label}
-              to={l.to}
-              className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.to ? "text-primary" : "text-foreground"}`}>
-              
-                {l.label}
-              </Link>
+              l.external ? (
+                <a
+                  key={l.label}
+                  href={l.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold tracking-wide transition hover:text-primary text-foreground flex items-center gap-1"
+                >
+                  {l.label}
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              ) : (
+                <Link
+                  key={l.label}
+                  to={l.path}
+                  className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
+                  {l.label}
+                </Link>
+              )
             )}
           </nav>
 
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-xs mx-8 relative">
-            <div className="relative w-full">
+            <div ref={searchRef} className="relative w-full max-w-md">
+              <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar productos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-muted/40 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
-              
-            </div>
-            {filtered.length > 0 &&
-            <div className="absolute top-full mt-2 w-full bg-card rounded-xl shadow-lg border border-border overflow-hidden z-50">
-                {filtered.map((p) =>
-              <Link
-                key={p.id}
-                to={`/producto/${p.slug}`}
-                onClick={() => setSearchQuery("")}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition text-sm">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-foreground">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.shortDesc}</p>
-                    </div>
-                  </Link>
-              )}
-                <Link
-                  to={`/tienda?q=${encodeURIComponent(searchQuery)}`}
-                  onClick={() => setSearchQuery("")}
-                  className="block px-4 py-2.5 text-xs font-semibold text-primary hover:bg-accent transition text-center border-t border-border"
-                >
-                  Ver todos los resultados →
-                </Link>
+                placeholder="Buscar productos, SKU..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                {searching && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}
               </div>
-            }
+              {showResults && <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-elevated z-50 overflow-hidden">
+                {results.length > 0 ? <>
+                  {results.map((product) => <Link key={product.id} to={`/producto/${product.slug}`} onClick={() => { setShowResults(false); setQuery(""); }} className="flex items-center gap-3 p-3 hover:bg-muted transition-colors">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0"><img src={product.images?.[0] || "/placeholder.svg"} alt={product.name} className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} /></div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium text-foreground truncate">{product.name}</p>{product.sku && <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>}<p className="text-sm font-bold text-primary mt-0.5">{product.sale_price ? new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(product.sale_price) : product.price ? new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(product.price) : "Consultar precio"}</p></div>
+                  </Link>)}
+                <Link
+                  to={`/tienda?q=${query}`}
+                  onClick={() => { setShowResults(false); setQuery(""); }}
+                  className="block text-center text-xs text-primary font-semibold py-3 border-t border-border hover:bg-muted transition-colors"
+                >
+                  Ver todos los resultados para "{query}" →
+                </Link>
+                </> : <div className="p-4 text-center"><p className="text-sm text-muted-foreground">No encontramos productos para "{query}"</p><p className="text-xs text-muted-foreground mt-1">Intenta con otro término o SKU</p></div>}
+              </div>}
+            </div>
           </div>
 
           {/* Actions */}
@@ -200,13 +237,19 @@ export default function Header() {
           
             <nav className="flex flex-col p-5 gap-1">
               {navLinks.map((l) =>
-            <Link
-              key={l.label}
-              to={l.to}
-              className={`py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.to ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`}>
-              
-                  {l.label}
-                </Link>
+                l.external ? (
+                  <a key={l.label} href={l.path} target="_blank" rel="noopener noreferrer" className="py-3 px-4 rounded-lg text-sm font-medium transition text-foreground hover:bg-muted flex items-center gap-1">
+                    {l.label}
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                ) : (
+                  <Link
+                    key={l.label}
+                    to={l.path}
+                    className={`py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.path ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`}>
+                    {l.label}
+                  </Link>
+                )
             )}
               <div className="pl-4 py-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Categorías</p>
@@ -250,9 +293,9 @@ export default function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
               type="text"
-              placeholder="Buscar productos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar productos, SKU..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               autoFocus
               className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-muted/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
             

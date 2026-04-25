@@ -24,10 +24,10 @@ export default function CheckoutPage() {
   // Los precios ya incluyen IVA — no se suma
   const subtotal = totalPrice;
 
-  // ─── Descuento Mundialista 5% (transferencias, 1 mayo - 30 junio 2025) ───
+  // ─── Descuento Mundialista 5% (transferencias, 1 mayo - 30 junio 2026) ───
   const DISCOUNT_ACTIVE = true;
-  const DISCOUNT_START = new Date("2025-05-01");
-  const DISCOUNT_END = new Date("2025-06-30T23:59:59");
+  const DISCOUNT_START = new Date("2026-05-01");
+  const DISCOUNT_END = new Date("2026-06-30T23:59:59");
   const transferMethods = ["bancolombia", "nequi", "daviplata", "breb"] as const;
   const today = new Date();
   const inDateRange = today >= DISCOUNT_START && today <= DISCOUNT_END;
