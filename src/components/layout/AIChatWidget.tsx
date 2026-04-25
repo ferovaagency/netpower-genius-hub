@@ -117,13 +117,14 @@ function MiniProductCard({
 }
 
 export default function AIChatWidget() {
-  const { isOpen, mode, closeChat, toggleChat } = useChat();
+  const { isOpen, mode, closeChat, toggleChat, openChat: openChatContext } = useChat();
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
@@ -141,6 +142,16 @@ export default function AIChatWidget() {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const shown = localStorage.getItem("netpower_chat_shown");
+    if (!shown) {
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -292,6 +303,17 @@ export default function AIChatWidget() {
     navigate("/carrito");
   };
 
+  const closePopup = () => {
+    setShowPopup(false);
+    localStorage.setItem("netpower_chat_shown", "true");
+  };
+
+  const openChat = () => {
+    setShowPopup(false);
+    openChatContext();
+    localStorage.setItem("netpower_chat_shown", "true");
+  };
+
   const visibleMessages = messages.filter((m, i) => {
     if (i === 0 && m.role === "user" && m.content === "Hola") return false;
     return true;
@@ -344,6 +366,32 @@ export default function AIChatWidget() {
 
   return (
     <>
+      {showPopup && !isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 bg-white border-2 border-primary rounded-2xl shadow-elevated p-4 max-w-[260px]">
+          <button onClick={closePopup} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-primary text-sm">Neti</p>
+              <p className="text-xs text-green-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-pulse" />
+                En línea ahora
+              </p>
+            </div>
+          </div>
+          <p className="text-sm text-foreground font-medium leading-relaxed">
+            ¡Hola! Soy Neti 👋 Estoy aquí para asesorarte en todo lo que necesites sobre tecnología TIC.
+          </p>
+          <button onClick={openChat} className="w-full mt-3 bg-primary text-white py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+            Chatear con Neti →
+          </button>
+        </div>
+      )}
+
       {/* Floating chat button */}
       <AnimatePresence>
         {!isOpen && (
