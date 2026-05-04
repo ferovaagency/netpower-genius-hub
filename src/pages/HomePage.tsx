@@ -25,8 +25,8 @@ const slides = [
   },
   {
     image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
-    badge: "5% OFF",
-    title: "¡Descuento Mundialista 5% OFF!",
+    badge: "3% OFF",
+    title: "¡Descuento Mundialista 3% OFF!",
     highlight: null as string | null,
     subtitle: "Válido pagando con transferencia bancaria (Bancolombia, Nequi, Daviplata o Bre-b). No aplica con Wompi. Válido del 1 de mayo al 30 de junio de 2026.",
     cta: "Ver productos",

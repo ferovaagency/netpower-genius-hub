@@ -24,7 +24,7 @@ export default function CheckoutPage() {
   // Los precios ya incluyen IVA — no se suma
   const subtotal = totalPrice;
 
-  // ─── Descuento Mundialista 5% (transferencias, 1 mayo - 30 junio 2026) ───
+  // ─── Descuento Mundialista 3% (transferencias, 1 mayo - 30 junio 2026) ───
   const DISCOUNT_ACTIVE = true;
   const DISCOUNT_START = new Date("2026-05-01");
   const DISCOUNT_END = new Date("2026-06-30T23:59:59");
@@ -35,7 +35,7 @@ export default function CheckoutPage() {
     DISCOUNT_ACTIVE &&
     inDateRange &&
     (transferMethods as readonly string[]).includes(paymentMethod);
-  const discount = discountApplies ? Math.round(subtotal * 0.05) : 0;
+  const discount = discountApplies ? Math.round(subtotal * 0.03) : 0;
   const total = subtotal - discount;
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
@@ -371,7 +371,7 @@ export default function CheckoutPage() {
 
                 {discountApplies && (
                   <div className="flex justify-between text-green-600">
-                    <span className="flex items-center gap-1">🎉 Descuento Mundialista 5%</span>
+                    <span className="flex items-center gap-1">🎉 Descuento Mundialista 3%</span>
                     <span className="font-medium">- {formatCOP(discount)}</span>
                   </div>
                 )}
