@@ -237,7 +237,7 @@ export default function AIChatWidget() {
           body: JSON.stringify({
             messages: allMessages,
             mode,
-            catalog: buildCatalogContext(),
+            catalog: buildCatalogContext(dbCatalog),
           }),
         });
 
