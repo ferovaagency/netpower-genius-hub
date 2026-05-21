@@ -57,40 +57,52 @@ useEffect(() => {
 
   const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); setSearchQuery(""); };
 
-  const FilterPanel = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="font-semibold text-sm mb-3 text-foreground">Categorías</h3>
-        <div className="space-y-1.5">
-          {categories.map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCategory(selectedCategory === c.slug ? "" : c.slug)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
-            >
-              {c.icon} {c.name}
-            </button>
-          ))}
+  const FilterPanel = ({ onApply }: { onApply?: () => void } = {}) => (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto pr-1 space-y-6 min-h-0">
+        <div>
+          <h3 className="font-semibold text-sm mb-3 text-foreground sticky top-0 bg-card py-1">Categorías</h3>
+          <div className="space-y-1.5">
+            {categories.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedCategory(selectedCategory === c.slug ? "" : c.slug)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
+              >
+                {c.icon} {c.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-      <div>
-        <h3 className="font-semibold text-sm mb-3 text-foreground">Marcas</h3>
-        <div className="space-y-1.5">
-          {brands.map(b => (
-            <button
-              key={b.id}
-              onClick={() => setSelectedBrand(selectedBrand === b.slug ? "" : b.slug)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedBrand === b.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
-            >
-              {b.name}
-            </button>
-          ))}
+        <div>
+          <h3 className="font-semibold text-sm mb-3 text-foreground sticky top-0 bg-card py-1">Marcas</h3>
+          <div className="space-y-1.5">
+            {brands.map(b => (
+              <button
+                key={b.id}
+                onClick={() => setSelectedBrand(selectedBrand === b.slug ? "" : b.slug)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedBrand === b.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
+              >
+                {b.name}
+              </button>
+            ))}
+          </div>
         </div>
+        {(selectedCategory || selectedBrand || searchQuery) && (
+          <button onClick={clearFilters} className="flex items-center gap-1 text-sm text-destructive hover:underline">
+            <X className="w-3 h-3" /> Limpiar filtros
+          </button>
+        )}
       </div>
-      {(selectedCategory || selectedBrand || searchQuery) && (
-        <button onClick={clearFilters} className="flex items-center gap-1 text-sm text-destructive hover:underline">
-          <X className="w-3 h-3" /> Limpiar filtros
-        </button>
+      {onApply && (
+        <div className="pt-4 mt-2 border-t border-border shrink-0">
+          <button
+            onClick={onApply}
+            className="w-full h-11 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+          >
+            Aplicar filtros
+          </button>
+        </div>
       )}
     </div>
   );
