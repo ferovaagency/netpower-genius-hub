@@ -401,17 +401,6 @@ export default function AIChatWidget() {
             exit={{ opacity: 0, scale: 0.8 }}
             className="fixed bottom-6 right-24 z-50 flex flex-col items-end gap-2"
           >
-            {/* Tooltip */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.4 }}
-              className="bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg max-w-[200px] relative"
-            >
-              <p className="text-xs font-semibold text-foreground">¿Necesitas ayuda? 💬</p>
-              <p className="text-[10px] text-muted-foreground">Chatea con Neti, tu asesor IA</p>
-              <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
-            </motion.div>
 
             <button
               onClick={toggleChat}
