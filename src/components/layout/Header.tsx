@@ -333,17 +333,18 @@ export default function Header() {
           exit={{ height: 0, opacity: 0 }}
           className="md:hidden border-b border-border overflow-hidden bg-card p-4">
           
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <form onSubmit={(e) => { e.preventDefault(); goSearch(); }} className="relative">
+              <button type="submit" aria-label="Buscar" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <Search className="w-4 h-4" />
+              </button>
               <input
               type="text"
-              placeholder="Buscar productos, SKU..."
+              placeholder="Buscar productos, marca, SKU..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
               className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-muted/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" />
-            
-            </div>
+            </form>
           </motion.div>
         }
       </AnimatePresence>
