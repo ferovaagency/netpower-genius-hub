@@ -110,8 +110,12 @@ useEffect(() => {
   return (
     <>
       <Helmet>
-        <title>Tienda de Tecnología TIC | Computadores, Servidores, Redes — Netpower IT</title>
+        <title>Tienda TIC | Computadores, Servidores, Redes — Netpower IT</title>
         <meta name="description" content="Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá." />
+        <meta property="og:title" content="Tienda TIC — Netpower IT" />
+        <meta property="og:description" content="Computadores, servidores, redes e impresoras para empresas en Colombia." />
+        <meta property="og:url" content="https://netpowerit.co/tienda" />
+        <meta property="og:type" content="website" />
         <link rel="canonical" href="https://netpowerit.co/tienda" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
