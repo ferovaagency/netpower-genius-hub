@@ -28,6 +28,8 @@ import AdminPage from "./pages/AdminPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import VCardNetpower from "./pages/VCardNetpower";
 import PaymentResult from "./pages/PaymentResult";
+import AdminBrandsPage from "./pages/AdminBrandsPage";
+import SearchPage from "./pages/SearchPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
