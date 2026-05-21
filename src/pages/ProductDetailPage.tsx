@@ -106,9 +106,14 @@ export default function ProductDetailPage() {
   return (
     <>
       <Helmet>
-        <title>{product.metaTitle || product.name}</title>
+        <title>{product.metaTitle || `${product.name} | Netpower IT`}</title>
         <meta name="description" content={product.metaDesc || product.shortDesc} />
         <link rel="canonical" href={`https://netpowerit.co/producto/${product.slug}`} />
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={product.name} />
+        <meta property="og:description" content={product.metaDesc || product.shortDesc} />
+        <meta property="og:url" content={`https://netpowerit.co/producto/${product.slug}`} />
+        {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
