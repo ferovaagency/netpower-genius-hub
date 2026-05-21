@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
-import { categories, brands, products } from "@/data/store-data";
+import { categories, products } from "@/data/store-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
