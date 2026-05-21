@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import { products, formatCOP, categories } from "@/data/store-data";
 import { useNavigate } from "react-router-dom";
 import { Product } from "@/types/store";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
