@@ -73,11 +73,12 @@ export default function Header() {
     }
     const timer = setTimeout(async () => {
       setSearching(true);
+      const term = `%${query}%`;
       const { data } = await supabase
         .from("products")
-        .select("id, slug, name, price, sale_price, images, sku")
+        .select("id, slug, name, price, sale_price, images, sku, brand, short_description")
         .eq("active", true)
-        .or(`name.ilike.%${query}%,sku.ilike.%${query}%`)
+        .or(`name.ilike.${term},sku.ilike.${term},brand.ilike.${term},short_description.ilike.${term}`)
         .limit(6);
       setResults(data || []);
       setShowResults(true);
