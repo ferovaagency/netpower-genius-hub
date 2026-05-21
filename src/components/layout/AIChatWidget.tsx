@@ -7,26 +7,32 @@ import ReactMarkdown from "react-markdown";
 import { products, formatCOP, categories } from "@/data/store-data";
 import { useNavigate } from "react-router-dom";
 import { Product } from "@/types/store";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-chat`;
 
-// Build product catalog for AI context
-function buildCatalogContext(): string {
-  return products
-    .filter((p) => p.active)
+type CatalogItem = { id: string; slug: string; name: string; brand: string; category: string; price: number; sale_price: number | null; stock: number };
+
+function buildCatalogContext(items: CatalogItem[]): string {
+  if (items.length === 0) return "";
+  return items
     .map((p) => {
-      const cat = categories.find((c) => c.id === p.categoryId);
-      return `- slug:${p.slug} | ${p.name} | ${formatCOP(p.salePrice || p.price)}${p.salePrice ? ` (antes ${formatCOP(p.price)})` : ""} | ${cat?.name || ""} | stock:${p.stock}`;
+      const price = p.sale_price ?? p.price;
+      return `- id:${p.id} | ${p.name} | ${p.brand || "—"} | ${p.category || ""} | ${formatCOP(price)} | stock:${p.stock ?? 0}`;
     })
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]] and [[WHATSAPP:text]] markers in AI text
-function parseMarkers(text: string): (string | Product | { type: "whatsapp"; label: string })[] {
-  const parts: (string | Product | { type: "whatsapp"; label: string })[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]/g;
+// Parse [[PRODUCT:slug]], [[WHATSAPP:text]] and [PRODUCT_SUGGESTIONS: id1,id2] markers
+type SuggestionsMarker = { type: "suggestions"; ids: string[] };
+type WhatsappMarker = { type: "whatsapp"; label: string };
+type Part = string | Product | WhatsappMarker | SuggestionsMarker;
+
+function parseMarkers(text: string): Part[] {
+  const parts: Part[] = [];
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -38,9 +44,11 @@ function parseMarkers(text: string): (string | Product | { type: "whatsapp"; lab
       const slug = match[1].trim();
       const product = products.find((p) => p.slug === slug);
       if (product) parts.push(product);
-      else parts.push(match[0]);
-    } else {
+    } else if (match[0].startsWith("[[WHATSAPP")) {
       parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
+    } else {
+      const ids = match[3].split(",").map((s) => s.trim()).filter(Boolean);
+      if (ids.length > 0) parts.push({ type: "suggestions", ids });
     }
     lastIndex = match.index + match[0].length;
   }
@@ -125,6 +133,8 @@ export default function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [suggestionsCache, setSuggestionsCache] = useState<Record<string, Product>>({});
+  const [dbCatalog, setDbCatalog] = useState<CatalogItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
@@ -136,6 +146,49 @@ export default function AIChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load real product catalog from DB once (for AI context with real IDs)
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id, slug, name, brand, category, price, sale_price, stock")
+      .eq("active", true)
+      .limit(500)
+      .then(({ data }) => setDbCatalog((data as any) || []));
+  }, []);
+
+  // Fetch product details for any [PRODUCT_SUGGESTIONS:...] markers in messages
+  useEffect(() => {
+    const ids = new Set<string>();
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const matches = msg.content.matchAll(/\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g);
+      for (const m of matches) {
+        m[1].split(",").map((s) => s.trim()).filter(Boolean).forEach((id) => ids.add(id));
+      }
+    }
+    const missing = [...ids].filter((id) => !suggestionsCache[id]);
+    if (missing.length === 0) return;
+    supabase
+      .from("products")
+      .select("id, slug, name, short_description, description, price, sale_price, sku, stock, images, category, brand, specs")
+      .in("id", missing)
+      .then(({ data }) => {
+        if (!data) return;
+        const next: Record<string, Product> = {};
+        for (const r of data as any[]) {
+          next[r.id] = {
+            id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
+            shortDesc: r.short_description ?? "", price: Number(r.price),
+            salePrice: r.sale_price ? Number(r.sale_price) : null,
+            sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+            categoryId: r.category ?? "", brandId: r.brand ?? "",
+            specs: r.specs ?? {}, metaTitle: "", metaDesc: "", active: true, featured: false,
+          } as Product;
+        }
+        setSuggestionsCache((prev) => ({ ...prev, ...next }));
+      });
+  }, [messages, suggestionsCache]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -194,7 +247,7 @@ export default function AIChatWidget() {
           body: JSON.stringify({
             messages: allMessages,
             mode,
-            catalog: buildCatalogContext(),
+            catalog: buildCatalogContext(dbCatalog),
           }),
         });
 
@@ -277,7 +330,7 @@ export default function AIChatWidget() {
         setIsLoading(false);
       }
     },
-    [mode]
+    [mode, dbCatalog]
   );
 
   const handleSend = () => {
@@ -350,6 +403,27 @@ export default function AIChatWidget() {
               </a>
             );
           }
+          if ("type" in part && part.type === "suggestions") {
+            const productsToShow = part.ids.map((id) => suggestionsCache[id]).filter(Boolean) as Product[];
+            if (productsToShow.length === 0) {
+              return (
+                <div key={idx} className="my-2 text-xs text-muted-foreground italic">Cargando productos…</div>
+              );
+            }
+            return (
+              <div key={idx} className="space-y-2 my-2">
+                {productsToShow.map((p) => (
+                  <MiniProductCard
+                    key={p.id}
+                    product={p}
+                    onAddToCart={() => handleAddToCart(p)}
+                    onViewProduct={() => handleViewProduct(p)}
+                    onCheckout={() => handleCheckout(p)}
+                  />
+                ))}
+              </div>
+            );
+          }
           return (
             <MiniProductCard
               key={idx}
@@ -401,17 +475,6 @@ export default function AIChatWidget() {
             exit={{ opacity: 0, scale: 0.8 }}
             className="fixed bottom-6 right-24 z-50 flex flex-col items-end gap-2"
           >
-            {/* Tooltip */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.4 }}
-              className="bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg max-w-[200px] relative"
-            >
-              <p className="text-xs font-semibold text-foreground">¿Necesitas ayuda? 💬</p>
-              <p className="text-[10px] text-muted-foreground">Chatea con Neti, tu asesor IA</p>
-              <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
-            </motion.div>
 
             <button
               onClick={toggleChat}

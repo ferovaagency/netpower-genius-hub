@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
-import { categories, brands, products } from "@/data/store-data";
+import { categories, products } from "@/data/store-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
@@ -37,10 +37,20 @@ const slides = [
 export default function HomePage() {
   const { openChat } = useChat();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [homeBrands, setHomeBrands] = useState<{ id: string; slug: string; name: string; logo_url: string | null }[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
   );
+
+  useEffect(() => {
+    supabase
+      .from("brands" as any)
+      .select("id, slug, name, logo_url")
+      .eq("show_in_home", true)
+      .order("display_order", { ascending: true })
+      .then(({ data }) => setHomeBrands((data as any) || []));
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -260,27 +270,32 @@ export default function HomePage() {
       </section>
 
       {/* Brands */}
-      <section className="py-14 bg-background">
-        <div className="container mx-auto px-6">
-          <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Marcas que Distribuimos</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {brands.filter((b) => b.logo).map((brand) => (
-              <Link
-                key={brand.id}
-                to={`/tienda?marca=${brand.slug}`}
-                className="flex items-center justify-center p-4 bg-card rounded-xl border border-border hover:border-primary hover:shadow-card-hover transition-all h-20"
-              >
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="max-h-10 max-w-[120px] object-contain filter grayscale hover:grayscale-0 transition-all"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              </Link>
-            ))}
+      {homeBrands.length > 0 && (
+        <section className="py-14 bg-background">
+          <div className="container mx-auto px-6">
+            <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Marcas que Distribuimos</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {homeBrands.map((brand) => (
+                <Link
+                  key={brand.id}
+                  to={`/tienda?marca=${brand.slug}`}
+                  className="flex items-center justify-center p-4 bg-card rounded-xl border border-border hover:border-primary hover:shadow-card-hover transition-all h-20"
+                >
+                  {brand.logo_url ? (
+                    <img
+                      src={brand.logo_url}
+                      alt={brand.name}
+                      className="max-h-10 max-w-[120px] object-contain filter grayscale hover:grayscale-0 transition-all"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-muted-foreground">{brand.name}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Testimonials */}
       <section className="py-14 bg-card">
@@ -288,9 +303,9 @@ export default function HomePage() {
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Lo que Dicen Nuestros Clientes</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-            { name: "Carlos Gómez", company: "TechSolutions SAS, Bogotá", text: "Excelente servicio y rapidez en la entrega. Los UPS APC que compramos funcionan perfecto." },
-            { name: "María Rodríguez", company: "Hospital San José, Medellín", text: "El equipo de Netpower IT nos asesoró con la solución de energía ideal para nuestro centro de datos." },
-            { name: "Andrés López", company: "Grupo Empresarial ALR, Cali", text: "Precios competitivos y garantía oficial. Llevamos 3 años comprando con ellos sin problemas." }].
+            { name: "Jorge M.", role: "Director de Tecnología", text: "Excelente servicio y rapidez en la entrega. Los UPS que compramos funcionan perfecto." },
+            { name: "Ana P.", role: "Coordinadora de Sistemas", text: "El equipo nos asesoró con la solución de energía ideal para nuestro centro de datos." },
+            { name: "Andrés L.", role: "Gerente de Infraestructura TI", text: "Precios competitivos y garantía oficial. Llevamos años comprando con ellos sin problemas." }].
             map((t, i) =>
             <div key={i} className="p-5 rounded-xl bg-background border border-border/60">
                 <div className="flex gap-0.5 mb-3">
@@ -298,10 +313,11 @@ export default function HomePage() {
                 </div>
                 <p className="text-sm text-muted-foreground mb-4 italic leading-relaxed">"{t.text}"</p>
                 <p className="font-semibold text-sm text-foreground">{t.name}</p>
-                <p className="text-xs text-muted-foreground">{t.company}</p>
+                <p className="text-xs text-muted-foreground">{t.role}</p>
               </div>
             )}
           </div>
+          <p className="text-center text-xs text-muted-foreground mt-6 italic">Testimonio representativo de cliente de Netpower IT</p>
         </div>
       </section>
 
