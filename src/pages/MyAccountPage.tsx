@@ -58,8 +58,9 @@ export default function MyAccountPage() {
   return (
     <>
       <Helmet>
-        <title>Mi Cuenta | Netpower IT</title>
-        <meta name="description" content="Consulta el estado de tu pedido en Netpower IT." />
+        <title>Mi Cuenta — Consultar Pedido | Netpower IT</title>
+        <meta name="description" content="Consulta el estado de tu pedido en Netpower IT usando tu correo y código de pedido. Seguimiento en tiempo real." />
+        <meta name="robots" content="noindex" />
       </Helmet>
       <div className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="flex items-center gap-3 mb-8">
