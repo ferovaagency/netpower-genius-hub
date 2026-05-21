@@ -145,6 +145,39 @@ export default function AIChatWidget() {
     scrollToBottom();
   }, [messages]);
 
+  // Fetch product details for any [PRODUCT_SUGGESTIONS:...] markers in messages
+  useEffect(() => {
+    const ids = new Set<string>();
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const matches = msg.content.matchAll(/\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g);
+      for (const m of matches) {
+        m[1].split(",").map((s) => s.trim()).filter(Boolean).forEach((id) => ids.add(id));
+      }
+    }
+    const missing = [...ids].filter((id) => !suggestionsCache[id]);
+    if (missing.length === 0) return;
+    supabase
+      .from("products")
+      .select("id, slug, name, short_description, description, price, sale_price, sku, stock, images, category, brand, specs")
+      .in("id", missing)
+      .then(({ data }) => {
+        if (!data) return;
+        const next: Record<string, Product> = {};
+        for (const r of data as any[]) {
+          next[r.id] = {
+            id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
+            shortDesc: r.short_description ?? "", price: Number(r.price),
+            salePrice: r.sale_price ? Number(r.sale_price) : null,
+            sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+            categoryId: r.category ?? "", brandId: r.brand ?? "",
+            specs: r.specs ?? {}, metaTitle: "", metaDesc: "", active: true, featured: false,
+          } as Product;
+        }
+        setSuggestionsCache((prev) => ({ ...prev, ...next }));
+      });
+  }, [messages, suggestionsCache]);
+
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300);
