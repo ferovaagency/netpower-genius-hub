@@ -13,13 +13,14 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-chat`;
 
-// Build product catalog for AI context
-function buildCatalogContext(): string {
-  return products
-    .filter((p) => p.active)
+type CatalogItem = { id: string; slug: string; name: string; brand: string; category: string; price: number; sale_price: number | null; stock: number };
+
+function buildCatalogContext(items: CatalogItem[]): string {
+  if (items.length === 0) return "";
+  return items
     .map((p) => {
-      const cat = categories.find((c) => c.id === p.categoryId);
-      return `- slug:${p.slug} | ${p.name} | ${formatCOP(p.salePrice || p.price)}${p.salePrice ? ` (antes ${formatCOP(p.price)})` : ""} | ${cat?.name || ""} | stock:${p.stock}`;
+      const price = p.sale_price ?? p.price;
+      return `- id:${p.id} | ${p.name} | ${p.brand || "—"} | ${p.category || ""} | ${formatCOP(price)} | stock:${p.stock ?? 0}`;
     })
     .join("\n");
 }
