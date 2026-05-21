@@ -391,6 +391,27 @@ export default function AIChatWidget() {
               </a>
             );
           }
+          if ("type" in part && part.type === "suggestions") {
+            const productsToShow = part.ids.map((id) => suggestionsCache[id]).filter(Boolean) as Product[];
+            if (productsToShow.length === 0) {
+              return (
+                <div key={idx} className="my-2 text-xs text-muted-foreground italic">Cargando productos…</div>
+              );
+            }
+            return (
+              <div key={idx} className="space-y-2 my-2">
+                {productsToShow.map((p) => (
+                  <MiniProductCard
+                    key={p.id}
+                    product={p}
+                    onAddToCart={() => handleAddToCart(p)}
+                    onViewProduct={() => handleViewProduct(p)}
+                    onCheckout={() => handleCheckout(p)}
+                  />
+                ))}
+              </div>
+            );
+          }
           return (
             <MiniProductCard
               key={idx}
