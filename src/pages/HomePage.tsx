@@ -37,10 +37,20 @@ const slides = [
 export default function HomePage() {
   const { openChat } = useChat();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [homeBrands, setHomeBrands] = useState<{ id: string; slug: string; name: string; logo_url: string | null }[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
   );
+
+  useEffect(() => {
+    supabase
+      .from("brands" as any)
+      .select("id, slug, name, logo_url")
+      .eq("show_in_home", true)
+      .order("display_order", { ascending: true })
+      .then(({ data }) => setHomeBrands((data as any) || []));
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
