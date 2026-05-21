@@ -134,6 +134,7 @@ export default function AIChatWidget() {
   const [initialized, setInitialized] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [suggestionsCache, setSuggestionsCache] = useState<Record<string, Product>>({});
+  const [dbCatalog, setDbCatalog] = useState<CatalogItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
