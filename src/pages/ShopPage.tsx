@@ -147,23 +147,29 @@ useEffect(() => {
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <label htmlFor="shop-search" className="sr-only">Buscar productos en la tienda</label>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <input
+                id="shop-search"
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Buscar productos..."
+                aria-label="Buscar productos"
                 className="h-9 pl-9 pr-3 w-48 sm:w-64 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2">
+                <button onClick={() => setSearchQuery("")} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 -translate-y-1/2">
                   <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
                 </button>
               )}
             </div>
+            <label htmlFor="shop-sort" className="sr-only">Ordenar productos</label>
             <select
+              id="shop-sort"
               value={sort}
               onChange={e => setSort(e.target.value as SortOption)}
+              aria-label="Ordenar productos"
               className="h-9 px-3 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="relevance">Relevancia</option>
@@ -171,7 +177,7 @@ useEffect(() => {
               <option value="price-desc">Mayor precio</option>
               <option value="newest">Más nuevos</option>
             </select>
-            <button onClick={() => setFiltersOpen(!filtersOpen)} className="lg:hidden p-2 rounded-lg border border-border hover:bg-accent transition">
+            <button onClick={() => setFiltersOpen(!filtersOpen)} aria-label="Abrir filtros" className="lg:hidden p-2 rounded-lg border border-border hover:bg-accent transition">
               <SlidersHorizontal className="w-4 h-4" />
             </button>
           </div>
