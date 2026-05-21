@@ -14,6 +14,7 @@ export default function CartPage() {
     <>
       <Helmet>
         <title>Carrito de Compras | Netpower IT</title>
+        <meta name="description" content="Revisa los productos en tu carrito de compras Netpower IT antes de proceder al pago. Productos TIC con garantía oficial." />
         <meta name="robots" content="noindex" />
       </Helmet>
 
