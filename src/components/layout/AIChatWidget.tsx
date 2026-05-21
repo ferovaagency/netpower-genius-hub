@@ -24,10 +24,14 @@ function buildCatalogContext(): string {
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]] and [[WHATSAPP:text]] markers in AI text
-function parseMarkers(text: string): (string | Product | { type: "whatsapp"; label: string })[] {
-  const parts: (string | Product | { type: "whatsapp"; label: string })[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]/g;
+// Parse [[PRODUCT:slug]], [[WHATSAPP:text]] and [PRODUCT_SUGGESTIONS: id1,id2] markers
+type SuggestionsMarker = { type: "suggestions"; ids: string[] };
+type WhatsappMarker = { type: "whatsapp"; label: string };
+type Part = string | Product | WhatsappMarker | SuggestionsMarker;
+
+function parseMarkers(text: string): Part[] {
+  const parts: Part[] = [];
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -39,9 +43,11 @@ function parseMarkers(text: string): (string | Product | { type: "whatsapp"; lab
       const slug = match[1].trim();
       const product = products.find((p) => p.slug === slug);
       if (product) parts.push(product);
-      else parts.push(match[0]);
-    } else {
+    } else if (match[0].startsWith("[[WHATSAPP")) {
       parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
+    } else {
+      const ids = match[3].split(",").map((s) => s.trim()).filter(Boolean);
+      if (ids.length > 0) parts.push({ type: "suggestions", ids });
     }
     lastIndex = match.index + match[0].length;
   }
