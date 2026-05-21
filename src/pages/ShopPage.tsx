@@ -174,23 +174,25 @@ useEffect(() => {
         </div>
 
         <div className="flex gap-8">
-          {/* Desktop sidebar */}
+          {/* Desktop sidebar — internal scroll */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-32 bg-card rounded-xl border border-border p-5 shadow-card">
+            <div className="sticky top-32 bg-card rounded-xl border border-border p-5 shadow-card max-h-[calc(100vh-9rem)]">
               <FilterPanel />
             </div>
           </aside>
 
-          {/* Mobile filters */}
+          {/* Mobile drawer — overlay, doesn't push content */}
           {filtersOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div className="absolute inset-0 bg-foreground/30" onClick={() => setFiltersOpen(false)} />
-              <div className="absolute right-0 top-0 bottom-0 w-80 bg-card p-6 overflow-auto animate-slide-in-right shadow-xl">
-                <div className="flex items-center justify-between mb-6">
+            <div className="fixed inset-0 z-[60] lg:hidden">
+              <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setFiltersOpen(false)} />
+              <div className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-card shadow-xl flex flex-col animate-slide-in-right">
+                <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
                   <h2 className="font-bold text-foreground">Filtros</h2>
-                  <button onClick={() => setFiltersOpen(false)}><X className="w-5 h-5" /></button>
+                  <button onClick={() => setFiltersOpen(false)} aria-label="Cerrar"><X className="w-5 h-5" /></button>
                 </div>
-                <FilterPanel />
+                <div className="flex-1 min-h-0 p-5 pb-3">
+                  <FilterPanel onApply={() => setFiltersOpen(false)} />
+                </div>
               </div>
             </div>
           )}
