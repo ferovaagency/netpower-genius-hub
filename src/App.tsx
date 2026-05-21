@@ -65,6 +65,8 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                     <Route path="/legal" element={<LegalPage />} />
                     <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/admin/marcas" element={<AdminBrandsPage />} />
+                    <Route path="/buscar" element={<SearchPage />} />
                     <Route path="/mi-cuenta" element={<MyAccountPage />} />
                     <Route path="/contacto-digital" element={<VCardNetpower />} />
                     <Route path="/resultado-pago" element={<PaymentResult />} />
