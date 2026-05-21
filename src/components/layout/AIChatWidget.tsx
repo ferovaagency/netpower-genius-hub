@@ -330,7 +330,7 @@ export default function AIChatWidget() {
         setIsLoading(false);
       }
     },
-    [mode]
+    [mode, dbCatalog]
   );
 
   const handleSend = () => {
