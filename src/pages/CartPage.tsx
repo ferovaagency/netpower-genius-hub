@@ -14,6 +14,7 @@ export default function CartPage() {
     <>
       <Helmet>
         <title>Carrito de Compras | Netpower IT</title>
+        <meta name="description" content="Revisa los productos en tu carrito de compras Netpower IT antes de proceder al pago. Productos TIC con garantía oficial." />
         <meta name="robots" content="noindex" />
       </Helmet>
 
@@ -55,15 +56,15 @@ export default function CartPage() {
                       <p className="text-sm font-bold text-foreground mt-1">{formatCOP(unitPrice)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => removeItem(item.product.id)} className="text-muted-foreground hover:text-destructive transition p-1">
+                      <button onClick={() => removeItem(item.product.id)} aria-label={`Eliminar ${item.product.name} del carrito`} className="text-muted-foreground hover:text-destructive transition p-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} aria-label="Disminuir cantidad" className="w-8 h-8 flex items-center justify-center hover:bg-muted transition">
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-8 h-8 flex items-center justify-center text-xs font-semibold border-x border-border">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition">
+                        <span className="w-8 h-8 flex items-center justify-center text-xs font-semibold border-x border-border" aria-label={`Cantidad: ${item.quantity}`}>{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} aria-label="Aumentar cantidad" className="w-8 h-8 flex items-center justify-center hover:bg-muted transition">
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>

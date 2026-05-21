@@ -47,7 +47,12 @@ export default function SearchPage() {
   return (
     <>
       <Helmet>
-        <title>{q ? `Buscar: ${q}` : "Buscar"} — Netpower IT</title>
+        <title>{q ? `Buscar: ${q} | Netpower IT` : "Buscar Productos | Netpower IT"}</title>
+        <meta name="description" content={q ? `Resultados de búsqueda para "${q}" en Netpower IT. Encuentra computadores, servidores, redes e impresoras.` : "Busca productos TIC: computadores, servidores, equipos de red, UPS y más en Netpower IT Colombia."} />
+        <meta property="og:title" content={q ? `Buscar: ${q}` : "Buscar Productos"} />
+        <meta property="og:description" content="Encuentra productos TIC en Netpower IT Colombia." />
+        <meta property="og:url" content={`https://netpowerit.co/buscar${q ? `?q=${encodeURIComponent(q)}` : ""}`} />
+        <meta property="og:type" content="website" />
       </Helmet>
       <div className="container mx-auto px-4 py-8">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
@@ -56,17 +61,22 @@ export default function SearchPage() {
           <span className="text-foreground font-medium">Buscar</span>
         </nav>
 
-        <form onSubmit={submit} className="relative max-w-2xl mb-8">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6">Buscar Productos</h1>
+
+        <form onSubmit={submit} className="relative max-w-2xl mb-8" role="search">
+          <label htmlFor="search-input" className="sr-only">Buscar productos</label>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" aria-hidden="true" />
           <input
+            id="search-input"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Buscar productos por nombre, marca o SKU…"
+            aria-label="Buscar productos por nombre, marca o SKU"
             className="w-full h-12 pl-12 pr-32 rounded-xl border border-border bg-background text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             autoFocus
           />
-          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 h-9 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
+          <button type="submit" aria-label="Buscar" className="absolute right-2 top-1/2 -translate-y-1/2 h-9 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
             Buscar
           </button>
         </form>

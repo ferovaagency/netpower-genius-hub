@@ -54,11 +54,12 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="absolute inset-0 bg-foreground/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <Link
             to={`/producto/${product.slug}`}
+            aria-label={`Ver detalles de ${product.name}`}
             className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition shadow-sm"
           >
             <Eye className="w-4 h-4" />
           </Link>
-          <button className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-destructive hover:text-destructive-foreground transition shadow-sm">
+          <button aria-label={`Añadir ${product.name} a favoritos`} className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-destructive hover:text-destructive-foreground transition shadow-sm">
             <Heart className="w-4 h-4" />
           </button>
         </div>

@@ -76,8 +76,9 @@ export default function PaymentResult() {
         <div className="bg-card rounded-2xl border border-border shadow-card p-8">
           {status === "loading" && (
             <div className="text-center space-y-4 py-8">
-              <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
-              <p className="text-muted-foreground">Verificando tu pago…</p>
+              <h1 className="sr-only">Verificando pago</h1>
+              <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" aria-hidden="true" />
+              <p className="text-muted-foreground" role="status">Verificando tu pago…</p>
             </div>
           )}
 

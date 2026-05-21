@@ -250,11 +250,11 @@ export default function Header() {
               Cotizar Proyecto
             </button>
 
-            <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden p-2 text-foreground hover:text-primary transition">
+            <button onClick={() => setSearchOpen(!searchOpen)} aria-label={searchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"} className="md:hidden p-2 text-foreground hover:text-primary transition">
               <Search className="w-5 h-5" />
             </button>
 
-            <Link to="/carrito" className="relative p-2 text-foreground hover:text-primary transition">
+            <Link to="/carrito" aria-label={`Carrito de compras${totalItems > 0 ? ` (${totalItems} artículos)` : ""}`} className="relative p-2 text-foreground hover:text-primary transition">
               <ShoppingCart className="w-5 h-5" />
               {totalItems > 0 &&
               <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
@@ -263,7 +263,7 @@ export default function Header() {
               }
             </Link>
 
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-foreground hover:text-primary transition">
+            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"} className="lg:hidden p-2 text-foreground hover:text-primary transition">
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>

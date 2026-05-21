@@ -62,18 +62,18 @@ export default function ContactPage() {
           <form className="bg-card rounded-xl border border-border shadow-card p-6 space-y-4">
             <h2 className="font-bold text-foreground mb-2">Envíanos un mensaje</h2>
             {[
-              { label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
-              { label: "Email", type: "email", placeholder: "tu@email.com" },
-              { label: "Teléfono", type: "tel", placeholder: "+57 301 841 7895" },
+              { id: "contact-name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
+              { id: "contact-email", label: "Email", type: "email", placeholder: "tu@email.com" },
+              { id: "contact-phone", label: "Teléfono", type: "tel", placeholder: "+57 301 841 7895" },
             ].map(f => (
-              <div key={f.label}>
-                <label className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
-                <input type={f.type} placeholder={f.placeholder} className="w-full h-10 px-4 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
+              <div key={f.id}>
+                <label htmlFor={f.id} className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
+                <input id={f.id} type={f.type} placeholder={f.placeholder} className="w-full h-10 px-4 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
               </div>
             ))}
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Mensaje</label>
-              <textarea placeholder="¿En qué podemos ayudarte?" rows={4} className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none" />
+              <label htmlFor="contact-message" className="text-sm font-medium text-foreground mb-1 block">Mensaje</label>
+              <textarea id="contact-message" placeholder="¿En qué podemos ayudarte?" rows={4} className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none" />
             </div>
             <button type="button" className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
               Enviar Mensaje

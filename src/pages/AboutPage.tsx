@@ -40,7 +40,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-4">
                 <item.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
+              <h2 className="font-bold text-foreground mb-2">{item.title}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
           ))}
