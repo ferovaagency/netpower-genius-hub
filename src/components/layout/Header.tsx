@@ -29,8 +29,18 @@ export default function Header() {
   const [showResults, setShowResults] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const catRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const goSearch = (term?: string) => {
+    const t = (term ?? query).trim();
+    if (!t) return;
+    setShowResults(false);
+    setSearchOpen(false);
+    setQuery("");
+    navigate(`/buscar?q=${encodeURIComponent(t)}`);
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
