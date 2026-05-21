@@ -147,6 +147,16 @@ export default function AIChatWidget() {
     scrollToBottom();
   }, [messages]);
 
+  // Load real product catalog from DB once (for AI context with real IDs)
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id, slug, name, brand, category, price, sale_price, stock")
+      .eq("active", true)
+      .limit(500)
+      .then(({ data }) => setDbCatalog((data as any) || []));
+  }, []);
+
   // Fetch product details for any [PRODUCT_SUGGESTIONS:...] markers in messages
   useEffect(() => {
     const ids = new Set<string>();
