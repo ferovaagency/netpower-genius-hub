@@ -1,0 +1,31 @@
+# Netpower IT
+
+> Proveedor colombiano de tecnología TIC para empresas: UPS, baterías, infraestructura de red, energía solar, servidores y licencias con garantía oficial.
+
+Netpower IT distribuye equipos y soluciones tecnológicas a empresas en Colombia con respaldo, garantía oficial y asesoría especializada. Pagos en COP vía transferencia o Wompi (Bancolombia, Nequi, Daviplata, Bre-b, tarjetas).
+
+## Pages
+
+- [Inicio](/): Catálogo destacado, marcas y propuesta de valor.
+- [Tienda](/tienda): Catálogo completo con filtros por categoría y marca.
+- [Buscar](/buscar): Búsqueda de productos por nombre, marca o SKU.
+- [Marcas](/marcas): Marcas representadas por Netpower IT.
+- [Nosotros](/nosotros): Quiénes somos y experiencia.
+- [Contacto](/contacto): Canales de contacto, WhatsApp y email.
+- [Cotización](/cotizacion): Solicita una cotización empresarial.
+- [Legal](/legal): Términos, privacidad y políticas.
+
+## Categorías
+
+- [Baterías para UPS](/tienda?categoria=baterias-ups)
+- [UPS y Accesorios](/tienda?categoria=ups-accesorios)
+- [Infraestructura TIC](/tienda?categoria=infraestructura-tic)
+- [Energía Solar](/tienda?categoria=energia-solar)
+- [Servidores](/tienda?categoria=servidores)
+- [Licencias](/tienda?categoria=licencias)
+- [Monitores](/tienda?categoria=monitores)
+- [Accesorios](/tienda?categoria=accesorios)
+
+## Optional
+
+- [Mi cuenta](/mi-cuenta): Consulta el estado de un pedido por email y referencia.

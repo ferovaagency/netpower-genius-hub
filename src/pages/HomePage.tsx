@@ -122,7 +122,16 @@ export default function HomePage() {
             className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             aria-hidden={idx !== currentSlide}
           >
-            <img src={slide.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img
+              src={slide.image}
+              alt=""
+              width={1920}
+              height={800}
+              fetchPriority={idx === 0 ? "high" : "low"}
+              loading={idx === 0 ? "eager" : "lazy"}
+              decoding={idx === 0 ? "sync" : "async"}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent" />
           </div>
         ))}
