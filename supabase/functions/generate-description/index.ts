@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAdmin } from "../_shared/require-admin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,8 @@ const buildFallback = (payload: {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const payload = await req.json();

@@ -100,6 +100,8 @@ Responde EXCLUSIVAMENTE con JSON válido sin markdown, sin backticks. Estructura
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const { tema, keyword_principal, industria, tipo, audiencia_objetivo, notas_adicionales } = await req.json();
