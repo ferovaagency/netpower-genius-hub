@@ -351,7 +351,7 @@ export default function ProductDetailPage() {
                   [&_li]:text-base [&_li]:mb-1
                   [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:bg-accent/30 [&_blockquote]:py-3 [&_blockquote]:pr-4 [&_blockquote]:rounded-r-lg
                   [&_strong]:text-foreground"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
               />
             )}
             {activeTab === "specs" && (
