@@ -153,12 +153,11 @@ export default function Header() {
               </Link>
             )}
 
-            {/* Categories dropdown */}
-            <div ref={catRef} className="relative">
+            {/* Categories megadropdown */}
+            <div ref={catRef} className="relative" onMouseEnter={() => setCatOpen(true)} onMouseLeave={() => setCatOpen(false)}>
               <button
                 onClick={() => setCatOpen(!catOpen)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition">
-                
+                className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition py-2">
                 Categorías <ChevronDown className={`w-3.5 h-3.5 transition-transform ${catOpen ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
@@ -168,21 +167,31 @@ export default function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-full mt-3 left-0 w-64 bg-card rounded-xl shadow-lg border border-border/60 py-1.5 z-50">
-                  
-                    {menuCategories.map((c) =>
-                  <Link
-                    key={c.id}
-                    to={`/tienda?categoria=${c.slug}`}
-                    onClick={() => setCatOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition rounded-lg mx-1.5">
-                    
-                        <span className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-primary">
-                          {c.lucideIcon}
-                        </span>
-                        <span className="font-medium">{c.name}</span>
-                      </Link>
-                  )}
+                  className="absolute top-full left-0 w-[680px] bg-card rounded-xl shadow-elevated border border-border/60 p-4 z-50 grid grid-cols-5 gap-3">
+                    {categoryMenu.map((parent) => (
+                      <div key={parent.slug} className="flex flex-col">
+                        <Link
+                          to={`/tienda?categoria=${parent.categoria}`}
+                          onClick={() => setCatOpen(false)}
+                          className="text-sm font-bold text-foreground hover:text-primary transition pb-2 border-b border-border/40 mb-2"
+                        >
+                          {parent.label}
+                        </Link>
+                        <ul className="space-y-1">
+                          {parent.subs.map((sub) => (
+                            <li key={sub.label}>
+                              <Link
+                                to={`/buscar?q=${encodeURIComponent(sub.q)}`}
+                                onClick={() => setCatOpen(false)}
+                                className="block text-xs text-muted-foreground hover:text-primary transition py-1"
+                              >
+                                {sub.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </motion.div>
                 }
               </AnimatePresence>
