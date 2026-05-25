@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Check, Upload, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { GeneratedSheet } from "@/pages/ProductSheetGeneratorPage";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface Props {
   result: GeneratedSheet;
@@ -71,7 +72,7 @@ export default function GeneratedSheetResult({ result, imageUrl, productName, pr
             [&_li]:text-sm [&_li]:mb-1
             [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-sm [&_blockquote]:my-4 [&_blockquote]:bg-accent/30 [&_blockquote]:py-3 [&_blockquote]:pr-4 [&_blockquote]:rounded-r-lg
             [&_strong]:text-foreground"
-          dangerouslySetInnerHTML={{ __html: result.description }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.description) }}
         />
       </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface Blog {
   id: number; slug: string; h1: string;
@@ -67,9 +68,9 @@ export default function BlogPostPage() {
           <h1>{blog.h1}</h1>
           <p className="text-xl font-semibold leading-relaxed">{blog.frase_inicial}</p>
           <p className="text-lg leading-relaxed">{blog.resumen_intro}</p>
-          <div dangerouslySetInnerHTML={{ __html: blog.contenido_html }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.contenido_html) }} />
           <hr className="my-8" />
-          <div dangerouslySetInnerHTML={{ __html: blog.cierre_html }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.cierre_html) }} />
         </article>
 
         <footer className="mt-12 pt-6 border-t text-sm text-muted-foreground">

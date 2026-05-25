@@ -7,18 +7,54 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Block private/loopback/link-local/multicast IP ranges to prevent SSRF.
+function isPrivateHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal")) return true;
+  // IPv6 loopback / link-local
+  if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  // IPv4 dotted-quad checks
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+  if (a === 10 || a === 127 || a === 0) return true;
+  if (a === 169 && b === 254) return true; // link-local incl. cloud metadata
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a >= 224) return true; // multicast / reserved
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { imageUrl, fileName } = await req.json();
-    if (!imageUrl) throw new Error("imageUrl is required");
+    if (!imageUrl || typeof imageUrl !== "string") throw new Error("imageUrl is required");
+
+    let parsed: URL;
+    try {
+      parsed = new URL(imageUrl);
+    } catch {
+      throw new Error("Invalid imageUrl");
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("Only http(s) URLs are allowed");
+    }
+    if (isPrivateHost(parsed.hostname)) {
+      throw new Error("URL host is not allowed");
+    }
 
     // Download the external image
-    const imgResp = await fetch(imageUrl, {
+    const imgResp = await fetch(parsed.toString(), {
       headers: { "User-Agent": "Mozilla/5.0" },
+      redirect: "error",
     });
     if (!imgResp.ok) throw new Error(`Failed to fetch image: ${imgResp.status}`);
+    const ctRaw = imgResp.headers.get("content-type") || "image/jpeg";
+    if (!ctRaw.toLowerCase().startsWith("image/")) {
+      throw new Error("URL did not return an image");
+    }
 
     const contentType = imgResp.headers.get("content-type") || "image/jpeg";
     const blob = await imgResp.blob();

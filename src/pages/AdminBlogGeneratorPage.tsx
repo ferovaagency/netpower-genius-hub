@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const INDUSTRIAS = [
   { value: "infraestructura-ti", label: "Infraestructura TI / Data center" },
@@ -152,9 +153,9 @@ export default function AdminBlogGeneratorPage() {
                 <h1>{blog.h1}</h1>
                 <p className="lead text-xl"><strong>{blog.frase_inicial}</strong></p>
                 <p>{blog.resumen_intro}</p>
-                <div dangerouslySetInnerHTML={{ __html: blog.contenido_html }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.contenido_html) }} />
                 <hr />
-                <div dangerouslySetInnerHTML={{ __html: blog.cierre_html }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.cierre_html) }} />
               </article>
             ) : (
               <div className="space-y-4">
