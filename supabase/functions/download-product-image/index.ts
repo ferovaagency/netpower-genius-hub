@@ -28,6 +28,8 @@ function isPrivateHost(host: string): boolean {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const { imageUrl, fileName } = await req.json();
