@@ -369,6 +369,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_first_admin: { Args: never; Returns: boolean }
       get_order_by_reference_email: {
         Args: { _email: string; _reference: string }
         Returns: {
