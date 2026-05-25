@@ -33,6 +33,8 @@ import SearchPage from "./pages/SearchPage";
 import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import AdminBlogGeneratorPage from "./pages/AdminBlogGeneratorPage";
+import AuthPage from "./pages/AuthPage";
+import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -64,12 +66,13 @@ const App = () => (
                     <Route path="/contacto" element={<ContactPage />} />
                     <Route path="/marcas" element={<BrandsPage />} />
                     <Route path="/nosotros" element={<AboutPage />} />
-                    <Route path="/admin/generador-fichas" element={<ProductSheetGeneratorPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/admin/generador-fichas" element={<ProtectedAdminRoute><ProductSheetGeneratorPage /></ProtectedAdminRoute>} />
                     <Route path="*" element={<NotFound />} />
                     <Route path="/legal" element={<LegalPage />} />
-                    <Route path="/admin" element={<AdminPage />} />
-                    <Route path="/admin/marcas" element={<AdminBrandsPage />} />
-                    <Route path="/admin/generador-blogs" element={<AdminBlogGeneratorPage />} />
+                    <Route path="/admin" element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
+                    <Route path="/admin/marcas" element={<ProtectedAdminRoute><AdminBrandsPage /></ProtectedAdminRoute>} />
+                    <Route path="/admin/generador-blogs" element={<ProtectedAdminRoute><AdminBlogGeneratorPage /></ProtectedAdminRoute>} />
                     <Route path="/blog" element={<BlogPage />} />
                     <Route path="/blog/:slug" element={<BlogPostPage />} />
                     <Route path="/buscar" element={<SearchPage />} />
