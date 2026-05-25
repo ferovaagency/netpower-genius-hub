@@ -15,6 +15,15 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
 const slides = [
   {
+    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&q=80",
+    badge: "NUEVO" as string | null,
+    title: "Ya está aquí la nueva generación de servidores HPE Gen12",
+    highlight: null as string | null,
+    subtitle: "Mayor rendimiento, eficiencia energética y seguridad para tu infraestructura.",
+    cta: "Ver servidores HPE Gen12",
+    ctaLink: "/tienda?categoria=servidores&marca=hpe",
+  },
+  {
     image: heroBanner,
     badge: null as string | null,
     title: "Protegemos la energía de tu empresa para que tu operación nunca se detenga.",

@@ -3,16 +3,47 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, Menu, X, Phone, ChevronDown, ExternalLink } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
-import { categories } from "@/data/store-data";
+
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-netpower-it.png";
 
-const menuCategories = categories.filter((c) => c.slug !== "servidores");
+type SubCat = { label: string; q: string };
+type ParentCat = { slug: string; label: string; categoria: string; subs: SubCat[] };
+
+const categoryMenu: ParentCat[] = [
+  { slug: "ups", label: "UPS", categoria: "ups-accesorios", subs: [
+    { label: "Interactiva", q: "ups interactiva" },
+    { label: "Online", q: "ups online" },
+    { label: "PDU", q: "pdu" },
+  ]},
+  { slug: "servidores", label: "Servidores", categoria: "servidores", subs: [
+    { label: "Torre", q: "servidor torre" },
+    { label: "Rack", q: "servidor rack" },
+  ]},
+  { slug: "computo", label: "Cómputo", categoria: "monitores", subs: [
+    { label: "PC de escritorio", q: "pc escritorio" },
+    { label: "Portátiles", q: "portátil" },
+    { label: "Workstation", q: "workstation" },
+    { label: "Monitores", q: "monitor" },
+  ]},
+  { slug: "accesorios", label: "Accesorios", categoria: "accesorios", subs: [
+    { label: "Cámaras", q: "cámara" },
+    { label: "Teclados", q: "teclado" },
+    { label: "Mouse", q: "mouse" },
+    { label: "Discos Duros", q: "disco duro" },
+    { label: "Diademas", q: "diadema" },
+  ]},
+  { slug: "licenciamiento", label: "Licenciamiento", categoria: "licencias", subs: [
+    { label: "Microsoft", q: "microsoft" },
+    { label: "Antivirus", q: "antivirus" },
+  ]},
+];
 
 const navLinks = [
 { label: "Inicio", path: "/" },
 { label: "Tienda", path: "/tienda" },
+{ label: "Blog", path: "/blog" },
 { label: "Quiénes Somos", path: "/nosotros" },
 { label: "Servicios IT", path: "https://avaconit.com/", external: true },
 { label: "Contacto", path: "/contacto" }];
@@ -122,12 +153,11 @@ export default function Header() {
               </Link>
             )}
 
-            {/* Categories dropdown */}
-            <div ref={catRef} className="relative">
+            {/* Categories megadropdown */}
+            <div ref={catRef} className="relative" onMouseEnter={() => setCatOpen(true)} onMouseLeave={() => setCatOpen(false)}>
               <button
                 onClick={() => setCatOpen(!catOpen)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition">
-                
+                className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition py-2">
                 Categorías <ChevronDown className={`w-3.5 h-3.5 transition-transform ${catOpen ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
@@ -137,21 +167,31 @@ export default function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-full mt-3 left-0 w-64 bg-card rounded-xl shadow-lg border border-border/60 py-1.5 z-50">
-                  
-                    {menuCategories.map((c) =>
-                  <Link
-                    key={c.id}
-                    to={`/tienda?categoria=${c.slug}`}
-                    onClick={() => setCatOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition rounded-lg mx-1.5">
-                    
-                        <span className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-primary">
-                          {c.lucideIcon}
-                        </span>
-                        <span className="font-medium">{c.name}</span>
-                      </Link>
-                  )}
+                  className="absolute top-full left-0 w-[680px] bg-card rounded-xl shadow-elevated border border-border/60 p-4 z-50 grid grid-cols-5 gap-3">
+                    {categoryMenu.map((parent) => (
+                      <div key={parent.slug} className="flex flex-col">
+                        <Link
+                          to={`/tienda?categoria=${parent.categoria}`}
+                          onClick={() => setCatOpen(false)}
+                          className="text-sm font-bold text-foreground hover:text-primary transition pb-2 border-b border-border/40 mb-2"
+                        >
+                          {parent.label}
+                        </Link>
+                        <ul className="space-y-1">
+                          {parent.subs.map((sub) => (
+                            <li key={sub.label}>
+                              <Link
+                                to={`/buscar?q=${encodeURIComponent(sub.q)}`}
+                                onClick={() => setCatOpen(false)}
+                                className="block text-xs text-muted-foreground hover:text-primary transition py-1"
+                              >
+                                {sub.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </motion.div>
                 }
               </AnimatePresence>
@@ -297,18 +337,28 @@ export default function Header() {
             )}
               <div className="pl-4 py-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Categorías</p>
-                {menuCategories.map((c) =>
-              <Link
-                key={c.id}
-                to={`/tienda?categoria=${c.slug}`}
-                className="flex items-center gap-3 py-2.5 text-sm text-muted-foreground hover:text-primary transition">
-                
-                    <span className="w-7 h-7 rounded-md bg-accent flex items-center justify-center text-primary">
-                      {c.lucideIcon}
-                    </span>
-                    {c.name}
-                  </Link>
-              )}
+                {categoryMenu.map((parent) => (
+                  <div key={parent.slug} className="mb-3">
+                    <Link
+                      to={`/tienda?categoria=${parent.categoria}`}
+                      className="block py-1.5 text-sm font-bold text-foreground hover:text-primary transition"
+                    >
+                      {parent.label}
+                    </Link>
+                    <ul className="pl-3 border-l border-border/40 mt-1">
+                      {parent.subs.map((sub) => (
+                        <li key={sub.label}>
+                          <Link
+                            to={`/buscar?q=${encodeURIComponent(sub.q)}`}
+                            className="block py-1 text-xs text-muted-foreground hover:text-primary transition"
+                          >
+                            {sub.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
               <a href="tel:+573018417896" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
                 <Phone className="w-4 h-4" /> +57 301 841 7896
