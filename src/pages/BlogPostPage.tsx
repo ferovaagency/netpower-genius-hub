@@ -45,6 +45,7 @@ export default function BlogPostPage() {
         <meta property="og:title" content={blog.meta_title || blog.h1} />
         <meta property="og:description" content={desc} />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://netpowerit.co/blog/${blog.slug}`} />
         <meta property="og:image" content={img} />
         <meta name="twitter:title" content={blog.meta_title || blog.h1} />
         <meta name="twitter:description" content={desc} />
