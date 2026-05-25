@@ -26,6 +26,10 @@ export default function AboutPage() {
         <title>Quiénes Somos – Netpower IT Colombia</title>
         <meta name="description" content="Netpower IT es tu proveedor de confianza en tecnología TIC en Colombia. Distribuidores autorizados con garantía oficial y soporte técnico." />
         <link rel="canonical" href="https://netpowerit.co/nosotros" />
+        <meta property="og:title" content="Quiénes Somos — Netpower IT" />
+        <meta property="og:description" content="Equipo, experiencia y propuesta de valor de Netpower IT, proveedor TIC empresarial en Colombia." />
+        <meta property="og:url" content="https://netpowerit.co/nosotros" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">
