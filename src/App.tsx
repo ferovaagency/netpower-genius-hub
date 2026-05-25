@@ -30,6 +30,9 @@ import VCardNetpower from "./pages/VCardNetpower";
 import PaymentResult from "./pages/PaymentResult";
 import AdminBrandsPage from "./pages/AdminBrandsPage";
 import SearchPage from "./pages/SearchPage";
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
+import AdminBlogGeneratorPage from "./pages/AdminBlogGeneratorPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -66,6 +69,9 @@ const App = () => (
                     <Route path="/legal" element={<LegalPage />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/admin/marcas" element={<AdminBrandsPage />} />
+                    <Route path="/admin/generador-blogs" element={<AdminBlogGeneratorPage />} />
+                    <Route path="/blog" element={<BlogPage />} />
+                    <Route path="/blog/:slug" element={<BlogPostPage />} />
                     <Route path="/buscar" element={<SearchPage />} />
                     <Route path="/mi-cuenta" element={<MyAccountPage />} />
                     <Route path="/contacto-digital" element={<VCardNetpower />} />
