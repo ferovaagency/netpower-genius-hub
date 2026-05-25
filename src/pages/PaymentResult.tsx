@@ -47,14 +47,11 @@ export default function PaymentResult() {
 
       // No tx id and no explicit pending → check the order in DB as a fallback
       if (orderId && orderId !== "—") {
-        const { data } = await supabase
-          .from("orders")
-          .select("status")
-          .eq("reference", orderId)
-          .maybeSingle();
+        const { data } = await supabase.rpc("get_order_status_by_reference", { _reference: orderId });
+        const row = Array.isArray(data) && data.length ? data[0] as { status: string } : null;
         if (cancelled) return;
-        if (data?.status === "completed") setStatus("success");
-        else if (data?.status === "pending_verification" || data?.status === "pending") setStatus("pending");
+        if (row?.status === "completed") setStatus("success");
+        else if (row?.status === "pending_verification" || row?.status === "pending") setStatus("pending");
         else setStatus("error");
       } else {
         setStatus("error");
