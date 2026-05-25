@@ -8,11 +8,42 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-netpower-it.png";
 
-const menuCategories = categories.filter((c) => c.slug !== "servidores");
+type SubCat = { label: string; q: string };
+type ParentCat = { slug: string; label: string; categoria: string; subs: SubCat[] };
+
+const categoryMenu: ParentCat[] = [
+  { slug: "ups", label: "UPS", categoria: "ups-accesorios", subs: [
+    { label: "Interactiva", q: "ups interactiva" },
+    { label: "Online", q: "ups online" },
+    { label: "PDU", q: "pdu" },
+  ]},
+  { slug: "servidores", label: "Servidores", categoria: "servidores", subs: [
+    { label: "Torre", q: "servidor torre" },
+    { label: "Rack", q: "servidor rack" },
+  ]},
+  { slug: "computo", label: "Cómputo", categoria: "monitores", subs: [
+    { label: "PC de escritorio", q: "pc escritorio" },
+    { label: "Portátiles", q: "portátil" },
+    { label: "Workstation", q: "workstation" },
+    { label: "Monitores", q: "monitor" },
+  ]},
+  { slug: "accesorios", label: "Accesorios", categoria: "accesorios", subs: [
+    { label: "Cámaras", q: "cámara" },
+    { label: "Teclados", q: "teclado" },
+    { label: "Mouse", q: "mouse" },
+    { label: "Discos Duros", q: "disco duro" },
+    { label: "Diademas", q: "diadema" },
+  ]},
+  { slug: "licenciamiento", label: "Licenciamiento", categoria: "licencias", subs: [
+    { label: "Microsoft", q: "microsoft" },
+    { label: "Antivirus", q: "antivirus" },
+  ]},
+];
 
 const navLinks = [
 { label: "Inicio", path: "/" },
 { label: "Tienda", path: "/tienda" },
+{ label: "Blog", path: "/blog" },
 { label: "Quiénes Somos", path: "/nosotros" },
 { label: "Servicios IT", path: "https://avaconit.com/", external: true },
 { label: "Contacto", path: "/contacto" }];
