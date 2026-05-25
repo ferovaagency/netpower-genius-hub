@@ -343,15 +343,81 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_order_by_reference_email: {
+        Args: { _email: string; _reference: string }
+        Returns: {
+          availability_request_id: string | null
+          created_at: string
+          customer_city: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          discount_amount: number
+          id: string
+          items: Json
+          payment_method: string | null
+          payment_provider: string | null
+          payment_reference: string | null
+          payment_url: string | null
+          receipt_url: string | null
+          reference: string
+          shipping_address: Json | null
+          status: string
+          subtotal: number | null
+          total: number
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_order_status_by_reference: {
+        Args: { _reference: string }
+        Returns: {
+          reference: string
+          status: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -478,6 +544,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
