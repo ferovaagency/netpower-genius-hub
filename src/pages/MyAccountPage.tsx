@@ -37,15 +37,12 @@ export default function MyAccountPage() {
     setError("");
     setOrder(null);
     try {
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("customer_email", email.trim().toLowerCase())
-        .eq("reference", reference.trim().toUpperCase())
-        .maybeSingle();
-      if (data) {
-        setOrder(data);
-      } else {
+      const { data } = await supabase.rpc("get_order_by_reference_email", {
+        _reference: reference.trim().toUpperCase(),
+        _email: email.trim().toLowerCase(),
+      });
+      const row = Array.isArray(data) && data.length ? data[0] : null;
+      if (row) setOrder(row); else {
         setError("No encontramos un pedido con esos datos. Verifica tu email y código de pedido.");
       }
     } catch {
