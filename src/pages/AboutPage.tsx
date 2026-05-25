@@ -1,6 +1,23 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ShieldCheck, Users, Headphones, Globe, Award, Truck } from "lucide-react";
+import anaMariaPhoto from "@/assets/team/ana-maria-osorio.png";
+import gonzaloPhoto from "@/assets/team/gonzalo.jpeg";
+
+const team = [
+  {
+    photo: anaMariaPhoto,
+    name: "Ana María Osorio",
+    role: "CEO",
+    bio: "Lidera la estrategia comercial y operativa de Netpower IT, con foco en construir relaciones de largo plazo con clientes empresariales en Colombia.",
+  },
+  {
+    photo: gonzaloPhoto,
+    name: "Gonzalo",
+    role: "Director de Estrategia",
+    bio: "Define la dirección de portafolio y alianzas con fabricantes, asegurando soluciones de infraestructura confiables para cada cliente.",
+  },
+];
 
 export default function AboutPage() {
   return (
@@ -21,8 +38,8 @@ export default function AboutPage() {
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-4">Quiénes Somos</h1>
           <p className="text-muted-foreground leading-relaxed">
-            Netpower IT es una empresa colombiana especializada en tecnología TIC. Somos distribuidores autorizados de las mejores marcas del mercado, 
-            ofreciendo soluciones en UPS, baterías, infraestructura de red, energía solar, servidores, licencias, monitores y accesorios 
+            Netpower IT es una empresa colombiana especializada en tecnología TIC. Somos distribuidores autorizados de las mejores marcas del mercado,
+            ofreciendo soluciones en UPS, baterías, infraestructura de red, energía solar, servidores, licencias, monitores y accesorios
             con garantía oficial y soporte técnico especializado.
           </p>
         </div>
@@ -45,6 +62,44 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
+
+        {/* Equipo directivo */}
+        <section className="mb-16">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-2">Equipo directivo</h2>
+            <p className="text-muted-foreground text-sm">Las personas detrás de Netpower IT</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {team.map((m) => (
+              <div key={m.name} className="flex flex-col sm:flex-row gap-5 p-6 rounded-xl bg-card border border-border shadow-card">
+                <div className="shrink-0 mx-auto sm:mx-0">
+                  <img
+                    src={m.photo}
+                    alt={`Foto de ${m.name}, ${m.role} de Netpower IT`}
+                    className="w-28 h-28 rounded-full object-cover border-4 border-accent"
+                  />
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="font-bold text-lg text-foreground">{m.name}</h3>
+                  <p className="text-sm text-primary font-semibold mb-2">{m.role}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Reseñas Google (Elfsight) */}
+        <section className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-2">Lo que dicen nuestros clientes en Google</h2>
+            <p className="text-muted-foreground text-sm">Reseñas verificadas de Google My Business</p>
+          </div>
+          {/* Pega aquí el script embed de Elfsight (ej: <div class="elfsight-app-XXXX"></div> + script src) */}
+          <div className="elfsight-app-placeholder text-center text-sm text-muted-foreground py-8 border border-dashed border-border rounded-xl">
+            Widget de reseñas pendiente — pega el script de Elfsight en <code>src/pages/AboutPage.tsx</code> dentro de esta sección.
+          </div>
+        </section>
 
         <div className="text-center bg-accent rounded-2xl p-10">
           <h2 className="text-xl font-extrabold text-foreground mb-3">¿Tienes un proyecto en mente?</h2>
