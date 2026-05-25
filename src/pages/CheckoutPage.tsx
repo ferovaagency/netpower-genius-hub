@@ -122,7 +122,8 @@ export default function CheckoutPage() {
           .from("receipts")
           .upload(filePath, receipt, { upsert: true });
         if (uploadErr) throw uploadErr;
-        receiptUrl = supabase.storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+        // Bucket is private; store the path. Admin viewer generates a signed URL on demand.
+        receiptUrl = filePath;
       }
 
       const { error: orderErr } = await supabase.from("orders").insert({
