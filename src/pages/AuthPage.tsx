@@ -32,7 +32,7 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         // Bootstrap: if no admin exists yet, promote this user to admin (safe no-op afterwards).
-        await supabase.rpc("bootstrap_first_admin").catch(() => null);
+        try { await supabase.rpc("bootstrap_first_admin"); } catch { /* ignore */ }
         toast.success("Sesión iniciada");
         navigate(redirect, { replace: true });
       } else {
