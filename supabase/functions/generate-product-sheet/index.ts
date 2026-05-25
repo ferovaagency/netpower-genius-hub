@@ -31,23 +31,57 @@ GUÍA EDITORIAL:
 - Usa un tono conversacional y cercano, evitando ser excesivamente formal
 
 ESTRUCTURA DE LA DESCRIPCIÓN (usa formato HTML con etiquetas h2, h3, h4, párrafos y listas):
-La descripción DEBE usar etiquetas HTML para estructurar el contenido:
 - <h2> para secciones principales
 - <h3> para subsecciones
 - <h4> para puntos específicos
-- <p> para párrafos (máximo 3-4 líneas por párrafo para facilitar la lectura)
+- <p> para párrafos (máximo 3-4 líneas por párrafo)
 - <ul><li> para listas de beneficios
 - <strong> para destacar datos importantes
 - <blockquote> para el testimonio
 
-Secciones obligatorias de la descripción:
-1. Párrafo introductorio enganchador (2-3 líneas)
-2. <h2>¿Por qué elegir [producto]?</h2> - Beneficios principales en lenguaje amigable
-3. <h2>Características técnicas destacadas</h2> - Desglose técnico accesible con h3 para cada característica
-4. <h2>¿Para quién es ideal?</h2> - Casos de uso y público objetivo
-5. <h2>Escenarios de implementación</h2> - Ejemplos prácticos de uso
-6. <h2>Lo que dicen nuestros clientes</h2> - UN testimonio inventado pero realista de un cliente colombiano (nombre, ciudad, cargo), en blockquote
-7. <h2>¿Por qué comprar en NetPower IT?</h2> - Breve cierre con ventajas de comprar con nosotros
+Secciones obligatorias:
+1. Párrafo introductorio enganchador (2-3 líneas) que responda directo a la intención de búsqueda del producto
+2. <h2>¿Por qué elegir [producto]?</h2>
+3. <h2>Características técnicas destacadas</h2> con h3 por característica
+4. <h2>¿Para quién es ideal?</h2>
+5. <h2>Escenarios de implementación</h2>
+6. <h2>Lo que dicen nuestros clientes</h2> — UN testimonio realista (nombre, ciudad, cargo) en <blockquote>. Debe ser claramente plausible, nunca con estadísticas inventadas.
+7. <h2>¿Por qué comprar en NetPower IT?</h2>
+
+DIRECTRICES GOOGLE SEARCH (obligatorias, basadas en Google Search Essentials, Helpful Content y AI Features):
+
+1) CONTENIDO ÚTIL ANTES QUE SEO: la ficha debe ayudar genuinamente a alguien que evalúa comprar el producto. Cero relleno.
+
+2) EEAT:
+   - Experiencia: ejemplos concretos de uso real en empresas colombianas.
+   - Expertise: terminología precisa del sector sin sobreexplicar lo obvio.
+   - Autoridad: si afirmas datos técnicos, refiérelos al fabricante oficial (sin inventar URLs).
+   - Confianza: nunca afirmes datos que no puedas respaldar; usa solo specs proporcionadas.
+
+3) EVITAR CONTENIDO ESCALADO DE BAJA CALIDAD:
+   - Nada de párrafos genéricos aplicables a cualquier producto/marca.
+   - Nada de "en el competitivo mundo actual…".
+   - Cada sección con información específica y accionable.
+
+4) OPTIMIZACIÓN PARA AI OVERVIEWS Y BÚSQUEDA GENERATIVA:
+   - Primera oración responde directamente "¿qué es y para qué sirve este producto?".
+   - Usa listas y tablas cuando aporten valor (los LLMs las extraen mejor).
+   - Incluye FAQs útiles al final (campo faqs) con 3-5 preguntas reales que la gente busca antes de comprar.
+
+5) INTENCIÓN DE BÚSQUEDA: una ficha de producto es típicamente transaccional/comercial — incluye pros concretos, escenarios y un CTA suave hacia cotización o compra.
+
+6) DATOS ESTRUCTURADOS: incluye un campo "schema_product" con JSON-LD válido tipo Product que el sitio pueda inyectar.
+
+PROHIBICIONES ABSOLUTAS:
+- No inventar fuentes, URLs, estudios ni autores.
+- No inventar estadísticas con porcentajes específicos.
+- No prometer resultados garantizados.
+- Nada de clickbait.
+- No copiar estructura ni frases de otros sitios.
+
+ORIGINALIDAD: cada ficha debe aportar al menos un ángulo, ejemplo o escenario específico al mercado colombiano que no sea obvio en los primeros resultados de Google.
+
+EXTENSIÓN ÚTIL: respeta el mínimo de palabras pero NUNCA infles para llegarlo. Mejor 800 palabras útiles que 1.500 con relleno.
 
 RESPUESTA JSON:
 {
@@ -58,9 +92,20 @@ RESPUESTA JSON:
   "faqs": [{"question": "...", "answer": "..."}],
   "metaTitle": "Máx 60 chars con keyword",
   "metaDesc": "Máx 160 chars orientada a conversión",
-  "suggestedImageSearch": "término de búsqueda sugerido para encontrar imagen del producto",
-  "detectedBrand": "Marca detectada del nombre del producto (ej: APC, CDP, HP, Samsung, Logitech, Epson, Dahua, Hikvision, ADATA, AOC, Brother, Targus, Powest, Wattana, Genius, Caixun, Xkim, Microsoft, SAT, 3nStar, Dell, HPE, Kingston, Lenovo, Teltonika, Vertiv). Si no se reconoce, usa la marca más probable.",
-  "detectedCategory": "Categoría detectada (una de: Baterías Para UPS, UPS y Accesorios, Infraestructura TIC, Energía Solar, Servidores, Licencias, Monitores, Accesorios)"
+  "suggestedImageSearch": "término de búsqueda sugerido",
+  "detectedBrand": "Marca detectada (APC, CDP, HP, Samsung, Logitech, Epson, Dahua, Hikvision, ADATA, AOC, Brother, Targus, Powest, Wattana, Genius, Caixun, Xkim, Microsoft, SAT, 3nStar, Dell, HPE, Kingston, Lenovo, Teltonika, Vertiv)",
+  "detectedCategory": "Una de: Baterías Para UPS, UPS y Accesorios, Infraestructura TIC, Energía Solar, Servidores, Licencias, Monitores, Accesorios",
+  "intencion_busqueda": "transaccional | comercial | informacional | navegacional",
+  "aporta_original": "1 frase concreta sobre qué aporta esta ficha que no esté en los primeros resultados de Google",
+  "schema_product": {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "...",
+    "description": "...",
+    "brand": { "@type": "Brand", "name": "..." },
+    "sku": "...",
+    "category": "..."
+  }
 }
 
 Responde SOLO en formato JSON válido con esta estructura exacta.`;
