@@ -337,18 +337,28 @@ export default function Header() {
             )}
               <div className="pl-4 py-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Categorías</p>
-                {menuCategories.map((c) =>
-              <Link
-                key={c.id}
-                to={`/tienda?categoria=${c.slug}`}
-                className="flex items-center gap-3 py-2.5 text-sm text-muted-foreground hover:text-primary transition">
-                
-                    <span className="w-7 h-7 rounded-md bg-accent flex items-center justify-center text-primary">
-                      {c.lucideIcon}
-                    </span>
-                    {c.name}
-                  </Link>
-              )}
+                {categoryMenu.map((parent) => (
+                  <div key={parent.slug} className="mb-3">
+                    <Link
+                      to={`/tienda?categoria=${parent.categoria}`}
+                      className="block py-1.5 text-sm font-bold text-foreground hover:text-primary transition"
+                    >
+                      {parent.label}
+                    </Link>
+                    <ul className="pl-3 border-l border-border/40 mt-1">
+                      {parent.subs.map((sub) => (
+                        <li key={sub.label}>
+                          <Link
+                            to={`/buscar?q=${encodeURIComponent(sub.q)}`}
+                            className="block py-1 text-xs text-muted-foreground hover:text-primary transition"
+                          >
+                            {sub.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
               <a href="tel:+573018417896" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
                 <Phone className="w-4 h-4" /> +57 301 841 7896
