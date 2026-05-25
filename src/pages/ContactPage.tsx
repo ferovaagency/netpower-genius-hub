@@ -9,6 +9,10 @@ export default function ContactPage() {
         <title>Contacto | Netpower IT — Tecnología TIC en Bogotá Colombia</title>
         <meta name="description" content="Contáctenos para cotizar computadores, servidores y equipos de red para su empresa en Colombia. Asesoría especializada TIC." />
         <link rel="canonical" href="https://netpowerit.co/contacto" />
+        <meta property="og:title" content="Contacto — Netpower IT Colombia" />
+        <meta property="og:description" content="Cotiza UPS, servidores, redes y cómputo empresarial con asesoría especializada en Colombia." />
+        <meta property="og:url" content="https://netpowerit.co/contacto" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ContactPage",

@@ -9,6 +9,10 @@ export default function BrandsPage() {
         <title>Marcas – Distribuidores Autorizados | Netpower IT</title>
         <meta name="description" content="Somos distribuidores autorizados de APC, HP, Samsung, Logitech, Dahua, Hikvision y más. Productos con garantía oficial en Colombia." />
         <link rel="canonical" href="https://netpowerit.co/marcas" />
+        <meta property="og:title" content="Marcas distribuidas por Netpower IT" />
+        <meta property="og:description" content="Distribuidor autorizado en Colombia: APC, HP, Samsung, Logitech, Dahua, Hikvision y más, con garantía oficial." />
+        <meta property="og:url" content="https://netpowerit.co/marcas" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">

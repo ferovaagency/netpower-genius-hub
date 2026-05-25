@@ -28,6 +28,10 @@ export default function BlogPage() {
         <title>Blog — Netpower IT</title>
         <meta name="description" content="Guías, comparativas y tendencias en infraestructura TI, UPS, servidores y energía empresarial." />
         <link rel="canonical" href="https://netpowerit.co/blog" />
+        <meta property="og:title" content="Blog Netpower IT — Infraestructura TI empresarial" />
+        <meta property="og:description" content="Guías técnicas y comparativas sobre UPS, servidores, redes y energía empresarial en Colombia." />
+        <meta property="og:url" content="https://netpowerit.co/blog" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <main className="container mx-auto px-4 py-10 max-w-6xl">
