@@ -25,7 +25,7 @@ import {
   fetchAllProducts,
   fetchProductBySlug,
 } from "@/hooks/useProducts";
-import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY } from "@/lib/catalog";
+import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
 import { generateSlug } from "@/lib/slug";
 
 interface SpecEntry {
@@ -54,6 +54,7 @@ export default function ProductSheetGeneratorPage() {
   const [productName, setProductName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState<string>(DEFAULT_PRODUCT_CATEGORY);
+  const [subcategory, setSubcategory] = useState<string>("");
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
@@ -125,8 +126,12 @@ export default function ProductSheetGeneratorPage() {
     const br = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
     setCategory(cat?.name || DEFAULT_PRODUCT_CATEGORY);
+    const loadedSubcat = (p.specs?.["Subcategoría"] || p.specs?.["Subcategoria"] || "") as string;
+    setSubcategory(loadedSubcat);
 
-    const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
+    const specs = Object.entries(p.specs || {})
+      .filter(([key]) => key !== "Subcategoría" && key !== "Subcategoria")
+      .map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
     setEditSearch(p.name);
     setSearchResults([]);
@@ -243,6 +248,9 @@ export default function ProductSheetGeneratorPage() {
         finalImageUrl = await downloadImageToStorage(imageUrl, slug);
       }
 
+      const finalSpecs: Record<string, string> = { ...(result.specs || {}) };
+      if (subcategory.trim()) finalSpecs["Subcategoría"] = subcategory.trim();
+
       if (tab === "edit" && selectedProduct) {
         const updated = await updateProductDB(selectedProduct.id, {
           name: productName,
@@ -255,7 +263,7 @@ export default function ProductSheetGeneratorPage() {
           images: finalImageUrl ? [finalImageUrl] : selectedProduct.images || [],
           categoryId: selectedCategory.id,
           brandId: selectedBrand.id,
-          specs: result.specs,
+          specs: finalSpecs,
           metaTitle: result.metaTitle,
           metaDesc: result.metaDesc,
           slug,
@@ -281,7 +289,7 @@ export default function ProductSheetGeneratorPage() {
         images: finalImageUrl ? [finalImageUrl] : [],
         categoryId: selectedCategory.id,
         brandId: selectedBrand.id,
-        specs: result.specs,
+        specs: finalSpecs,
         metaTitle: result.metaTitle,
         metaDesc: result.metaDesc,
         active: true,
@@ -339,6 +347,7 @@ export default function ProductSheetGeneratorPage() {
     setProductName("");
     setBrand("");
     setCategory(DEFAULT_PRODUCT_CATEGORY);
+    setSubcategory("");
     setSku("");
     setPrice("");
     setSalePrice("");
@@ -485,10 +494,13 @@ export default function ProductSheetGeneratorPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoría</label>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoría padre</label>
                     <select
                       value={category}
-                      onChange={(e) => setCategory(e.target.value)}
+                      onChange={(e) => {
+                        setCategory(e.target.value);
+                        setSubcategory("");
+                      }}
                       className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                     >
                       {ALLOWED_PRODUCT_CATEGORIES.map((categoryOption) => (
@@ -496,6 +508,29 @@ export default function ProductSheetGeneratorPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    Subcategoría <span className="text-muted-foreground/70 font-normal">(opcional, ayuda a organizar)</span>
+                  </label>
+                  <select
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  >
+                    <option value="">— Sin subcategoría —</option>
+                    {getSubcategoriesFor(category).map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    placeholder="O escribe una subcategoría personalizada"
+                    className="mt-2 w-full h-9 px-3 rounded-lg border border-dashed border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                  />
                 </div>
 
                 <div>

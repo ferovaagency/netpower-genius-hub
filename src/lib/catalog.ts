@@ -11,6 +11,80 @@ export const ALLOWED_PRODUCT_CATEGORIES = [
 
 export const DEFAULT_PRODUCT_CATEGORY = "Accesorios" as const;
 
+export const PRODUCT_SUBCATEGORIES: Record<(typeof ALLOWED_PRODUCT_CATEGORIES)[number], string[]> = {
+  "Baterías Para UPS": [
+    "Baterías 12V 7Ah",
+    "Baterías 12V 9Ah",
+    "Baterías 12V 18Ah",
+    "Baterías de ciclo profundo",
+    "Baterías AGM",
+    "Baterías de litio",
+  ],
+  "UPS y Accesorios": [
+    "UPS Interactivas (hasta 1.5kVA)",
+    "UPS Online doble conversión",
+    "UPS para Rack",
+    "Reguladores de voltaje",
+    "Tarjetas de gestión SNMP",
+    "Bypass y PDU",
+  ],
+  "Infraestructura TIC": [
+    "Switches administrables",
+    "Switches no administrables",
+    "Routers y firewalls",
+    "Access Points WiFi",
+    "Patch panels y racks",
+    "Cableado estructurado",
+    "Fibra óptica",
+  ],
+  "Energía Solar": [
+    "Paneles solares",
+    "Inversores solares",
+    "Controladores de carga",
+    "Baterías solares",
+    "Kits solares",
+    "Estructuras y soportes",
+  ],
+  "Servidores": [
+    "Servidores Torre",
+    "Servidores Rack",
+    "Servidores Blade",
+    "Storage / NAS",
+    "Accesorios para servidor",
+    "Memoria y discos para servidor",
+  ],
+  "Licencias": [
+    "Microsoft 365",
+    "Windows Server",
+    "Antivirus y seguridad",
+    "Firewall Fortinet",
+    "Backup y respaldo",
+    "Office y productividad",
+  ],
+  "Monitores": [
+    "Monitores LED",
+    "Monitores IPS",
+    "Monitores Gaming",
+    "Monitores curvos",
+    "Monitores profesionales",
+    "Soportes para monitor",
+  ],
+  "Accesorios": [
+    "Teclados y mouse",
+    "Cables y adaptadores",
+    "Audífonos y diademas",
+    "Webcams",
+    "Memorias USB y discos externos",
+    "Impresoras y consumibles",
+    "Mochilas y maletines",
+  ],
+};
+
+export const getSubcategoriesFor = (parent: string | null | undefined): string[] => {
+  if (!parent) return [];
+  return PRODUCT_SUBCATEGORIES[parent as (typeof ALLOWED_PRODUCT_CATEGORIES)[number]] ?? [];
+};
+
 const normalize = (value: string) =>
   value
     .toLowerCase()
