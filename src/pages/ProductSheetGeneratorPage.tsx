@@ -347,6 +347,7 @@ export default function ProductSheetGeneratorPage() {
     setProductName("");
     setBrand("");
     setCategory(DEFAULT_PRODUCT_CATEGORY);
+    setSubcategory("");
     setSku("");
     setPrice("");
     setSalePrice("");
