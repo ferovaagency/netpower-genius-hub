@@ -248,6 +248,9 @@ export default function ProductSheetGeneratorPage() {
         finalImageUrl = await downloadImageToStorage(imageUrl, slug);
       }
 
+      const finalSpecs: Record<string, string> = { ...(result.specs || {}) };
+      if (subcategory.trim()) finalSpecs["Subcategoría"] = subcategory.trim();
+
       if (tab === "edit" && selectedProduct) {
         const updated = await updateProductDB(selectedProduct.id, {
           name: productName,
