@@ -25,7 +25,7 @@ import {
   fetchAllProducts,
   fetchProductBySlug,
 } from "@/hooks/useProducts";
-import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY } from "@/lib/catalog";
+import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
 import { generateSlug } from "@/lib/slug";
 
 interface SpecEntry {
