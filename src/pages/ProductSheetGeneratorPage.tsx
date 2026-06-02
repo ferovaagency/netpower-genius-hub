@@ -126,8 +126,12 @@ export default function ProductSheetGeneratorPage() {
     const br = brands.find((b) => b.id === p.brandId);
     setBrand(br?.name || "");
     setCategory(cat?.name || DEFAULT_PRODUCT_CATEGORY);
+    const loadedSubcat = (p.specs?.["Subcategoría"] || p.specs?.["Subcategoria"] || "") as string;
+    setSubcategory(loadedSubcat);
 
-    const specs = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }));
+    const specs = Object.entries(p.specs || {})
+      .filter(([key]) => key !== "Subcategoría" && key !== "Subcategoria")
+      .map(([key, value]) => ({ key, value }));
     setSpecEntries(specs.length > 0 ? specs : [{ key: "", value: "" }]);
     setEditSearch(p.name);
     setSearchResults([]);
