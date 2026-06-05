@@ -22,7 +22,7 @@ const slides = [
     highlight: null as string | null,
     subtitle: "Mayor rendimiento, eficiencia energética y seguridad para tu infraestructura.",
     cta: "Ver servidores HPE Gen12",
-    ctaLink: "/tienda?categoria=servidores&marca=hpe",
+    ctaLink: "/categoria/servidores?marca=hpe",
   },
   {
     image: heroBanner,
