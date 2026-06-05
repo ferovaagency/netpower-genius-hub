@@ -171,7 +171,7 @@ export default function Header() {
                     {categoryMenu.map((parent) => (
                       <div key={parent.slug} className="flex flex-col">
                         <Link
-                          to={`/tienda?categoria=${parent.categoria}`}
+                          to={`/categoria/${parent.categoria}`}
                           onClick={() => setCatOpen(false)}
                           className="text-sm font-bold text-foreground hover:text-primary transition pb-2 border-b border-border/40 mb-2"
                         >
