@@ -17,14 +17,14 @@ Netpower IT distribuye equipos y soluciones tecnológicas a empresas en Colombia
 
 ## Categorías
 
-- [Baterías para UPS](/tienda?categoria=baterias-ups)
-- [UPS y Accesorios](/tienda?categoria=ups-accesorios)
-- [Infraestructura TIC](/tienda?categoria=infraestructura-tic)
-- [Energía Solar](/tienda?categoria=energia-solar)
-- [Servidores](/tienda?categoria=servidores)
-- [Licencias](/tienda?categoria=licencias)
-- [Monitores](/tienda?categoria=monitores)
-- [Accesorios](/tienda?categoria=accesorios)
+- [Baterías para UPS](/categoria/baterias-ups)
+- [UPS y Accesorios](/categoria/ups-accesorios)
+- [Infraestructura TIC](/categoria/infraestructura-tic)
+- [Energía Solar](/categoria/energia-solar)
+- [Servidores](/categoria/servidores)
+- [Licencias](/categoria/licencias)
+- [Monitores](/categoria/monitores)
+- [Accesorios](/categoria/accesorios)
 
 ## Optional
 

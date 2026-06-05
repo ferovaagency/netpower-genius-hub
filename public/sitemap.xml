@@ -18,42 +18,42 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=baterias-ups</loc>
+    <loc>https://netpowerit.co/categoria/baterias-ups</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=ups-accesorios</loc>
+    <loc>https://netpowerit.co/categoria/ups-accesorios</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=infraestructura-tic</loc>
+    <loc>https://netpowerit.co/categoria/infraestructura-tic</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=energia-solar</loc>
+    <loc>https://netpowerit.co/categoria/energia-solar</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=servidores</loc>
+    <loc>https://netpowerit.co/categoria/servidores</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=licencias</loc>
+    <loc>https://netpowerit.co/categoria/licencias</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=monitores</loc>
+    <loc>https://netpowerit.co/categoria/monitores</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://netpowerit.co/tienda?categoria=accesorios</loc>
+    <loc>https://netpowerit.co/categoria/accesorios</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
