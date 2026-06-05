@@ -127,28 +127,39 @@ useEffect(() => {
     </div>
   );
 
+  const activeCategory = categories.find(c => c.slug === selectedCategory);
+  const canonicalPath = activeCategory ? `/categoria/${activeCategory.slug}` : "/tienda";
+  const canonicalUrl = `https://netpowerit.co${canonicalPath}`;
+  const pageTitle = activeCategory
+    ? `${activeCategory.name} | Netpower IT`
+    : "Tienda TIC | Computadores, Servidores, Redes — Netpower IT";
+  const pageDesc = activeCategory
+    ? `${activeCategory.description}. Compra ${activeCategory.name} para empresas en Colombia con Netpower IT.`
+    : "Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá.";
+
   return (
     <>
       <Helmet>
-        <title>Tienda TIC | Computadores, Servidores, Redes — Netpower IT</title>
-        <meta name="description" content="Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá." />
-        <meta property="og:title" content="Tienda TIC — Netpower IT" />
-        <meta property="og:description" content="Computadores, servidores, redes e impresoras para empresas en Colombia." />
-        <meta property="og:url" content="https://netpowerit.co/tienda" />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://netpowerit.co/tienda" />
+        <link rel="canonical" href={canonicalUrl} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "@id": "https://netpowerit.co/tienda#page",
-          "name": "Tienda TIC — Netpower IT",
-          "description": "Computadores, servidores, redes e impresoras para empresas en Colombia",
-          "url": "https://netpowerit.co/tienda",
+          "@id": `${canonicalUrl}#page`,
+          "name": pageTitle,
+          "description": pageDesc,
+          "url": canonicalUrl,
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
               {"@type":"ListItem","position":1,"name":"Inicio","item":"https://netpowerit.co"},
-              {"@type":"ListItem","position":2,"name":"Tienda","item":"https://netpowerit.co/tienda"}
+              {"@type":"ListItem","position":2,"name":"Tienda","item":"https://netpowerit.co/tienda"},
+              ...(activeCategory ? [{"@type":"ListItem","position":3,"name":activeCategory.name,"item":canonicalUrl}] : [])
             ]
           }
         })}</script>
@@ -159,7 +170,8 @@ useEffect(() => {
         <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
           <Link to="/" className="hover:text-primary transition">Inicio</Link>
           <span>/</span>
-          <span className="text-foreground font-medium">Tienda</span>
+          <Link to="/tienda" className={activeCategory ? "hover:text-primary transition" : "text-foreground font-medium"}>Tienda</Link>
+          {activeCategory && (<><span>/</span><span className="text-foreground font-medium">{activeCategory.name}</span></>)}
         </nav>
 
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
