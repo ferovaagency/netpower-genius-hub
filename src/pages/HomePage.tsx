@@ -279,7 +279,7 @@ export default function HomePage() {
 
       {/* CTA Banner */}
       <section className="relative py-16 overflow-hidden">
-        <img src={ctaBanner} alt="Cotización empresarial" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={ctaBanner} alt="Cotización empresarial" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-surface-dark/85" />
         <div className="container mx-auto px-6 text-center relative z-10">
           <h2 className="text-2xl md:text-3xl font-extrabold text-card mb-3">¿Necesitas servicios profesionales para servidores?</h2>
@@ -306,6 +306,7 @@ export default function HomePage() {
                     <img
                       src={brand.logo_url}
                       alt={brand.name}
+                      loading="lazy"
                       className="max-h-10 max-w-[120px] object-contain filter grayscale hover:grayscale-0 transition-all"
                     />
                   ) : (

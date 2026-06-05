@@ -38,11 +38,11 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-sm uppercase tracking-wider mb-4 text-surface-dark-foreground/80">Contacto</h3>
             <div className="flex flex-col gap-3 text-sm text-surface-dark-foreground/60">
-              <span className="flex items-start gap-2">
+              <address className="not-italic flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Bogotá, Colombia · Servicio en toda Colombia e internacional
-              </span>
-              <a href="tel:+573018417895" className="flex items-center gap-2 hover:text-primary transition">
-                <Phone className="w-4 h-4 text-primary shrink-0" /> +57 301 841 7895
+              </address>
+              <a href="tel:+573018417896" className="flex items-center gap-2 hover:text-primary transition">
+                <Phone className="w-4 h-4 text-primary shrink-0" /> +57 301 841 7896
               </a>
               <a href="mailto:aosorio@netpowerit.co" className="flex items-center gap-2 hover:text-primary transition">
                 <Mail className="w-4 h-4 text-primary shrink-0" /> aosorio@netpowerit.co
