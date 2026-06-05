@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import LegalPage from "./pages/LegalPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -11,7 +11,10 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
-import AIChatWidget from "@/components/layout/AIChatWidget";
+// Lazy-load para mejorar LCP: el chat (que carga embla/markdown/etc.) y el modal de exit-intent
+// no bloquean el render inicial.
+const AIChatWidget = lazy(() => import("@/components/layout/AIChatWidget"));
+const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
 import SocialProofPopup from "@/components/layout/SocialProofPopup";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
@@ -83,7 +86,10 @@ const App = () => (
                 </main>
                 <Footer />
                 <WhatsAppButton />
-                <AIChatWidget />
+                <Suspense fallback={null}>
+                  <AIChatWidget />
+                  <ExitIntentPopup />
+                </Suspense>
                 <SocialProofPopup />
               </div>
             </BrowserRouter>

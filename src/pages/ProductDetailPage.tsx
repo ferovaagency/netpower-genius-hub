@@ -9,6 +9,7 @@ import { useChat } from "@/contexts/ChatContext";
 import type { Product } from "@/types/store";
 import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
+import TrustBadges from "@/components/TrustBadges";
 
 const WHATSAPP_NUMBER = "573018417895";
 
@@ -288,6 +289,9 @@ export default function ProductDetailPage() {
                     <MessageCircle className="w-4 h-4" /> WhatsApp
                   </a>
                 </div>
+
+                <TrustBadges className="mb-4" compact />
+
 
                 <div className="grid grid-cols-2 gap-3">
                   {[
