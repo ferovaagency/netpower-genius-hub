@@ -7,10 +7,10 @@ const CATEGORY_SLUGS: Record<string, string> = {
   "UPS y Accesorios": "ups-accesorios",
   "Infraestructura TIC": "infraestructura-tic",
   "Energía Solar": "energia-solar",
-  "Servidores": "servidores",
-  "Licencias": "licencias",
-  "Monitores": "monitores",
-  "Accesorios": "accesorios",
+  Servidores: "servidores",
+  Licencias: "licencias",
+  Monitores: "monitores",
+  Accesorios: "accesorios",
 };
 
 function escapeXml(s: string) {
@@ -26,10 +26,7 @@ function toW3C(date: string | null) {
 }
 
 Deno.serve(async () => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data: products } = await supabase
     .from("products")
@@ -39,31 +36,30 @@ Deno.serve(async () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Static pages
+  // Páginas estáticas purificadas (Se eliminó /buscar y se ajustaron prioridades transaccionales)
   const staticPages = [
     { loc: "/", priority: "1.0", changefreq: "daily", lastmod: today },
     { loc: "/tienda", priority: "0.9", changefreq: "daily", lastmod: today },
-    { loc: "/buscar", priority: "0.5", changefreq: "weekly", lastmod: today },
-    { loc: "/blog", priority: "0.7", changefreq: "weekly", lastmod: today },
-    { loc: "/cotizacion", priority: "0.7", changefreq: "monthly", lastmod: today },
-    { loc: "/contacto", priority: "0.6", changefreq: "monthly", lastmod: today },
-    { loc: "/marcas", priority: "0.6", changefreq: "monthly", lastmod: today },
-    { loc: "/nosotros", priority: "0.5", changefreq: "monthly", lastmod: today },
+    { loc: "/cotizacion", priority: "0.9", changefreq: "monthly", lastmod: today },
+    { loc: "/blog", priority: "0.8", changefreq: "weekly", lastmod: today },
+    { loc: "/marcas", priority: "0.8", changefreq: "monthly", lastmod: today },
+    { loc: "/contacto", priority: "0.7", changefreq: "monthly", lastmod: today },
+    { loc: "/nosotros", priority: "0.7", changefreq: "monthly", lastmod: today },
     { loc: "/legal", priority: "0.3", changefreq: "yearly", lastmod: today },
   ];
 
-  // Category pages
+  // URLs de Categoría Limpias (SEO Friendly)
   const categoryEntries = Object.entries(CATEGORY_SLUGS).map(([, slug]) => ({
-    loc: `/tienda?categoria=${slug}`,
-    priority: "0.8",
+    loc: `/categoria/${slug}`,
+    priority: "0.9",
     changefreq: "weekly",
     lastmod: today,
   }));
 
-  // Product pages
+  // URLs de Producto Dinámicas
   const productEntries = (products ?? []).map((p) => ({
     loc: `/producto/${escapeXml(p.slug)}`,
-    priority: "0.7",
+    priority: "0.8",
     changefreq: "monthly",
     lastmod: toW3C(p.updated_at),
   }));
@@ -86,7 +82,7 @@ ${allEntries
 
   return new Response(xml, {
     headers: {
-      "Content-Type": "text/xml; charset=utf-8",
+      "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600",
     },
   });
