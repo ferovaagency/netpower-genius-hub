@@ -64,7 +64,18 @@ useEffect(() => {
     }
   }, [allProducts, selectedCategory, selectedBrand, sort, searchQuery]);
 
-  const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); setSearchQuery(""); };
+  const clearFilters = () => {
+    setSelectedCategory("");
+    setSelectedBrand("");
+    setSearchQuery("");
+    if (slugParam) navigate("/tienda", { replace: false });
+  };
+
+  const handleCategoryClick = (slug: string) => {
+    const next = selectedCategory === slug ? "" : slug;
+    setSelectedCategory(next);
+    navigate(next ? `/categoria/${next}` : "/tienda");
+  };
 
   const FilterPanel = ({ onApply }: { onApply?: () => void } = {}) => (
     <div className="flex flex-col h-full">
@@ -75,7 +86,7 @@ useEffect(() => {
             {categories.map(c => (
               <button
                 key={c.id}
-                onClick={() => setSelectedCategory(selectedCategory === c.slug ? "" : c.slug)}
+                onClick={() => handleCategoryClick(c.slug)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
               >
                 {c.icon} {c.name}
