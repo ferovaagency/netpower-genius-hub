@@ -25,5 +25,8 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /*?categoria=*
+Disallow: /buscar
+Disallow; /generador-fichas
 
 Sitemap: https://netpowerit.co/sitemap.xml
