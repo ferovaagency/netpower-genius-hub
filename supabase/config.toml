@@ -3,6 +3,9 @@ project_id = "uyqroiydexhdazxzrypd"
 [functions.generate-product-sheet]
 verify_jwt = false
 
+[functions.generate-description]
+verify_jwt = false
+
 [functions.sales-chat]
 verify_jwt = false
 
