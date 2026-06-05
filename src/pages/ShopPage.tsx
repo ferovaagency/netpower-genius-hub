@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { SlidersHorizontal, X, Search } from "lucide-react";
 import { categories, brands } from "@/data/store-data";
@@ -11,9 +11,18 @@ type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
 
 export default function ShopPage() {
   const [searchParams] = useSearchParams();
-  const catParam = searchParams.get("categoria");
+  const { slug: slugParam } = useParams<{ slug?: string }>();
+  const navigate = useNavigate();
+  const legacyCatParam = searchParams.get("categoria");
   const queryParam = searchParams.get("q") || "";
-  const [selectedCategory, setSelectedCategory] = useState(catParam || "");
+  // Backwards-compat redirect: /tienda?categoria=xxx -> /categoria/xxx
+  useEffect(() => {
+    if (!slugParam && legacyCatParam) {
+      navigate(`/categoria/${legacyCatParam}`, { replace: true });
+    }
+  }, [slugParam, legacyCatParam, navigate]);
+  const [selectedCategory, setSelectedCategory] = useState(slugParam || legacyCatParam || "");
+  useEffect(() => { if (slugParam) setSelectedCategory(slugParam); }, [slugParam]);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [sort, setSort] = useState<SortOption>("relevance");
   const [filtersOpen, setFiltersOpen] = useState(false);
