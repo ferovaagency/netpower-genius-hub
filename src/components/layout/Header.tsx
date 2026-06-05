@@ -340,7 +340,7 @@ export default function Header() {
                 {categoryMenu.map((parent) => (
                   <div key={parent.slug} className="mb-3">
                     <Link
-                      to={`/tienda?categoria=${parent.categoria}`}
+                      to={`/categoria/${parent.categoria}`}
                       className="block py-1.5 text-sm font-bold text-foreground hover:text-primary transition"
                     >
                       {parent.label}
