@@ -289,6 +289,9 @@ export default function ProductDetailPage() {
                   </a>
                 </div>
 
+                <TrustBadges className="mb-4" compact />
+
+
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { icon: Truck, text: "Envío a todo Colombia" },
