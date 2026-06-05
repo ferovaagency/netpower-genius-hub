@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { SlidersHorizontal, X, Search } from "lucide-react";
 import { categories, brands } from "@/data/store-data";
@@ -11,9 +11,18 @@ type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
 
 export default function ShopPage() {
   const [searchParams] = useSearchParams();
-  const catParam = searchParams.get("categoria");
+  const { slug: slugParam } = useParams<{ slug?: string }>();
+  const navigate = useNavigate();
+  const legacyCatParam = searchParams.get("categoria");
   const queryParam = searchParams.get("q") || "";
-  const [selectedCategory, setSelectedCategory] = useState(catParam || "");
+  // Backwards-compat redirect: /tienda?categoria=xxx -> /categoria/xxx
+  useEffect(() => {
+    if (!slugParam && legacyCatParam) {
+      navigate(`/categoria/${legacyCatParam}`, { replace: true });
+    }
+  }, [slugParam, legacyCatParam, navigate]);
+  const [selectedCategory, setSelectedCategory] = useState(slugParam || legacyCatParam || "");
+  useEffect(() => { if (slugParam) setSelectedCategory(slugParam); }, [slugParam]);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [sort, setSort] = useState<SortOption>("relevance");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -55,7 +64,18 @@ useEffect(() => {
     }
   }, [allProducts, selectedCategory, selectedBrand, sort, searchQuery]);
 
-  const clearFilters = () => { setSelectedCategory(""); setSelectedBrand(""); setSearchQuery(""); };
+  const clearFilters = () => {
+    setSelectedCategory("");
+    setSelectedBrand("");
+    setSearchQuery("");
+    if (slugParam) navigate("/tienda", { replace: false });
+  };
+
+  const handleCategoryClick = (slug: string) => {
+    const next = selectedCategory === slug ? "" : slug;
+    setSelectedCategory(next);
+    navigate(next ? `/categoria/${next}` : "/tienda");
+  };
 
   const FilterPanel = ({ onApply }: { onApply?: () => void } = {}) => (
     <div className="flex flex-col h-full">
@@ -66,7 +86,7 @@ useEffect(() => {
             {categories.map(c => (
               <button
                 key={c.id}
-                onClick={() => setSelectedCategory(selectedCategory === c.slug ? "" : c.slug)}
+                onClick={() => handleCategoryClick(c.slug)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-accent"}`}
               >
                 {c.icon} {c.name}
@@ -107,28 +127,39 @@ useEffect(() => {
     </div>
   );
 
+  const activeCategory = categories.find(c => c.slug === selectedCategory);
+  const canonicalPath = activeCategory ? `/categoria/${activeCategory.slug}` : "/tienda";
+  const canonicalUrl = `https://netpowerit.co${canonicalPath}`;
+  const pageTitle = activeCategory
+    ? `${activeCategory.name} | Netpower IT`
+    : "Tienda TIC | Computadores, Servidores, Redes — Netpower IT";
+  const pageDesc = activeCategory
+    ? `${activeCategory.description}. Compra ${activeCategory.name} para empresas en Colombia con Netpower IT.`
+    : "Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá.";
+
   return (
     <>
       <Helmet>
-        <title>Tienda TIC | Computadores, Servidores, Redes — Netpower IT</title>
-        <meta name="description" content="Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá." />
-        <meta property="og:title" content="Tienda TIC — Netpower IT" />
-        <meta property="og:description" content="Computadores, servidores, redes e impresoras para empresas en Colombia." />
-        <meta property="og:url" content="https://netpowerit.co/tienda" />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://netpowerit.co/tienda" />
+        <link rel="canonical" href={canonicalUrl} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "@id": "https://netpowerit.co/tienda#page",
-          "name": "Tienda TIC — Netpower IT",
-          "description": "Computadores, servidores, redes e impresoras para empresas en Colombia",
-          "url": "https://netpowerit.co/tienda",
+          "@id": `${canonicalUrl}#page`,
+          "name": pageTitle,
+          "description": pageDesc,
+          "url": canonicalUrl,
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
               {"@type":"ListItem","position":1,"name":"Inicio","item":"https://netpowerit.co"},
-              {"@type":"ListItem","position":2,"name":"Tienda","item":"https://netpowerit.co/tienda"}
+              {"@type":"ListItem","position":2,"name":"Tienda","item":"https://netpowerit.co/tienda"},
+              ...(activeCategory ? [{"@type":"ListItem","position":3,"name":activeCategory.name,"item":canonicalUrl}] : [])
             ]
           }
         })}</script>
@@ -139,7 +170,8 @@ useEffect(() => {
         <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
           <Link to="/" className="hover:text-primary transition">Inicio</Link>
           <span>/</span>
-          <span className="text-foreground font-medium">Tienda</span>
+          <Link to="/tienda" className={activeCategory ? "hover:text-primary transition" : "text-foreground font-medium"}>Tienda</Link>
+          {activeCategory && (<><span>/</span><span className="text-foreground font-medium">{activeCategory.name}</span></>)}
         </nav>
 
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
