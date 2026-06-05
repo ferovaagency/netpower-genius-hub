@@ -29,4 +29,4 @@ Disallow: /*?categoria=*
 Disallow: /buscar
 Disallow; /generador-fichas
 
-Sitemap: https://netpowerit.co/sitemap.xml
+Sitemap: https://netpowerit.co/functions/v1/generate-sitemap
