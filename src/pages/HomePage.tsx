@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
 import { categories, products } from "@/data/store-data";
@@ -8,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
 import ProductCard from "@/components/store/ProductCard";
 import { getParentCategory } from "@/lib/catalog";
+import SeoHead from "@/components/SeoHead";
+import TrustBadges from "@/components/TrustBadges";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ctaBanner from "@/assets/cta-banner.jpg";
 
@@ -115,13 +116,12 @@ export default function HomePage() {
 
   return (
     <>
-      <Helmet>
-        <title>Netpower IT – Tu Proveedor #1 de Tecnología TIC en Colombia</title>
-        <meta name="description" content="UPS, baterías, servidores, infraestructura de red, energía solar y licencias con garantía oficial. Envío a todo Colombia. Cotiza tu proyecto TIC." />
-        <meta property="og:title" content="Netpower IT – Tecnología TIC en Colombia" />
-        <meta property="og:description" content="Tu proveedor #1 de UPS, servidores, infraestructura y energía solar en Colombia" />
-        <link rel="canonical" href="https://netpowerit.co" />
-      </Helmet>
+      <SeoHead
+        title="Netpower IT – UPS, Servidores y Soluciones TIC en Colombia"
+        description="Compra UPS, baterías, servidores HPE, infraestructura de red y energía solar con garantía oficial. Envío a toda Colombia y pago seguro con Wompi, PSE y tarjetas."
+        canonicalUrl="https://netpowerit.co"
+      />
+
 
       {/* Hero Slider */}
       <section className="relative overflow-hidden min-h-[480px] flex items-center">
@@ -185,6 +185,9 @@ export default function HomePage() {
               <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
                 Solicitar Cotización
               </button>
+            </motion.div>
+            <motion.div variants={fadeUp} className="mt-5">
+              <TrustBadges />
             </motion.div>
           </motion.div>
         </div>
@@ -356,6 +359,9 @@ export default function HomePage() {
               
               Chatear por WhatsApp
             </a>
+          </div>
+          <div className="mt-5 flex justify-center">
+            <TrustBadges />
           </div>
         </div>
       </section>
