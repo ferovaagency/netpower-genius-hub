@@ -82,14 +82,16 @@ export default function GeneratedSheetResult({ result, imageUrl, productName, pr
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Especificaciones</h3>
           <CopyBtn text={JSON.stringify(result.specs, null, 2)} id="specs" />
         </div>
-        <div className="divide-y divide-border">
-          {Object.entries(result.specs).map(([k, v]) => (
-            <div key={k} className="flex py-2 text-sm">
-              <span className="w-2/5 font-medium text-foreground">{k}</span>
-              <span className="w-3/5 text-muted-foreground">{v}</span>
-            </div>
-          ))}
-        </div>
+        <table className="w-full text-sm text-left">
+          <tbody>
+            {Object.entries(result.specs).map(([k, v]) => (
+              <tr key={k} className="border-b border-border last:border-0">
+                <th className="py-2 w-2/5 font-medium text-foreground align-top">{k}</th>
+                <td className="py-2 w-3/5 text-muted-foreground align-top">{v}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Benefits */}

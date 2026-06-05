@@ -14,7 +14,6 @@ import WhatsAppButton from "@/components/layout/WhatsAppButton";
 // Lazy-load para mejorar LCP: el chat (que carga embla/markdown/etc.) y el modal de exit-intent
 // no bloquean el render inicial.
 const AIChatWidget = lazy(() => import("@/components/layout/AIChatWidget"));
-const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
 import SocialProofPopup from "@/components/layout/SocialProofPopup";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
@@ -89,7 +88,6 @@ const App = () => (
                 <WhatsAppButton />
                 <Suspense fallback={null}>
                   <AIChatWidget />
-                  <ExitIntentPopup />
                 </Suspense>
                 <SocialProofPopup />
               </div>
