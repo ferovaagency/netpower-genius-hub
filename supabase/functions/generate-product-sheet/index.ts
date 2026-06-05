@@ -14,7 +14,7 @@ serve(async (req) => {
   if (denied) return denied;
 
   try {
-    const { productName, brand, category, sku, specs } = await req.json();
+    const { productName, brand, category, sku, specs, additionalNotes } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -118,7 +118,7 @@ Responde SOLO en formato JSON válido con esta estructura exacta.`;
 - Marca: ${brand || "No especificada"}
 - Categoría: ${category || "No especificada"}
 - SKU: ${sku || "No especificado"}
-- Especificaciones conocidas: ${specsText || "No proporcionadas"}`;
+- Especificaciones conocidas: ${specsText || "No proporcionadas"}${additionalNotes ? `\n- Notas/Detalles del producto a tener en cuenta: ${additionalNotes}` : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Sparkles,
@@ -9,7 +9,10 @@ import {
   Image as ImageIcon,
   Edit3,
   Power,
+  Upload,
+  X,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { categories, brands } from "@/data/store-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -59,7 +62,11 @@ export default function ProductSheetGeneratorPage() {
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [stock, setStock] = useState("10");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [aiNotes, setAiNotes] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [specEntries, setSpecEntries] = useState<SpecEntry[]>([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -120,7 +127,8 @@ export default function ProductSheetGeneratorPage() {
     setPrice(String(p.price));
     setSalePrice(p.salePrice ? String(p.salePrice) : "");
     setStock(String(p.stock));
-    setImageUrl(p.images?.[0] || "");
+    setImageUrls(p.images || []);
+    setAiNotes("");
 
     const cat = categories.find((c) => c.id === p.categoryId);
     const br = brands.find((b) => b.id === p.brandId);
@@ -168,7 +176,7 @@ export default function ProductSheetGeneratorPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${supabaseKey}`,
         },
-        body: JSON.stringify({ productName, brand, category, sku, specs }),
+        body: JSON.stringify({ productName, brand, category, sku, specs, additionalNotes: aiNotes }),
       });
 
       if (!response.ok) {
@@ -242,10 +250,23 @@ export default function ProductSheetGeneratorPage() {
       const parsedSalePrice = salePrice ? Number(salePrice) : null;
       const parsedStock = Number.isFinite(Number(stock)) ? Math.max(0, Math.floor(Number(stock))) : 0;
 
-      let finalImageUrl = imageUrl;
-      if (imageUrl) {
-        toast.info("Descargando imagen al servidor...");
-        finalImageUrl = await downloadImageToStorage(imageUrl, slug);
+      const processedImages: string[] = [];
+      for (let i = 0; i < imageUrls.length; i++) {
+        const url = imageUrls[i];
+        if (url.trim()) {
+          if (url.startsWith("http") && !url.includes("supabase.co")) {
+            toast.info(`Descargando imagen ${i + 1} al servidor...`);
+            try {
+              const downloadedUrl = await downloadImageToStorage(url, `${slug}-${i}`);
+              processedImages.push(downloadedUrl);
+            } catch (e) {
+              console.error("Failed to download image:", e);
+              processedImages.push(url);
+            }
+          } else {
+            processedImages.push(url);
+          }
+        }
       }
 
       const finalSpecs: Record<string, string> = { ...(result.specs || {}) };
@@ -260,7 +281,7 @@ export default function ProductSheetGeneratorPage() {
           salePrice: parsedSalePrice,
           stock: parsedStock,
           sku: sku || selectedProduct.sku || `SKU-${Date.now()}`,
-          images: finalImageUrl ? [finalImageUrl] : selectedProduct.images || [],
+          images: processedImages,
           categoryId: selectedCategory.id,
           brandId: selectedBrand.id,
           specs: finalSpecs,
@@ -286,7 +307,7 @@ export default function ProductSheetGeneratorPage() {
         salePrice: parsedSalePrice,
         sku: sku || `SKU-${Date.now()}`,
         stock: parsedStock,
-        images: finalImageUrl ? [finalImageUrl] : [],
+        images: processedImages,
         categoryId: selectedCategory.id,
         brandId: selectedBrand.id,
         specs: finalSpecs,
@@ -352,7 +373,9 @@ export default function ProductSheetGeneratorPage() {
     setPrice("");
     setSalePrice("");
     setStock("10");
-    setImageUrl("");
+    setImageUrls([]);
+    setImageUrlInput("");
+    setAiNotes("");
     setSpecEntries([{ key: "", value: "" }]);
     setResult(null);
     setError("");
@@ -580,28 +603,115 @@ export default function ProductSheetGeneratorPage() {
                   </div>
                 </div>
 
+                {/* Imágenes */}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    <ImageIcon className="w-3 h-3 inline mr-1" />URL de imagen del producto
+                    <ImageIcon className="w-3 h-3 inline mr-1" />Imágenes del producto (mín 1, máx 5)
                   </label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1">La imagen se descargará a nuestro servidor al publicar.</p>
-                  {imageUrl && (
-                    <div className="mt-2 rounded-lg border border-border overflow-hidden bg-muted/30">
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        className="w-full h-32 object-contain"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
+                  
+                  {/* Previews de imágenes cargadas */}
+                  {imageUrls.length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {imageUrls.map((url, index) => (
+                        <div key={`${url}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-muted/20">
+                          <img
+                            src={url}
+                            alt={`Imagen ${index + 1}`}
+                            className="h-full w-full object-contain"
+                            onError={(e) => (e.currentTarget.style.display = "none")}
+                          />
+                          <button
+                            onClick={() => setImageUrls((prev) => prev.filter((_, i) => i !== index))}
+                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition shadow-sm"
+                            type="button"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
+
+                  {imageUrls.length < 5 && (
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={imageUrlInput}
+                          onChange={(e) => setImageUrlInput(e.target.value)}
+                          placeholder="Pega URL de imagen (https://...)"
+                          className="flex-1 h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (imageUrlInput.trim()) {
+                              setImageUrls((prev) => [...prev, imageUrlInput.trim()]);
+                              setImageUrlInput("");
+                            }
+                          }}
+                          className="h-10 px-4 rounded-lg border border-border bg-muted/20 text-foreground hover:bg-accent transition text-sm font-semibold flex items-center justify-center"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={uploadingImage}
+                          onClick={() => fileInputRef.current?.click()}
+                          className="h-10 px-4 rounded-lg border border-border bg-background text-foreground hover:bg-accent transition text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                          Subir imagen local
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={async (e) => {
+                            const files = e.target.files;
+                            if (!files) return;
+                            setUploadingImage(true);
+                            try {
+                              for (const file of Array.from(files)) {
+                                if (imageUrls.length >= 5) break;
+                                const ext = file.name.split(".").pop() || "jpg";
+                                const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                                const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+                                if (error) throw error;
+                                const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+                                setImageUrls((prev) => [...prev, data.publicUrl]);
+                              }
+                              toast.success("Imagen(es) subida(s) con éxito");
+                            } catch (err: any) {
+                              toast.error("No se pudo subir la imagen: " + err.message);
+                            } finally {
+                              setUploadingImage(false);
+                              if (fileInputRef.current) fileInputRef.current.value = "";
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-1.5">Las URLs externas se descargarán automáticamente al publicar para optimizar velocidad y SEO.</p>
+                </div>
+
+                {/* Notas adicionales para la IA */}
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    Información adicional para la IA (opcional)
+                  </label>
+                  <textarea
+                    value={aiNotes}
+                    onChange={(e) => setAiNotes(e.target.value)}
+                    placeholder="Pega especificaciones técnicas adicionales, características especiales, detalles de garantía u otros datos útiles para que la IA los considere en la ficha..."
+                    className="w-full h-24 px-3 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition resize-y"
+                  />
                 </div>
 
                 <div>
@@ -696,7 +806,7 @@ export default function ProductSheetGeneratorPage() {
                 {!loading && result && (
                   <GeneratedSheetResult
                     result={result}
-                    imageUrl={imageUrl}
+                    imageUrl={imageUrls[0] || ""}
                     productName={productName}
                     price={price}
                     onPublish={handlePublish}
