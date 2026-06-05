@@ -25,7 +25,7 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /*?categoria=*
+Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow; /generador-fichas
 
