@@ -21,7 +21,8 @@ Deno.serve(async () => {
   const { data: products, error } = await supabase
     .from("products")
     .select("id, sku, name, short_description, price, images, stock, slug")
-    .eq("active", true);
+    .eq("active", true)
+    .gt("price", 0);
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
