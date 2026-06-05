@@ -1,8 +1,7 @@
 // Creates a Wompi Web Checkout signed URL for an order.
-// Flow: client posts order payload -> we insert order in DB with status 'pending'
-// and payment_provider 'wompi', then return a signed Wompi URL. The browser
-// redirects there. Wompi redirects back to /resultado-pago?id=<transactionId>
-// where PaymentResult verifies the transaction status against Wompi public API.
+// SECURITY: The order total is computed server-side from current product prices
+// in the database. The client-supplied `amountCOP` is only used as a sanity
+// check — if it mismatches the server total, the request is rejected.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -13,7 +12,6 @@ const corsHeaders = {
 
 const WOMPI_PUBLIC_KEY = Deno.env.get("WOMPI_PUBLIC_KEY") ?? "";
 const WOMPI_INTEGRITY_SECRET = Deno.env.get("WOMPI_INTEGRITY_SECRET") ?? "";
-// Sandbox vs production is determined by the public key prefix (pub_test_ vs pub_prod_)
 const isSandbox = WOMPI_PUBLIC_KEY.startsWith("pub_test_");
 const WOMPI_CHECKOUT_BASE = "https://checkout.wompi.co/p/";
 
@@ -23,6 +21,14 @@ async function sha256Hex(input: string): Promise<string> {
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+interface IncomingItem {
+  productId?: string;
+  quantity?: number;
+  unitPrice?: number;
+  name?: string;
+  sku?: string;
 }
 
 Deno.serve(async (req) => {
@@ -36,7 +42,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const {
       reference,
-      amountCOP, // integer pesos
+      amountCOP,
       customer,
       items,
       shipping_address,
@@ -45,30 +51,93 @@ Deno.serve(async (req) => {
       reference: string;
       amountCOP: number;
       customer: { name: string; email: string; phone: string };
-      items: unknown;
+      items: IncomingItem[];
       shipping_address: unknown;
       redirectBaseUrl: string;
     };
 
-    if (!reference || !amountCOP || !customer?.email) {
+    if (
+      !reference ||
+      typeof reference !== "string" ||
+      !customer?.email ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const amountInCents = Math.round(amountCOP) * 100;
-    const currency = "COP";
+    // Validate items shape
+    const cleanItems = items
+      .filter((i) => i && typeof i.productId === "string" && Number(i.quantity) > 0)
+      .map((i) => ({
+        productId: String(i.productId),
+        quantity: Math.max(1, Math.min(1000, Math.floor(Number(i.quantity)))),
+      }));
 
-    // Wompi integrity signature: SHA256(reference + amountInCents + currency + integritySecret)
-    const signature = await sha256Hex(
-      `${reference}${amountInCents}${currency}${WOMPI_INTEGRITY_SECRET}`
-    );
+    if (cleanItems.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid items" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Insert/upsert order in DB
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Authoritative price lookup
+    const productIds = [...new Set(cleanItems.map((i) => i.productId))];
+    const { data: products, error: prodErr } = await supabase
+      .from("products")
+      .select("id, price, sale_price")
+      .in("id", productIds);
+
+    if (prodErr) throw prodErr;
+    if (!products || products.length !== productIds.length) {
+      return new Response(JSON.stringify({ error: "One or more products not found" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const priceMap = new Map<string, number>();
+    for (const p of products) {
+      const effective = Number(p.sale_price ?? p.price ?? 0);
+      if (!Number.isFinite(effective) || effective <= 0) {
+        return new Response(
+          JSON.stringify({ error: `Product ${p.id} is not purchasable online` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      priceMap.set(p.id as string, effective);
+    }
+
+    // Server-computed total (in pesos)
+    let serverTotalCOP = 0;
+    for (const i of cleanItems) {
+      serverTotalCOP += priceMap.get(i.productId)! * i.quantity;
+    }
+    serverTotalCOP = Math.round(serverTotalCOP);
+
+    // Tolerate up to 1 COP difference for rounding
+    const clientAmount = Math.round(Number(amountCOP) || 0);
+    if (Math.abs(clientAmount - serverTotalCOP) > 1) {
+      console.warn("Price mismatch", { clientAmount, serverTotalCOP, reference });
+      return new Response(
+        JSON.stringify({ error: "Order total does not match current product prices" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const amountInCents = serverTotalCOP * 100;
+    const currency = "COP";
+
+    const signature = await sha256Hex(
+      `${reference}${amountInCents}${currency}${WOMPI_INTEGRITY_SECRET}`
     );
 
     const { error: orderErr } = await supabase.from("orders").upsert(
@@ -78,7 +147,7 @@ Deno.serve(async (req) => {
         customer_email: customer.email,
         customer_phone: customer.phone,
         items,
-        total: amountCOP,
+        total: serverTotalCOP,
         status: "pending",
         payment_method: "wompi",
         payment_provider: "wompi",
@@ -110,7 +179,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("create-wompi-checkout error:", err);
-    return new Response(JSON.stringify({ error: String((err as Error).message ?? err) }), {
+    return new Response(JSON.stringify({ error: "Unable to create checkout" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
