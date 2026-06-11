@@ -167,31 +167,11 @@ export default function ProductSheetGeneratorPage() {
     });
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/generate-product-sheet`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ productName, brand, category, sku, specs, additionalNotes: aiNotes }),
+      const { data, error: invokeError } = await supabase.functions.invoke("generate-product-sheet", {
+        body: { productName, brand, category, sku, specs, additionalNotes: aiNotes },
       });
 
-      if (!response.ok) {
-        let errMsg = `Error ${response.status}`;
-        try {
-          const data = await response.json();
-          errMsg = data.error || errMsg;
-        } catch {
-          // noop
-        }
-        if (response.status === 404) errMsg = "La función aún no está desplegada. Espera unos segundos y reintenta.";
-        throw new Error(errMsg);
-      }
-
-      const data = await response.json();
+      if (invokeError) throw new Error(invokeError.message || "Error al generar la ficha");
       if (data?.error) throw new Error(data.error);
       if (data?.data) setResult(data.data);
     } catch (e: any) {
@@ -203,21 +183,11 @@ export default function ProductSheetGeneratorPage() {
 
   const downloadImageToStorage = async (externalUrl: string, slug: string): Promise<string> => {
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const resp = await fetch(`${supabaseUrl}/functions/v1/download-product-image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ imageUrl: externalUrl, fileName: slug }),
+      const { data, error } = await supabase.functions.invoke("download-product-image", {
+        body: { imageUrl: externalUrl, fileName: slug },
       });
-
-      if (!resp.ok) throw new Error("Failed to download image");
-      const data = await resp.json();
-      return data.url || externalUrl;
+      if (error) throw error;
+      return data?.url || externalUrl;
     } catch (e) {
       console.error("Image download failed, using original URL:", e);
       return externalUrl;
