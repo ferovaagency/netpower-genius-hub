@@ -2,7 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { MessageCircle, Home, ShoppingBag } from "lucide-react";
 
-const WHATSAPP_NUMBER = "573018417895";
+const WHATSAPP_NUMBER = "573504609431";
 
 const NotFound = () => {
   const location = useLocation();

@@ -96,7 +96,7 @@ export default function SearchPage() {
             <p className="text-lg font-semibold text-foreground mb-2">Sin resultados</p>
             <p className="text-sm text-muted-foreground mb-4">Intenta con otro término o consulta por WhatsApp</p>
             <a
-              href={`https://wa.me/573018417895?text=${encodeURIComponent(`Hola, busco: ${q}`)}`}
+              href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, busco: ${q}`)}`}
               target="_blank" rel="noopener noreferrer"
               className="inline-flex h-10 px-5 items-center rounded-lg bg-success text-success-foreground text-sm font-semibold"
             >

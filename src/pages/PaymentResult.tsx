@@ -110,7 +110,7 @@ export default function PaymentResult() {
                 </ol>
               </div>
               <a
-                href="https://wa.me/573018417896"
+                href="https://wa.me/573504609431"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
@@ -136,7 +136,7 @@ export default function PaymentResult() {
                   Reintentar pago
                 </Link>
                 <a
-                  href="https://wa.me/573018417896"
+                  href="https://wa.me/573504609431"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"

@@ -255,7 +255,7 @@ useEffect(() => {
                 <p className="text-lg font-semibold text-foreground mb-2">No se encontraron productos</p>
                 <p className="text-sm text-muted-foreground mb-4">Intenta cambiar los filtros de búsqueda</p>
                 <a
-                  href={`https://wa.me/573018417895?text=${encodeURIComponent(`Hola, busco: ${searchQuery}`)}`}
+                  href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, busco: ${searchQuery}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-success text-success-foreground text-sm font-semibold hover:opacity-90 transition"

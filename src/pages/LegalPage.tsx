@@ -77,7 +77,7 @@ export default function LegalPage() {
  
             <section>
               <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">1. Responsable del tratamiento</h2>
-              <p className="text-muted-foreground leading-relaxed">Netpower IT es el responsable del tratamiento de los datos personales recopilados a través de este sitio. Contacto: <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a> · <a href="https://wa.me/573018417896" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">+57 301 841 7896</a>.</p>
+              <p className="text-muted-foreground leading-relaxed">Netpower IT es el responsable del tratamiento de los datos personales recopilados a través de este sitio. Contacto: <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a> · <a href="https://wa.me/573504609431" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">+57 350 460 9431</a>.</p>
             </section>
  
             <section>

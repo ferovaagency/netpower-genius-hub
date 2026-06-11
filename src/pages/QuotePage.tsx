@@ -38,7 +38,7 @@ export default function QuotePage() {
               <h2 className="text-lg font-bold text-foreground mb-1">{t.title}</h2>
               <p className="text-sm text-muted-foreground mb-6 flex-1">{t.desc}</p>
               <a
-                href={`https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20de%20${encodeURIComponent(t.title)}`}
+                href={`https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20de%20${encodeURIComponent(t.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:text-secondary transition"
@@ -52,7 +52,7 @@ export default function QuotePage() {
         <div className="mt-12 text-center">
           <p className="text-muted-foreground text-sm">¿Prefieres hablar con un asesor directamente?</p>
           <a
-            href="https://wa.me/573018417895?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
+            href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all"

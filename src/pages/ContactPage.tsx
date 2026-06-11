@@ -43,7 +43,7 @@ export default function ContactPage() {
           <div className="space-y-6">
             {[
               { icon: Mail, label: "Email", value: "aosorio@netpowerit.co", href: "mailto:aosorio@netpowerit.co" },
-              { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 301 841 7895", href: "tel:+573018417895" },
+              { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 350 460 9431", href: "tel:+573504609431" },
               { icon: MapPin, label: "Ubicación", value: "Bogotá, Colombia · Servicio en toda Colombia e internacional", href: undefined },
               { icon: Clock, label: "Horario", value: "Lun-Vie 8am-6pm | Sáb 9am-1pm", href: undefined },
             ].map((item, i) => (
@@ -68,7 +68,7 @@ export default function ContactPage() {
             {[
               { id: "contact-name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
               { id: "contact-email", label: "Email", type: "email", placeholder: "tu@email.com" },
-              { id: "contact-phone", label: "Teléfono", type: "tel", placeholder: "+57 301 841 7895" },
+              { id: "contact-phone", label: "Teléfono", type: "tel", placeholder: "+57 350 460 9431" },
             ].map(f => (
               <div key={f.id}>
                 <label htmlFor={f.id} className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
