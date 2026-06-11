@@ -49,10 +49,22 @@ serve(async (req) => {
     }
 
     // Download the external image
-    const imgResp = await fetch(parsed.toString(), {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      redirect: "error",
+    const browserHeaders: Record<string, string> = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9,es;q=0.8",
+      "Referer": `${parsed.protocol}//${parsed.hostname}/`,
+    };
+    let imgResp = await fetch(parsed.toString(), {
+      headers: browserHeaders,
+      redirect: "follow",
     });
+    if (!imgResp.ok) {
+      // Retry once without Referer (some CDNs block cross-origin referers)
+      const { Referer: _r, ...noRef } = browserHeaders;
+      imgResp = await fetch(parsed.toString(), { headers: noRef, redirect: "follow" });
+    }
     if (!imgResp.ok) throw new Error(`Failed to fetch image: ${imgResp.status}`);
     const ctRaw = imgResp.headers.get("content-type") || "image/jpeg";
     if (!ctRaw.toLowerCase().startsWith("image/")) {
