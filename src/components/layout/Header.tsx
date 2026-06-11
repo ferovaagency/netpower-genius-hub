@@ -125,10 +125,10 @@ export default function Header() {
         <div className="container mx-auto flex items-center justify-between py-2 px-6 text-xs text-surface-dark-foreground/80 font-medium">
           <span>Envío a todo Colombia · Garantía oficial · Soporte técnico</span>
           <a
-            href="tel:+573018417896"
+            href="tel:+573504609431"
             className="hidden sm:flex items-center gap-1.5 font-bold text-base md:text-lg text-white hover:text-secondary transition-colors tracking-wide"
           >
-            <Phone className="w-4 h-4" /> +57 301 841 7896
+            <Phone className="w-4 h-4" /> +57 350 460 9431
           </a>
         </div>
       </div>
@@ -360,8 +360,8 @@ export default function Header() {
                   </div>
                 ))}
               </div>
-              <a href="tel:+573018417896" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
-                <Phone className="w-4 h-4" /> +57 301 841 7896
+              <a href="tel:+573504609431" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
+                <Phone className="w-4 h-4" /> +57 350 460 9431
               </a>
               <button
               onClick={() => openChat("quote")}

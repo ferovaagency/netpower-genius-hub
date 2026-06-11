@@ -7,7 +7,7 @@ import { formatCOP, categories, findProductById, decreaseInventory } from "@/dat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const WHATSAPP = "573018417896";
+const WHATSAPP = "573504609431";
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();

@@ -11,7 +11,7 @@ import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
 import TrustBadges from "@/components/TrustBadges";
 
-const WHATSAPP_NUMBER = "573018417895";
+const WHATSAPP_NUMBER = "573504609431";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -74,7 +74,7 @@ export default function ProductDetailPage() {
         <p className="text-sm text-muted-foreground mb-6">¿Buscas un producto que no aparece? Pregúntanos si está disponible.</p>
         <div className="flex flex-col gap-3">
           <a
-            href={`https://wa.me/573018417895?text=${waMessage}`}
+            href={`https://wa.me/573504609431?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="h-11 rounded-lg bg-success text-success-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
@@ -223,7 +223,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <a
-                  href={`https://wa.me/573018417896?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
+                  href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"

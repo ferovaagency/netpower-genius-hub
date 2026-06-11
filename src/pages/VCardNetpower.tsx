@@ -10,10 +10,10 @@ export default function VCardNetpower() {
     nombre: "Ana Maria Osorio",
     cargo: "CEO",
     empresa: "Netpower IT",
-    telefono: "+573018417895",
+    telefono: "+573504609431",
     email: "aosorio@netpowerit.co",
     web: "https://netpowerit.co",
-    whatsapp: "573018417895",
+    whatsapp: "573504609431",
   };
 
   const handleAccion = () => {

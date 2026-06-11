@@ -393,7 +393,7 @@ export default function AIChatWidget() {
             return (
               <a
                 key={idx}
-                href="https://wa.me/573018417895?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
+                href="https://wa.me/573504609431?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="my-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] text-sm font-semibold hover:opacity-90 transition shadow-sm"
