@@ -183,21 +183,11 @@ export default function ProductSheetGeneratorPage() {
 
   const downloadImageToStorage = async (externalUrl: string, slug: string): Promise<string> => {
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const resp = await fetch(`${supabaseUrl}/functions/v1/download-product-image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ imageUrl: externalUrl, fileName: slug }),
+      const { data, error } = await supabase.functions.invoke("download-product-image", {
+        body: { imageUrl: externalUrl, fileName: slug },
       });
-
-      if (!resp.ok) throw new Error("Failed to download image");
-      const data = await resp.json();
-      return data.url || externalUrl;
+      if (error) throw error;
+      return data?.url || externalUrl;
     } catch (e) {
       console.error("Image download failed, using original URL:", e);
       return externalUrl;
