@@ -10,3 +10,17 @@
     }
   ]
 }
+
+{
+  "redirects": [
+    {
+      "source": "/:path*/feed/?",
+      "destination": "/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/feed/?",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
