@@ -27,6 +27,6 @@ Allow: /
 Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
-Disallow; /generador-fichas
+Disallow: /generador-fichas
 
 Sitemap: https://netpowerit.co/functions/v1/generate-sitemap
