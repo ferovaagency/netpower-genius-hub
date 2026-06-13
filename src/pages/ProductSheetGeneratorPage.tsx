@@ -29,7 +29,7 @@ import {
   fetchProductBySlug,
 } from "@/hooks/useProducts";
 import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
-import { generateSlug } from "@/lib/slug";
+import { generateSlug, ensureUniqueSlug } from "@/lib/slug";
 
 interface SpecEntry {
   key: string;
@@ -215,7 +215,12 @@ export default function ProductSheetGeneratorPage() {
         brands.find((b) => b.name === detectedBrand) ||
         brands[0];
 
-      const slug = generateSlug(productName);
+      // En edición: preservar slug original (URL canónica nunca cambia).
+      // En creación: generar slug ≤30 chars y único en el sitio.
+      const slug =
+        tab === "edit" && selectedProduct
+          ? selectedProduct.slug
+          : await ensureUniqueSlug(productName);
       const parsedPrice = Number(price) || 0;
       const parsedSalePrice = salePrice ? Number(salePrice) : null;
       const parsedStock = Number.isFinite(Number(stock)) ? Math.max(0, Math.floor(Number(stock))) : 0;
@@ -257,7 +262,7 @@ export default function ProductSheetGeneratorPage() {
           specs: finalSpecs,
           metaTitle: result.metaTitle,
           metaDesc: result.metaDesc,
-          slug,
+          // slug NO se actualiza al editar: la URL canónica permanece estable.
           active: selectedProduct.active ?? true,
         });
 
