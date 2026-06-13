@@ -160,9 +160,15 @@ export default function ProductDetailPage() {
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-10">
           {/* Image */}
-          <div className="bg-card rounded-2xl border border-border shadow-card p-6 flex items-center justify-center aspect-square relative overflow-hidden max-h-[420px]">
+          <div className="bg-white rounded-2xl border border-border shadow-card p-6 flex items-center justify-center aspect-square relative overflow-hidden max-h-[420px]">
             {product.images && product.images.length > 0 && product.images[0] ? (
-              <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain" />
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                decoding="async"
+                fetchPriority="high"
+                className="max-w-full max-h-full w-auto h-auto object-contain mx-auto my-auto"
+              />
             ) : (
               <span className="text-8xl">{category?.icon || "📦"}</span>
             )}
