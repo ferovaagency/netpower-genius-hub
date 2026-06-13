@@ -1,5 +1,4 @@
 import React, { Suspense, lazy } from "react";
-import LegalPage from "./pages/LegalPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -11,31 +10,32 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
-// Lazy-load para mejorar LCP: el chat (que carga embla/markdown/etc.) y el modal de exit-intent
-// no bloquean el render inicial.
-const AIChatWidget = lazy(() => import("@/components/layout/AIChatWidget"));
-import SocialProofPopup from "@/components/layout/SocialProofPopup";
 import HomePage from "./pages/HomePage";
-import ShopPage from "./pages/ShopPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import QuotePage from "./pages/QuotePage";
-import ContactPage from "./pages/ContactPage";
-import BrandsPage from "./pages/BrandsPage";
-import AboutPage from "./pages/AboutPage";
-import ProductSheetGeneratorPage from "./pages/ProductSheetGeneratorPage";
-import NotFound from "./pages/NotFound";
-import AdminPage from "./pages/AdminPage";
-import MyAccountPage from "./pages/MyAccountPage";
-import VCardNetpower from "./pages/VCardNetpower";
-import PaymentResult from "./pages/PaymentResult";
-import AdminBrandsPage from "./pages/AdminBrandsPage";
-import SearchPage from "./pages/SearchPage";
-import BlogPage from "./pages/BlogPage";
-import BlogPostPage from "./pages/BlogPostPage";
-import AdminBlogGeneratorPage from "./pages/AdminBlogGeneratorPage";
-import AuthPage from "./pages/AuthPage";
+
+// Lazy-load para mejorar LCP/TTI: solo HomePage se carga eager.
+const AIChatWidget = lazy(() => import("@/components/layout/AIChatWidget"));
+const SocialProofPopup = lazy(() => import("@/components/layout/SocialProofPopup"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const QuotePage = lazy(() => import("./pages/QuotePage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const BrandsPage = lazy(() => import("./pages/BrandsPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ProductSheetGeneratorPage = lazy(() => import("./pages/ProductSheetGeneratorPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const MyAccountPage = lazy(() => import("./pages/MyAccountPage"));
+const VCardNetpower = lazy(() => import("./pages/VCardNetpower"));
+const PaymentResult = lazy(() => import("./pages/PaymentResult"));
+const AdminBrandsPage = lazy(() => import("./pages/AdminBrandsPage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const AdminBlogGeneratorPage = lazy(() => import("./pages/AdminBlogGeneratorPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
 
 function ScrollToTop() {
@@ -43,7 +43,15 @@ function ScrollToTop() {
   React.useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
   return null;
 }
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false } },
+});
+
+const PageFallback = () => (
+  <div className="min-h-[40vh] flex items-center justify-center text-muted-foreground text-sm">
+    Cargando…
+  </div>
+);
 
 const App = () => (
   <HelmetProvider>
@@ -58,38 +66,40 @@ const App = () => (
                 <ScrollToTop />
                 <Header />
                 <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/tienda" element={<ShopPage />} />
-                    <Route path="/categoria/:slug" element={<ShopPage />} />
-                    <Route path="/producto/:slug" element={<ProductDetailPage />} />
-                    <Route path="/carrito" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/cotizacion" element={<QuotePage />} />
-                    <Route path="/contacto" element={<ContactPage />} />
-                    <Route path="/marcas" element={<BrandsPage />} />
-                    <Route path="/nosotros" element={<AboutPage />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/admin/generador-fichas" element={<ProtectedAdminRoute><ProductSheetGeneratorPage /></ProtectedAdminRoute>} />
-                    <Route path="*" element={<NotFound />} />
-                    <Route path="/legal" element={<LegalPage />} />
-                    <Route path="/admin" element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
-                    <Route path="/admin/marcas" element={<ProtectedAdminRoute><AdminBrandsPage /></ProtectedAdminRoute>} />
-                    <Route path="/admin/generador-blogs" element={<ProtectedAdminRoute><AdminBlogGeneratorPage /></ProtectedAdminRoute>} />
-                    <Route path="/blog" element={<BlogPage />} />
-                    <Route path="/blog/:slug" element={<BlogPostPage />} />
-                    <Route path="/buscar" element={<SearchPage />} />
-                    <Route path="/mi-cuenta" element={<MyAccountPage />} />
-                    <Route path="/contacto-digital" element={<VCardNetpower />} />
-                    <Route path="/resultado-pago" element={<PaymentResult />} />
-                  </Routes>
+                  <Suspense fallback={<PageFallback />}>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/tienda" element={<ShopPage />} />
+                      <Route path="/categoria/:slug" element={<ShopPage />} />
+                      <Route path="/producto/:slug" element={<ProductDetailPage />} />
+                      <Route path="/carrito" element={<CartPage />} />
+                      <Route path="/checkout" element={<CheckoutPage />} />
+                      <Route path="/cotizacion" element={<QuotePage />} />
+                      <Route path="/contacto" element={<ContactPage />} />
+                      <Route path="/marcas" element={<BrandsPage />} />
+                      <Route path="/nosotros" element={<AboutPage />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/admin/generador-fichas" element={<ProtectedAdminRoute><ProductSheetGeneratorPage /></ProtectedAdminRoute>} />
+                      <Route path="/legal" element={<LegalPage />} />
+                      <Route path="/admin" element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
+                      <Route path="/admin/marcas" element={<ProtectedAdminRoute><AdminBrandsPage /></ProtectedAdminRoute>} />
+                      <Route path="/admin/generador-blogs" element={<ProtectedAdminRoute><AdminBlogGeneratorPage /></ProtectedAdminRoute>} />
+                      <Route path="/blog" element={<BlogPage />} />
+                      <Route path="/blog/:slug" element={<BlogPostPage />} />
+                      <Route path="/buscar" element={<SearchPage />} />
+                      <Route path="/mi-cuenta" element={<MyAccountPage />} />
+                      <Route path="/contacto-digital" element={<VCardNetpower />} />
+                      <Route path="/resultado-pago" element={<PaymentResult />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
                 </main>
                 <Footer />
                 <WhatsAppButton />
                 <Suspense fallback={null}>
                   <AIChatWidget />
+                  <SocialProofPopup />
                 </Suspense>
-                <SocialProofPopup />
               </div>
             </BrowserRouter>
           </TooltipProvider>

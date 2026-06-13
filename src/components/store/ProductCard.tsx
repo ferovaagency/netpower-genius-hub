@@ -25,10 +25,16 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">
-      {/* Image area */}
-      <div className="relative aspect-square bg-muted/50 flex items-center justify-center overflow-hidden">
+      {/* Image area — todas las imágenes con el mismo tamaño (cuadrado) y centradas */}
+      <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
         {product.images && product.images.length > 0 && product.images[0] ? (
-          <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain p-4" />
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="max-w-full max-h-full w-auto h-auto object-contain p-4 mx-auto my-auto"
+          />
         ) : (
           <div className="text-4xl">{category?.icon || "📦"}</div>
         )}
