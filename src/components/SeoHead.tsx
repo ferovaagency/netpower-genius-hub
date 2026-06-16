@@ -10,7 +10,7 @@ interface SeoHeadProps {
   productData?: {
     name?: string;
     image?: string;
-    price?: number;
+    price?: number | string;
     priceCurrency?: string;
     availability?: string;
     sku?: string;
