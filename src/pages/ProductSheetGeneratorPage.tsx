@@ -372,6 +372,7 @@ export default function ProductSheetGeneratorPage() {
     setPrice("");
     setSalePrice("");
     setStock("10");
+    setFeatured(false);
     setImageUrls([]);
     setImageUrlInput("");
     setAiNotes("");
