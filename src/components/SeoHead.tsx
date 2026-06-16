@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { toRawPrice } from "@/lib/utils";
+
 
 interface SeoHeadProps {
   title: string;
@@ -8,7 +10,7 @@ interface SeoHeadProps {
   productData?: {
     name?: string;
     image?: string;
-    price?: number;
+    price?: number | string;
     priceCurrency?: string;
     availability?: string;
     sku?: string;
@@ -42,9 +44,8 @@ export default function SeoHead({
           "@type": "Offer",
           url: canonicalUrl,
           priceCurrency: productData?.priceCurrency ?? "COP",
-          price: productData?.price ?? 0,
-          availability:
-            productData?.availability ?? "https://schema.org/InStock",
+          price: toRawPrice(productData?.price),
+          availability: productData?.availability ?? "https://schema.org/InStock",
           areaServed: "CO",
         },
       }

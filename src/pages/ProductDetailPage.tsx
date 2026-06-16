@@ -9,6 +9,7 @@ import { useChat } from "@/contexts/ChatContext";
 import type { Product } from "@/types/store";
 import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
 
 const WHATSAPP_NUMBER = "573504609431";
@@ -129,7 +130,7 @@ export default function ProductDetailPage() {
             "@type": "Offer",
             "url": `https://netpowerit.co/producto/${product.slug}`,
             "priceCurrency": "COP",
-            "price": product.salePrice || product.price || "0",
+            "price": toRawPrice(product.salePrice ?? product.price),
             "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
             "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
           }
