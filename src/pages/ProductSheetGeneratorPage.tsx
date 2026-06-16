@@ -678,14 +678,17 @@ export default function ProductSheetGeneratorPage() {
                             try {
                               for (const file of Array.from(files)) {
                                 if (imageUrls.length >= 5) break;
-                                const ext = file.name.split(".").pop() || "jpg";
-                                const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                                const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+                                // Convertir SIEMPRE a WebP antes de subir al bucket.
+                                const { blob, fileName } = await fileToWebP(file);
+                                const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${fileName}`;
+                                const { error } = await supabase.storage
+                                  .from("product-images")
+                                  .upload(path, blob, { contentType: "image/webp", upsert: false });
                                 if (error) throw error;
                                 const { data } = supabase.storage.from("product-images").getPublicUrl(path);
                                 setImageUrls((prev) => [...prev, data.publicUrl]);
                               }
-                              toast.success("Imagen(es) subida(s) con éxito");
+                              toast.success("Imagen(es) subida(s) como WebP");
                             } catch (err: any) {
                               toast.error("No se pudo subir la imagen: " + err.message);
                             } finally {
@@ -697,7 +700,7 @@ export default function ProductSheetGeneratorPage() {
                       </div>
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground mt-1.5">Las URLs externas se descargarán automáticamente al publicar para optimizar velocidad y SEO.</p>
+                  <p className="text-[10px] text-muted-foreground mt-1.5">Las imágenes locales se convierten a WebP automáticamente. Las URLs externas se descargan al publicar.</p>
                 </div>
 
                 {/* Notas adicionales para la IA */}
