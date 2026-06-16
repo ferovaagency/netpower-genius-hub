@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
             "@type": "Offer",
             "url": `https://netpowerit.co/producto/${product.slug}`,
             "priceCurrency": "COP",
-            "price": product.salePrice || product.price || "0",
+            "price": toRawPrice(product.salePrice ?? product.price),
             "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
             "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
           }
