@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { toRawPrice } from "@/lib/utils";
+
 
 interface SeoHeadProps {
   title: string;
