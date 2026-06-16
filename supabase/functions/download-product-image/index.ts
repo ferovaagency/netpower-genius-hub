@@ -77,24 +77,39 @@ serve(async (req) => {
         `El sitio de origen bloqueó la descarga (${imgResp.status}). Descarga la imagen manualmente y súbela desde tu equipo.`,
       );
     }
-    const ctRaw = imgResp.headers.get("content-type") || "image/jpeg";
-    if (!ctRaw.toLowerCase().startsWith("image/")) {
+    let ctRaw = (imgResp.headers.get("content-type") || "image/jpeg").toLowerCase();
+    if (!ctRaw.startsWith("image/")) {
       throw new Error("URL did not return an image");
     }
 
-    const contentType = imgResp.headers.get("content-type") || "image/jpeg";
-    const blob = await imgResp.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-
-    // Determine extension
-    const extMap: Record<string, string> = {
+    // Allowed mime types in the storage bucket
+    const allowed: Record<string, string> = {
       "image/jpeg": ".jpg",
       "image/png": ".png",
       "image/webp": ".webp",
       "image/gif": ".gif",
     };
-    const ext = extMap[contentType] || ".jpg";
+
+    let uint8: Uint8Array;
+    let contentType: string;
+
+    if (allowed[ctRaw]) {
+      const arrayBuffer = await imgResp.arrayBuffer();
+      uint8 = new Uint8Array(arrayBuffer);
+      contentType = ctRaw;
+    } else {
+      // Unsupported format (e.g. image/avif) — re-fetch via weserv.nl and force JPEG output
+      const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(
+        parsed.host + parsed.pathname + parsed.search,
+      )}&output=jpg`;
+      const conv = await fetch(proxied, { redirect: "follow" });
+      if (!conv.ok) throw new Error(`Image format ${ctRaw} not supported and conversion failed`);
+      const arrayBuffer = await conv.arrayBuffer();
+      uint8 = new Uint8Array(arrayBuffer);
+      contentType = "image/jpeg";
+    }
+
+    const ext = allowed[contentType] || ".jpg";
     const safeName = (fileName || `product-${Date.now()}`).replace(/[^a-z0-9-_]/gi, "-") + ext;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
