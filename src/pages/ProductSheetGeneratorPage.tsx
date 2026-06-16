@@ -603,6 +603,21 @@ export default function ProductSheetGeneratorPage() {
                   </div>
                 </div>
 
+                {/* Destacado en Home */}
+                <label className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-background cursor-pointer hover:bg-accent transition">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">⭐ Mostrar en "Productos Destacados" del Home</p>
+                    <p className="text-[11px] text-muted-foreground">Si está activado, aparecerá en la sección destacada de la portada.</p>
+                  </div>
+                </label>
+
+
                 {/* Imágenes */}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
