@@ -65,7 +65,18 @@ serve(async (req) => {
       const { Referer: _r, ...noRef } = browserHeaders;
       imgResp = await fetch(parsed.toString(), { headers: noRef, redirect: "follow" });
     }
-    if (!imgResp.ok) throw new Error(`Failed to fetch image: ${imgResp.status}`);
+    if (!imgResp.ok) {
+      // Final fallback: proxy via images.weserv.nl (bypasses hotlink protection)
+      const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(
+        parsed.host + parsed.pathname + parsed.search,
+      )}`;
+      imgResp = await fetch(proxied, { redirect: "follow" });
+    }
+    if (!imgResp.ok) {
+      throw new Error(
+        `El sitio de origen bloqueó la descarga (${imgResp.status}). Descarga la imagen manualmente y súbela desde tu equipo.`,
+      );
+    }
     const ctRaw = imgResp.headers.get("content-type") || "image/jpeg";
     if (!ctRaw.toLowerCase().startsWith("image/")) {
       throw new Error("URL did not return an image");
