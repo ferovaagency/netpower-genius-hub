@@ -90,8 +90,13 @@ export default function HomePage() {
 
       setCategoryCounts(nextCounts);
 
-      // Featured = los últimos 8 productos subidos (ordenados por created_at desc)
-      setFeaturedProducts(data.slice(0, 8).map((r: any) => ({
+      // Destacados: primero los marcados como `featured`, luego rellenamos
+      // con los más recientes hasta completar 8.
+      const featuredFirst = data.filter((r: any) => r.featured === true);
+      const rest = data.filter((r: any) => r.featured !== true);
+      const ordered = [...featuredFirst, ...rest].slice(0, 8);
+
+      setFeaturedProducts(ordered.map((r: any) => ({
         id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
         shortDesc: r.short_description ?? "", price: Number(r.price),
         salePrice: r.sale_price ? Number(r.sale_price) : null,

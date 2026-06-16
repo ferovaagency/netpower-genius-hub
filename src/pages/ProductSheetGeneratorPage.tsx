@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useProducts";
 import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
 import { generateSlug, ensureUniqueSlug } from "@/lib/slug";
+import { fileToWebP } from "@/lib/image-to-webp";
 
 interface SpecEntry {
   key: string;
@@ -62,6 +63,7 @@ export default function ProductSheetGeneratorPage() {
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [stock, setStock] = useState("10");
+  const [featured, setFeatured] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -127,6 +129,7 @@ export default function ProductSheetGeneratorPage() {
     setPrice(String(p.price));
     setSalePrice(p.salePrice ? String(p.salePrice) : "");
     setStock(String(p.stock));
+    setFeatured(Boolean(p.featured));
     setImageUrls(p.images || []);
     setAiNotes("");
 
@@ -247,10 +250,30 @@ export default function ProductSheetGeneratorPage() {
       const finalSpecs: Record<string, string> = { ...(result.specs || {}) };
       if (subcategory.trim()) finalSpecs["Subcategoría"] = subcategory.trim();
 
+      // Inyectar FAQs en la descripción larga (HTML visible) + guardar para JSON-LD.
+      const faqsArr = Array.isArray(result.faqs) ? result.faqs.filter((f) => f?.question && f?.answer) : [];
+      let finalDescription = result.description || "";
+      if (faqsArr.length > 0) {
+        const faqHtml =
+          `\n<h2>Preguntas frecuentes</h2>\n` +
+          faqsArr
+            .map(
+              (f) =>
+                `<h3>${f.question}</h3>\n<p>${String(f.answer).replace(/</g, "&lt;")}</p>`
+            )
+            .join("\n");
+        // Evitar duplicar si ya viene incluida.
+        if (!/preguntas frecuentes/i.test(finalDescription)) {
+          finalDescription = `${finalDescription}\n${faqHtml}`;
+        }
+        // Almacenar JSON crudo para JSON-LD FAQPage en ProductDetailPage.
+        finalSpecs["__faqs"] = JSON.stringify(faqsArr);
+      }
+
       if (tab === "edit" && selectedProduct) {
         const updated = await updateProductDB(selectedProduct.id, {
           name: productName,
-          description: result.description,
+          description: finalDescription,
           shortDesc: result.shortDesc,
           price: parsedPrice,
           salePrice: parsedSalePrice,
@@ -264,6 +287,7 @@ export default function ProductSheetGeneratorPage() {
           metaDesc: result.metaDesc,
           // slug NO se actualiza al editar: la URL canónica permanece estable.
           active: selectedProduct.active ?? true,
+          featured,
         });
 
         toast.success("¡Producto actualizado!", {
@@ -276,7 +300,7 @@ export default function ProductSheetGeneratorPage() {
       const newProduct: Omit<Product, "id"> = {
         slug,
         name: productName,
-        description: result.description,
+        description: finalDescription,
         shortDesc: result.shortDesc,
         price: parsedPrice,
         salePrice: parsedSalePrice,
@@ -289,7 +313,7 @@ export default function ProductSheetGeneratorPage() {
         metaTitle: result.metaTitle,
         metaDesc: result.metaDesc,
         active: true,
-        featured: false,
+        featured,
       };
 
       const { product: savedProduct, updated } = await upsertProductDB(newProduct as Product);
@@ -348,6 +372,7 @@ export default function ProductSheetGeneratorPage() {
     setPrice("");
     setSalePrice("");
     setStock("10");
+    setFeatured(false);
     setImageUrls([]);
     setImageUrlInput("");
     setAiNotes("");
@@ -578,6 +603,21 @@ export default function ProductSheetGeneratorPage() {
                   </div>
                 </div>
 
+                {/* Destacado en Home */}
+                <label className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-background cursor-pointer hover:bg-accent transition">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">⭐ Mostrar en "Productos Destacados" del Home</p>
+                    <p className="text-[11px] text-muted-foreground">Si está activado, aparecerá en la sección destacada de la portada.</p>
+                  </div>
+                </label>
+
+
                 {/* Imágenes */}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
@@ -654,14 +694,17 @@ export default function ProductSheetGeneratorPage() {
                             try {
                               for (const file of Array.from(files)) {
                                 if (imageUrls.length >= 5) break;
-                                const ext = file.name.split(".").pop() || "jpg";
-                                const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                                const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+                                // Convertir SIEMPRE a WebP antes de subir al bucket.
+                                const { blob, fileName } = await fileToWebP(file);
+                                const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${fileName}`;
+                                const { error } = await supabase.storage
+                                  .from("product-images")
+                                  .upload(path, blob, { contentType: "image/webp", upsert: false });
                                 if (error) throw error;
                                 const { data } = supabase.storage.from("product-images").getPublicUrl(path);
                                 setImageUrls((prev) => [...prev, data.publicUrl]);
                               }
-                              toast.success("Imagen(es) subida(s) con éxito");
+                              toast.success("Imagen(es) subida(s) como WebP");
                             } catch (err: any) {
                               toast.error("No se pudo subir la imagen: " + err.message);
                             } finally {
@@ -673,7 +716,7 @@ export default function ProductSheetGeneratorPage() {
                       </div>
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground mt-1.5">Las URLs externas se descargarán automáticamente al publicar para optimizar velocidad y SEO.</p>
+                  <p className="text-[10px] text-muted-foreground mt-1.5">Las imágenes locales se convierten a WebP automáticamente. Las URLs externas se descargan al publicar.</p>
                 </div>
 
                 {/* Notas adicionales para la IA */}
