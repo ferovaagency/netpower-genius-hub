@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useProducts";
 import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
 import { generateSlug, ensureUniqueSlug } from "@/lib/slug";
+import { fileToWebP } from "@/lib/image-to-webp";
 
 interface SpecEntry {
   key: string;
@@ -62,6 +63,7 @@ export default function ProductSheetGeneratorPage() {
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [stock, setStock] = useState("10");
+  const [featured, setFeatured] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -127,6 +129,7 @@ export default function ProductSheetGeneratorPage() {
     setPrice(String(p.price));
     setSalePrice(p.salePrice ? String(p.salePrice) : "");
     setStock(String(p.stock));
+    setFeatured(Boolean(p.featured));
     setImageUrls(p.images || []);
     setAiNotes("");
 
