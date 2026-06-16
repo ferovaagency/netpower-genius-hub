@@ -44,9 +44,8 @@ export default function SeoHead({
           "@type": "Offer",
           url: canonicalUrl,
           priceCurrency: productData?.priceCurrency ?? "COP",
-          price: productData?.price ?? 0,
-          availability:
-            productData?.availability ?? "https://schema.org/InStock",
+          price: toRawPrice(productData?.price),
+          availability: productData?.availability ?? "https://schema.org/InStock",
           areaServed: "CO",
         },
       }
