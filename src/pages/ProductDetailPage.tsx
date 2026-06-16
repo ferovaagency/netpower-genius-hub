@@ -106,6 +106,25 @@ export default function ProductDetailPage() {
 
   const waMessage = encodeURIComponent(`Hola Netpower IT, consulto disponibilidad y precio: ${product.name} (${product.sku})`);
 
+  // Extraer FAQs del campo specs.__faqs para JSON-LD FAQPage.
+  const faqList: { question: string; answer: string }[] = (() => {
+    const raw = (product.specs as any)?.__faqs;
+    if (!raw) return [];
+    try {
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return Array.isArray(parsed)
+        ? parsed.filter((f: any) => f?.question && f?.answer)
+        : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  // Specs visibles (sin claves internas).
+  const visibleSpecs = Object.entries(product.specs || {}).filter(
+    ([k]) => !k.startsWith("__")
+  );
+
   return (
     <>
       <Helmet>
@@ -135,6 +154,17 @@ export default function ProductDetailPage() {
             "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
           }
         })}</script>
+        {faqList.length > 0 && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqList.map((f) => ({
+              "@type": "Question",
+              "name": f.question,
+              "acceptedAnswer": { "@type": "Answer", "text": f.answer },
+            })),
+          })}</script>
+        )}
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">
