@@ -398,7 +398,7 @@ export default function ProductDetailPage() {
             )}
             {activeTab === "specs" && (
               <div className="max-w-2xl">
-                {Object.entries(product.specs).map(([k, v]) => (
+                {visibleSpecs.map(([k, v]) => (
                   <div key={k} className="flex border-b border-border py-3 text-sm">
                     <span className="w-1/3 font-medium text-foreground">{k}</span>
                     <span className="w-2/3 text-muted-foreground">{v}</span>
