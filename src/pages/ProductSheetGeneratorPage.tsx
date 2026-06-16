@@ -250,10 +250,30 @@ export default function ProductSheetGeneratorPage() {
       const finalSpecs: Record<string, string> = { ...(result.specs || {}) };
       if (subcategory.trim()) finalSpecs["Subcategoría"] = subcategory.trim();
 
+      // Inyectar FAQs en la descripción larga (HTML visible) + guardar para JSON-LD.
+      const faqsArr = Array.isArray(result.faqs) ? result.faqs.filter((f) => f?.question && f?.answer) : [];
+      let finalDescription = result.description || "";
+      if (faqsArr.length > 0) {
+        const faqHtml =
+          `\n<h2>Preguntas frecuentes</h2>\n` +
+          faqsArr
+            .map(
+              (f) =>
+                `<h3>${f.question}</h3>\n<p>${String(f.answer).replace(/</g, "&lt;")}</p>`
+            )
+            .join("\n");
+        // Evitar duplicar si ya viene incluida.
+        if (!/preguntas frecuentes/i.test(finalDescription)) {
+          finalDescription = `${finalDescription}\n${faqHtml}`;
+        }
+        // Almacenar JSON crudo para JSON-LD FAQPage en ProductDetailPage.
+        finalSpecs["__faqs"] = JSON.stringify(faqsArr);
+      }
+
       if (tab === "edit" && selectedProduct) {
         const updated = await updateProductDB(selectedProduct.id, {
           name: productName,
-          description: result.description,
+          description: finalDescription,
           shortDesc: result.shortDesc,
           price: parsedPrice,
           salePrice: parsedSalePrice,
@@ -267,6 +287,7 @@ export default function ProductSheetGeneratorPage() {
           metaDesc: result.metaDesc,
           // slug NO se actualiza al editar: la URL canónica permanece estable.
           active: selectedProduct.active ?? true,
+          featured,
         });
 
         toast.success("¡Producto actualizado!", {
@@ -279,7 +300,7 @@ export default function ProductSheetGeneratorPage() {
       const newProduct: Omit<Product, "id"> = {
         slug,
         name: productName,
-        description: result.description,
+        description: finalDescription,
         shortDesc: result.shortDesc,
         price: parsedPrice,
         salePrice: parsedSalePrice,
@@ -292,7 +313,7 @@ export default function ProductSheetGeneratorPage() {
         metaTitle: result.metaTitle,
         metaDesc: result.metaDesc,
         active: true,
-        featured: false,
+        featured,
       };
 
       const { product: savedProduct, updated } = await upsertProductDB(newProduct as Product);
