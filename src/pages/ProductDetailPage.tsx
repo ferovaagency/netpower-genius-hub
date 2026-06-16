@@ -9,6 +9,7 @@ import { useChat } from "@/contexts/ChatContext";
 import type { Product } from "@/types/store";
 import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
 
 const WHATSAPP_NUMBER = "573504609431";
