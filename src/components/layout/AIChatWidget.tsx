@@ -439,6 +439,16 @@ export default function AIChatWidget() {
               </a>
             );
           }
+          if ("type" in part && part.type === "quote") {
+            return (
+              <div key={idx} className="my-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm">
+                <p className="font-semibold text-success flex items-center gap-1.5">✅ Solicitud registrada</p>
+                <p className="text-foreground/80 text-xs mt-1">
+                  Recibimos tus datos. Un asesor te enviará la cotización formal al correo <strong>{part.data.email || "registrado"}</strong> en menos de 1 hora hábil.
+                </p>
+              </div>
+            );
+          }
           if ("type" in part && part.type === "suggestions") {
             const productsToShow = part.ids.map((id) => suggestionsCache[id]).filter(Boolean) as Product[];
             if (productsToShow.length === 0) {
