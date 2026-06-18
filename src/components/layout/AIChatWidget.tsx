@@ -25,14 +25,15 @@ function buildCatalogContext(items: CatalogItem[]): string {
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]], [[WHATSAPP:text]] and [PRODUCT_SUGGESTIONS: id1,id2] markers
+// Parse [[PRODUCT:slug]], [[WHATSAPP:text]], [PRODUCT_SUGGESTIONS:...], [[QUOTE_DATA:{...}]] markers
 type SuggestionsMarker = { type: "suggestions"; ids: string[] };
 type WhatsappMarker = { type: "whatsapp"; label: string };
-type Part = string | Product | WhatsappMarker | SuggestionsMarker;
+type QuoteMarker = { type: "quote"; raw: string; data: Record<string, string> };
+type Part = string | Product | WhatsappMarker | SuggestionsMarker | QuoteMarker;
 
 function parseMarkers(text: string): Part[] {
   const parts: Part[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g;
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]|\[\[QUOTE_DATA:(\{[\s\S]*?\})\]\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -46,6 +47,10 @@ function parseMarkers(text: string): Part[] {
       if (product) parts.push(product);
     } else if (match[0].startsWith("[[WHATSAPP")) {
       parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
+    } else if (match[0].startsWith("[[QUOTE_DATA:")) {
+      let data: Record<string, string> = {};
+      try { data = JSON.parse(match[4]); } catch { /* ignore */ }
+      parts.push({ type: "quote", raw: match[4], data });
     } else {
       const ids = match[3].split(",").map((s) => s.trim()).filter(Boolean);
       if (ids.length > 0) parts.push({ type: "suggestions", ids });
@@ -57,6 +62,7 @@ function parseMarkers(text: string): Part[] {
   }
   return parts;
 }
+
 
 function MiniProductCard({
   product,
