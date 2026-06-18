@@ -144,6 +144,36 @@ export default function AIChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
+  const submittedQuotesRef = useRef<Set<string>>(new Set());
+
+  // Detect [[QUOTE_DATA:{...}]] in assistant messages and persist once
+  useEffect(() => {
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const m = msg.content.match(/\[\[QUOTE_DATA:(\{[\s\S]*?\})\]\]/);
+      if (!m) continue;
+      const key = m[1];
+      if (submittedQuotesRef.current.has(key)) continue;
+      submittedQuotesRef.current.add(key);
+      let data: any = {};
+      try { data = JSON.parse(m[1]); } catch { continue; }
+      const transcript = messages.map(x => `${x.role === "user" ? "Cliente" : "Neti"}: ${x.content.replace(/\[\[QUOTE_DATA:[\s\S]*?\]\]/g, "")}`).join("\n");
+      supabase.from("quote_requests").insert({
+        source: "neti_chat",
+        customer_name: data.name || null,
+        customer_email: data.email || null,
+        customer_phone: data.phone || null,
+        city: data.city || null,
+        subject: "Cotización solicitada vía Neti (AI chat)",
+        message: data.project || "",
+        details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript },
+        status: "new",
+      }).then(({ error }) => {
+        if (error) console.error("Failed to save quote:", error);
+      });
+    }
+  }, [messages]);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
