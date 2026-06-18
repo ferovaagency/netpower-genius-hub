@@ -166,8 +166,60 @@ export default function AdminPage() {
     (c.email || "").toLowerCase().includes(custSearch.toLowerCase())
   );
 
+  // ── COTIZACIONES ──────────────────────────────────────────────
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(true);
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [newQuotesCount, setNewQuotesCount] = useState(0);
+
+  const fetchQuotes = useCallback(async () => {
+    const { data } = await supabase.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(200);
+    setQuotes(data || []);
+    setNewQuotesCount((data || []).filter((q: any) => q.status === "new").length);
+    setLoadingQuotes(false);
+  }, []);
+
+  useEffect(() => {
+    fetchQuotes();
+    const interval = setInterval(fetchQuotes, 15000);
+    return () => clearInterval(interval);
+  }, [fetchQuotes]);
+
+  const updateQuoteStatus = async (id: string, status: string) => {
+    await supabase.from("quote_requests").update({ status }).eq("id", id);
+    setQuotes(prev => prev.map(q => q.id === id ? { ...q, status } : q));
+    if (selectedQuote?.id === id) setSelectedQuote({ ...selectedQuote, status });
+    toast({ title: "Estado actualizado" });
+    fetchQuotes();
+  };
+
+  const deleteQuote = async (id: string) => {
+    if (!window.confirm("¿Eliminar esta cotización?")) return;
+    await supabase.from("quote_requests").delete().eq("id", id);
+    setQuotes(prev => prev.filter(q => q.id !== id));
+    setSelectedQuote(null);
+    toast({ title: "Cotización eliminada" });
+  };
+
+  const filteredQuotes = quotes.filter(q =>
+    (q.customer_name || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+    (q.customer_email || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+    (q.message || "").toLowerCase().includes(quoteSearch.toLowerCase())
+  );
+
+  const quoteStatusBadge = (s: string) => {
+    const map: Record<string, string> = { new: "bg-blue-100 text-blue-800", in_progress: "bg-yellow-100 text-yellow-800", sent: "bg-green-100 text-green-800", closed: "bg-gray-100 text-gray-700" };
+    const labels: Record<string, string> = { new: "Nueva", in_progress: "En proceso", sent: "Enviada", closed: "Cerrada" };
+    return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[s] || "bg-gray-100"}`}>{labels[s] || s}</span>;
+  };
+
+  const sourceLabel = (s: string) => {
+    const m: Record<string, string> = { contact_form: "Formulario contacto", neti_chat: "Chat Neti (AI)", quote_page: "Página cotización" };
+    return m[s] || s;
+  };
+
   return (
-    <>
       <Helmet><title>Panel Admin | Netpower IT</title></Helmet>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-extrabold mb-6">Panel de Administración</h1>
