@@ -231,10 +231,15 @@ export default function AdminPage() {
               <Bell className="w-4 h-4 mr-1" /> Aprobaciones
               {pendingCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{pendingCount}</span>}
             </TabsTrigger>
+            <TabsTrigger value="cotizaciones" className="relative">
+              <FileText className="w-4 h-4 mr-1" /> Cotizaciones
+              {newQuotesCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{newQuotesCount}</span>}
+            </TabsTrigger>
             <TabsTrigger value="productos"><Package className="w-4 h-4 mr-1" /> Productos</TabsTrigger>
             <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
           </TabsList>
+
 
           {/* APROBACIONES */}
           <TabsContent value="aprobaciones">
