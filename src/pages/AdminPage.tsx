@@ -220,6 +220,7 @@ export default function AdminPage() {
   };
 
   return (
+    <>
       <Helmet><title>Panel Admin | Netpower IT</title></Helmet>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-extrabold mb-6">Panel de Administración</h1>
