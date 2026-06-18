@@ -526,7 +526,116 @@ export default function AdminPage() {
               </div>
             )}
           </TabsContent>
+
+          {/* COTIZACIONES */}
+          <TabsContent value="cotizaciones">
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Buscar por nombre, email o mensaje..." value={quoteSearch} onChange={e => setQuoteSearch(e.target.value)} className="max-w-md" />
+            </div>
+            {loadingQuotes ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div> : filteredQuotes.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">No hay cotizaciones todavía</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">Cliente</th>
+                      <th className="px-4 py-3 text-left font-semibold">Contacto</th>
+                      <th className="px-4 py-3 text-left font-semibold">Origen</th>
+                      <th className="px-4 py-3 text-left font-semibold">Resumen</th>
+                      <th className="px-4 py-3 text-left font-semibold">Estado</th>
+                      <th className="px-4 py-3 text-left font-semibold">Fecha</th>
+                      <th className="px-4 py-3 text-left font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredQuotes.map(q => (
+                      <tr key={q.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedQuote(q)}>
+                        <td className="px-4 py-3 font-medium">{q.customer_name || "—"}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {q.customer_email && <div className="flex items-center gap-1"><Mail className="w-3 h-3" />{q.customer_email}</div>}
+                          {q.customer_phone && <div className="flex items-center gap-1 text-muted-foreground"><Phone className="w-3 h-3" />{q.customer_phone}</div>}
+                        </td>
+                        <td className="px-4 py-3 text-xs">{sourceLabel(q.source)}</td>
+                        <td className="px-4 py-3 max-w-xs"><p className="text-xs line-clamp-2">{q.message || "—"}</p></td>
+                        <td className="px-4 py-3">{quoteStatusBadge(q.status)}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString("es-CO")}</td>
+                        <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                          <select value={q.status} onChange={e => updateQuoteStatus(q.id, e.target.value)} className="text-xs border border-border rounded-lg px-2 py-1 bg-background">
+                            <option value="new">Nueva</option>
+                            <option value="in_progress">En proceso</option>
+                            <option value="sent">Enviada</option>
+                            <option value="closed">Cerrada</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {selectedQuote && (
+              <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setSelectedQuote(null)}>
+                <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg">Cotización · {selectedQuote.customer_name || "Sin nombre"}</h3>
+                      <p className="text-xs text-muted-foreground">{sourceLabel(selectedQuote.source)} · {new Date(selectedQuote.created_at).toLocaleString("es-CO")}</p>
+                    </div>
+                    <button onClick={() => setSelectedQuote(null)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+                    <div><span className="font-semibold">Email:</span> <a href={`mailto:${selectedQuote.customer_email}`} className="text-primary">{selectedQuote.customer_email || "—"}</a></div>
+                    <div><span className="font-semibold">Teléfono:</span> {selectedQuote.customer_phone ? <a href={`https://wa.me/${selectedQuote.customer_phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="text-primary">{selectedQuote.customer_phone}</a> : "—"}</div>
+                    <div><span className="font-semibold">Ciudad:</span> {selectedQuote.city || "—"}</div>
+                    <div><span className="font-semibold">Estado:</span> {quoteStatusBadge(selectedQuote.status)}</div>
+                  </div>
+
+                  <div className="mb-3">
+                    <p className="font-semibold text-sm mb-1">Mensaje / Proyecto:</p>
+                    <p className="text-sm bg-muted/30 rounded-lg p-3 whitespace-pre-wrap">{selectedQuote.message || "—"}</p>
+                  </div>
+
+                  {selectedQuote.details?.budget && (
+                    <p className="text-sm mb-2"><span className="font-semibold">Presupuesto:</span> {selectedQuote.details.budget}</p>
+                  )}
+                  {selectedQuote.details?.notes && (
+                    <p className="text-sm mb-2"><span className="font-semibold">Notas:</span> {selectedQuote.details.notes}</p>
+                  )}
+
+                  {selectedQuote.details?.transcript && (
+                    <details className="mb-3">
+                      <summary className="font-semibold text-sm cursor-pointer">Ver conversación con Neti</summary>
+                      <pre className="text-xs bg-muted/30 rounded-lg p-3 mt-2 whitespace-pre-wrap max-h-80 overflow-y-auto">{selectedQuote.details.transcript}</pre>
+                    </details>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 justify-between mt-4 pt-4 border-t">
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedQuote.customer_email && (
+                        <a href={`mailto:${selectedQuote.customer_email}?subject=Cotización Netpower IT`} className="text-xs h-9 px-3 inline-flex items-center gap-1 rounded-lg bg-primary text-primary-foreground font-semibold">
+                          <Mail className="w-3 h-3" /> Responder por email
+                        </a>
+                      )}
+                      {selectedQuote.customer_phone && (
+                        <a href={`https://wa.me/${selectedQuote.customer_phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="text-xs h-9 px-3 inline-flex items-center gap-1 rounded-lg bg-[hsl(145,63%,42%)] text-white font-semibold">
+                          <Phone className="w-3 h-3" /> WhatsApp
+                        </a>
+                      )}
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => deleteQuote(selectedQuote.id)}>
+                      <Trash2 className="w-3 h-3 mr-1" /> Eliminar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
+
       </div>
     </>
   );
