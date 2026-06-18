@@ -25,14 +25,15 @@ function buildCatalogContext(items: CatalogItem[]): string {
     .join("\n");
 }
 
-// Parse [[PRODUCT:slug]], [[WHATSAPP:text]] and [PRODUCT_SUGGESTIONS: id1,id2] markers
+// Parse [[PRODUCT:slug]], [[WHATSAPP:text]], [PRODUCT_SUGGESTIONS:...], [[QUOTE_DATA:{...}]] markers
 type SuggestionsMarker = { type: "suggestions"; ids: string[] };
 type WhatsappMarker = { type: "whatsapp"; label: string };
-type Part = string | Product | WhatsappMarker | SuggestionsMarker;
+type QuoteMarker = { type: "quote"; raw: string; data: Record<string, string> };
+type Part = string | Product | WhatsappMarker | SuggestionsMarker | QuoteMarker;
 
 function parseMarkers(text: string): Part[] {
   const parts: Part[] = [];
-  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]/g;
+  const regex = /\[\[PRODUCT:([^\]]+)\]\]|\[\[WHATSAPP(?::([^\]]*))?\]\]|\[PRODUCT_SUGGESTIONS:\s*([^\]]+)\]|\[\[QUOTE_DATA:(\{[\s\S]*?\})\]\]/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -46,6 +47,10 @@ function parseMarkers(text: string): Part[] {
       if (product) parts.push(product);
     } else if (match[0].startsWith("[[WHATSAPP")) {
       parts.push({ type: "whatsapp", label: match[2]?.trim() || "Chatear por WhatsApp" });
+    } else if (match[0].startsWith("[[QUOTE_DATA:")) {
+      let data: Record<string, string> = {};
+      try { data = JSON.parse(match[4]); } catch { /* ignore */ }
+      parts.push({ type: "quote", raw: match[4], data });
     } else {
       const ids = match[3].split(",").map((s) => s.trim()).filter(Boolean);
       if (ids.length > 0) parts.push({ type: "suggestions", ids });
@@ -57,6 +62,7 @@ function parseMarkers(text: string): Part[] {
   }
   return parts;
 }
+
 
 function MiniProductCard({
   product,
@@ -138,6 +144,36 @@ export default function AIChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
+  const submittedQuotesRef = useRef<Set<string>>(new Set());
+
+  // Detect [[QUOTE_DATA:{...}]] in assistant messages and persist once
+  useEffect(() => {
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const m = msg.content.match(/\[\[QUOTE_DATA:(\{[\s\S]*?\})\]\]/);
+      if (!m) continue;
+      const key = m[1];
+      if (submittedQuotesRef.current.has(key)) continue;
+      submittedQuotesRef.current.add(key);
+      let data: any = {};
+      try { data = JSON.parse(m[1]); } catch { continue; }
+      const transcript = messages.map(x => `${x.role === "user" ? "Cliente" : "Neti"}: ${x.content.replace(/\[\[QUOTE_DATA:[\s\S]*?\]\]/g, "")}`).join("\n");
+      supabase.from("quote_requests").insert({
+        source: "neti_chat",
+        customer_name: data.name || null,
+        customer_email: data.email || null,
+        customer_phone: data.phone || null,
+        city: data.city || null,
+        subject: "Cotización solicitada vía Neti (AI chat)",
+        message: data.project || "",
+        details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript },
+        status: "new",
+      }).then(({ error }) => {
+        if (error) console.error("Failed to save quote:", error);
+      });
+    }
+  }, [messages]);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -401,6 +437,16 @@ export default function AIChatWidget() {
                 <MessageCircle className="w-4 h-4" />
                 {part.label}
               </a>
+            );
+          }
+          if ("type" in part && part.type === "quote") {
+            return (
+              <div key={idx} className="my-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm">
+                <p className="font-semibold text-success flex items-center gap-1.5">✅ Solicitud registrada</p>
+                <p className="text-foreground/80 text-xs mt-1">
+                  Recibimos tus datos. Un asesor te enviará la cotización formal al correo <strong>{part.data.email || "registrado"}</strong> en menos de 1 hora hábil.
+                </p>
+              </div>
             );
           }
           if ("type" in part && part.type === "suggestions") {

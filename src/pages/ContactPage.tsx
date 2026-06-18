@@ -1,8 +1,51 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
 export default function ContactPage() {
+  const { toast } = useToast();
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const schema = z.object({
+    name: z.string().trim().min(2, "Nombre requerido").max(100),
+    email: z.string().trim().email("Email inválido").max(255),
+    phone: z.string().trim().min(7, "Teléfono inválido").max(30),
+    message: z.string().trim().min(5, "Mensaje requerido").max(1500),
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      toast({ title: "Revisa el formulario", description: parsed.error.issues[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("quote_requests").insert({
+      source: "contact_form",
+      customer_name: parsed.data.name,
+      customer_email: parsed.data.email,
+      customer_phone: parsed.data.phone,
+      subject: "Mensaje desde formulario de contacto",
+      message: parsed.data.message,
+      status: "new",
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error al enviar", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSent(true);
+    setForm({ name: "", email: "", phone: "", message: "" });
+    toast({ title: "✅ Mensaje enviado", description: "Te contactaremos en menos de 1 hora hábil." });
+  };
+
   return (
     <>
       <Helmet>
@@ -63,26 +106,52 @@ export default function ContactPage() {
             ))}
           </div>
 
-          <form className="bg-card rounded-xl border border-border shadow-card p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border shadow-card p-6 space-y-4">
             <h2 className="font-bold text-foreground mb-2">Envíanos un mensaje</h2>
+            {sent && (
+              <div className="rounded-lg bg-success/10 border border-success/30 px-4 py-3 text-sm text-success font-medium">
+                ✅ Mensaje recibido. Te responderemos en menos de 1 hora hábil.
+              </div>
+            )}
             {[
-              { id: "contact-name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
-              { id: "contact-email", label: "Email", type: "email", placeholder: "tu@email.com" },
-              { id: "contact-phone", label: "Teléfono", type: "tel", placeholder: "+57 350 460 9431" },
+              { id: "name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
+              { id: "email", label: "Email", type: "email", placeholder: "tu@email.com" },
+              { id: "phone", label: "Teléfono", type: "tel", placeholder: "+57 350 460 9431" },
             ].map(f => (
               <div key={f.id}>
-                <label htmlFor={f.id} className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
-                <input id={f.id} type={f.type} placeholder={f.placeholder} className="w-full h-10 px-4 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
+                <label htmlFor={`contact-${f.id}`} className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>
+                <input
+                  id={`contact-${f.id}`}
+                  type={f.type}
+                  required
+                  value={(form as any)[f.id]}
+                  onChange={e => setForm(p => ({ ...p, [f.id]: e.target.value }))}
+                  placeholder={f.placeholder}
+                  className="w-full h-10 px-4 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                />
               </div>
             ))}
             <div>
               <label htmlFor="contact-message" className="text-sm font-medium text-foreground mb-1 block">Mensaje</label>
-              <textarea id="contact-message" placeholder="¿En qué podemos ayudarte?" rows={4} className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none" />
+              <textarea
+                id="contact-message"
+                required
+                value={form.message}
+                onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
+                placeholder="¿En qué podemos ayudarte?"
+                rows={4}
+                className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none"
+              />
             </div>
-            <button type="button" className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all">
-              Enviar Mensaje
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</> : "Enviar Mensaje"}
             </button>
           </form>
+
         </div>
       </div>
     </>
