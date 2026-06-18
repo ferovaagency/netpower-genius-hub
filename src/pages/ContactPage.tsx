@@ -7,6 +7,45 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 export default function ContactPage() {
+  const { toast } = useToast();
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const schema = z.object({
+    name: z.string().trim().min(2, "Nombre requerido").max(100),
+    email: z.string().trim().email("Email inválido").max(255),
+    phone: z.string().trim().min(7, "Teléfono inválido").max(30),
+    message: z.string().trim().min(5, "Mensaje requerido").max(1500),
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      toast({ title: "Revisa el formulario", description: parsed.error.issues[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("quote_requests").insert({
+      source: "contact_form",
+      customer_name: parsed.data.name,
+      customer_email: parsed.data.email,
+      customer_phone: parsed.data.phone,
+      subject: "Mensaje desde formulario de contacto",
+      message: parsed.data.message,
+      status: "new",
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error al enviar", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSent(true);
+    setForm({ name: "", email: "", phone: "", message: "" });
+    toast({ title: "✅ Mensaje enviado", description: "Te contactaremos en menos de 1 hora hábil." });
+  };
+
   return (
     <>
       <Helmet>
