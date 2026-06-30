@@ -5,12 +5,14 @@ import { Mail, Phone, MapPin, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 
 export default function ContactPage() {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const schema = z.object({
     name: z.string().trim().min(2, "Nombre requerido").max(100),
@@ -21,6 +23,10 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      toast({ title: "Autorización requerida", description: "Debes aceptar la Política de Tratamiento de Datos Personales.", variant: "destructive" });
+      return;
+    }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       toast({ title: "Revisa el formulario", description: parsed.error.issues[0].message, variant: "destructive" });
@@ -43,6 +49,7 @@ export default function ContactPage() {
     }
     setSent(true);
     setForm({ name: "", email: "", phone: "", message: "" });
+    setConsent(false);
     toast({ title: "✅ Mensaje enviado", description: "Te contactaremos en menos de 1 hora hábil." });
   };
 
@@ -143,9 +150,10 @@ export default function ContactPage() {
                 className="w-full px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none"
               />
             </div>
+            <DataConsentCheckbox checked={consent} onChange={setConsent} id="contact-consent" />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !consent}
               className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</> : "Enviar Mensaje"}

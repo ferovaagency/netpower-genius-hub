@@ -64,7 +64,7 @@ export default function Footer() {
               <li><Link to="/marcas" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Marcas</Link></li>
               <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Términos y Condiciones</Link></li>
               <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Política de Cookies</Link></li>
-              <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Tratamiento de Datos</Link></li>
+              <li><Link to="/politica-datos" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Política de Tratamiento de Datos Personales</Link></li>
             </ul>
             <h3 className="font-semibold text-sm uppercase tracking-wider mb-3 text-surface-dark-foreground/80">Marcas</h3>
             <div className="flex flex-wrap gap-1.5">

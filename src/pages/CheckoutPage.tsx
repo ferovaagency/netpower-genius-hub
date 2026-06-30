@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatCOP, categories, findProductById, decreaseInventory } from "@/data/store-data";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 
 const WHATSAPP = "573504609431";
 
@@ -15,6 +16,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"" | "wompi" | "bancolombia" | "nequi" | "daviplata" | "breb">("");
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [consent, setConsent] = useState(false);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", idType: "CC", idNumber: "",
@@ -59,6 +61,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!isFormValid) { toast.error("Completa todos los campos obligatorios"); return; }
     if (!paymentMethod) { toast.error("Selecciona un método de pago"); return; }
+    if (!consent) { toast.error("Debes aceptar la Política de Tratamiento de Datos Personales"); return; }
     if (requiresReceipt && !receipt) { toast.error("Sube tu comprobante de pago"); return; }
     if (requiresReceipt && receipt && receipt.size > 5 * 1024 * 1024) {
       toast.error("El comprobante no puede superar 5MB"); return;
@@ -405,9 +408,10 @@ export default function CheckoutPage() {
                 * Precios incluyen IVA. Envío se calcula al confirmar.
               </p>
 
+              <DataConsentCheckbox checked={consent} onChange={setConsent} id="checkout-consent" />
               <button
                 type="submit"
-                disabled={loading || !isFormValid || !paymentMethod || (requiresReceipt && !receipt)}
+                disabled={loading || !isFormValid || !paymentMethod || (requiresReceipt && !receipt) || !consent}
                 className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
