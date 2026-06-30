@@ -123,7 +123,7 @@ export default function Header() {
       {/* Top bar */}
       <div className="bg-surface-dark">
         <div className="container mx-auto flex items-center justify-between py-2 px-6 text-xs text-surface-dark-foreground/80 font-medium">
-          <span>Envío a todo Colombia · Garantía oficial · Soporte técnico</span>
+          <span>Envío GRATIS en Bogotá · Envío a todo Colombia · Garantía oficial</span>
           <a
             href="tel:+573504609431"
             className="hidden sm:flex items-center gap-1.5 font-bold text-base md:text-lg text-white hover:text-secondary transition-colors tracking-wide"
