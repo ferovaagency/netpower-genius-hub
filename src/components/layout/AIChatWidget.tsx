@@ -8,6 +8,7 @@ import { products, formatCOP, categories } from "@/data/store-data";
 import { useNavigate } from "react-router-dom";
 import { Product } from "@/types/store";
 import { supabase } from "@/integrations/supabase/client";
+import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -139,6 +140,7 @@ export default function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [suggestionsCache, setSuggestionsCache] = useState<Record<string, Product>>({});
   const [dbCatalog, setDbCatalog] = useState<CatalogItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -370,6 +372,7 @@ export default function AIChatWidget() {
   );
 
   const handleSend = () => {
+    if (!consent) return;
     if (!input.trim() || isLoading) return;
     const text = input.trim();
     setInput("");
@@ -599,7 +602,12 @@ export default function AIChatWidget() {
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border shrink-0">
+            <div className="p-3 border-t border-border shrink-0 space-y-2">
+              {!consent && (
+                <div className="px-1">
+                  <DataConsentCheckbox checked={consent} onChange={setConsent} id="chat-consent" />
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <input
                   ref={inputRef}
@@ -607,13 +615,13 @@ export default function AIChatWidget() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Escribe tu mensaje..."
-                  disabled={isLoading}
+                  placeholder={consent ? "Escribe tu mensaje..." : "Acepta la política para chatear..."}
+                  disabled={isLoading || !consent}
                   className="flex-1 h-10 px-4 rounded-full border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                 />
                 <button
                   onClick={handleSend}
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || !input.trim() || !consent}
                   className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />

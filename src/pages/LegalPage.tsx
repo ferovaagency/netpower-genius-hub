@@ -72,43 +72,17 @@ export default function LegalPage() {
  
         {/* Tratamiento de Datos */}
         {active === "Tratamiento de Datos" && (
-          <div className="space-y-6">
-            <p className="text-xs text-muted-foreground">Conforme a la Ley 1581 de 2012 y el Decreto 1074 de 2015 — República de Colombia</p>
- 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">1. Responsable del tratamiento</h2>
-              <p className="text-muted-foreground leading-relaxed">Netpower IT es el responsable del tratamiento de los datos personales recopilados a través de este sitio. Contacto: <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a> · <a href="https://wa.me/573504609431" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">+57 350 460 9431</a>.</p>
-            </section>
- 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">2. Datos que recopilamos</h2>
-              <p className="text-muted-foreground leading-relaxed">Recopilamos los siguientes datos cuando el usuario realiza una compra o solicita una cotización: nombre completo, correo electrónico, teléfono, dirección de entrega e historial de pedidos.</p>
-            </section>
- 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">3. Finalidad del tratamiento</h2>
-              <p className="text-muted-foreground leading-relaxed">Los datos se usan para: procesar pedidos, enviar confirmaciones, brindar soporte posventa, mejorar nuestros servicios y realizar comunicaciones comerciales sobre productos, promociones y novedades.</p>
-            </section>
- 
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl">
-              <p className="font-bold text-gray-900 mb-2">⚠️ AUTORIZACIÓN EXPRESA</p>
-              <p className="text-gray-800 text-sm leading-relaxed">
-                Al registrarse, solicitar una cotización o realizar una compra en este sitio web, el usuario otorga autorización expresa e inequívoca a Netpower IT para contactarlo mediante{" "}
-                <strong>mensajes de texto (SMS), mensajes de WhatsApp y correos electrónicos</strong>{" "}
-                con información sobre sus pedidos, novedades del catálogo, promociones especiales y comunicaciones comerciales. Esta autorización puede ser revocada en cualquier momento escribiendo a{" "}
-                <a href="mailto:aosorio@netpowerit.co" className="underline">aosorio@netpowerit.co</a>.
-              </p>
-            </div>
- 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">4. Derechos del titular</h2>
-              <p className="text-muted-foreground leading-relaxed">Conforme a la Ley 1581 de 2012, tiene derecho a conocer, actualizar, rectificar y solicitar la supresión de sus datos. Escríbanos a <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a>.</p>
-            </section>
- 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">5. Seguridad y transferencia</h2>
-              <p className="text-muted-foreground leading-relaxed">Los datos se almacenan en servidores seguros con cifrado. No vendemos, alquilamos ni transferimos datos personales a terceros sin consentimiento explícito, salvo obligación legal o para gestionar la entrega del pedido.</p>
-            </section>
+          <div className="space-y-4">
+            <p className="text-muted-foreground leading-relaxed">
+              Netpower IT SAS (NIT 901.881.682-0) trata los datos personales conforme a la Ley 1581 de 2012. Consulta la
+              política completa, finalidades y tus derechos como titular en la página oficial.
+            </p>
+            <Link
+              to="/politica-datos"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+            >
+              Ver Política de Tratamiento de Datos Personales →
+            </Link>
           </div>
         )}
  
