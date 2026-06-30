@@ -14,33 +14,39 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
-const slides = [
+type SlideCTA =
+  | { type: "link"; label: string; to: string }
+  | { type: "chat"; label: string; mode: "general" | "quote" };
+
+type Slide = {
+  image: string;
+  badge: string | null;
+  titleParts: [string, string, string]; // before, highlight (text-primary), after
+  subtitle: string;
+  cta: SlideCTA;
+};
+
+const slides: Slide[] = [
   {
     image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&q=80",
-    badge: "NUEVO" as string | null,
-    title: "Ya está aquí la nueva generación de servidores HPE Gen12",
-    highlight: null as string | null,
-    subtitle: "Mayor rendimiento, eficiencia energética y seguridad para tu infraestructura.",
-    cta: "Ver servidores HPE Gen12",
-    ctaLink: "/categoria/servidores?marca=hpe",
+    badge: null,
+    titleParts: ["Ya está aquí la nueva generación de ", "servidores HPE Gen12", ""],
+    subtitle: "Mayor rendimiento y seguridad para tu infraestructura. Respaldo certificado: garantía directa con las marcas que nos respaldan. +120 empresas confían en nosotros.",
+    cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
   {
     image: heroBanner,
-    badge: null as string | null,
-    title: "Protegemos la energía de tu empresa para que tu operación nunca se detenga.",
-    highlight: null as string | null,
-    subtitle: "UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.",
-    cta: "Ver Tienda",
-    ctaLink: "/tienda",
+    badge: null,
+    titleParts: ["Protegemos la energía de tu empresa para que tu operación ", "nunca se detenga", "."],
+    subtitle: "UPS, servidores e infraestructura con garantía oficial. Las marcas nos respaldan y certifican. +120 empresas confían en nosotros.",
+    cta: { type: "chat", label: "Solicitar Cotización", mode: "quote" },
   },
   {
     image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
-    badge: "3% OFF",
-    title: "¡Descuento Mundialista 3% OFF!",
-    highlight: null as string | null,
-    subtitle: "Válido pagando con transferencia bancaria (Bancolombia, Nequi, Daviplata o Bre-b). No aplica con Wompi. Válido del 1 de mayo al 30 de junio de 2026.",
-    cta: "Ver productos",
-    ctaLink: "/tienda",
+    badge: "PRODUCTO DEL MES",
+    titleParts: ["Tu compra con ", "respaldo certificado", ""],
+    subtitle: "Garantía directa con las marcas que nos respaldan y certifican. +120 empresas confían en nosotros.",
+    cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
 ];
 
