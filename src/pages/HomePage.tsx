@@ -178,24 +178,23 @@ export default function HomePage() {
               </motion.div>
             )}
             <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
-              {slides[currentSlide].highlight ? (
-                <>
-                  Tu proveedor <span className="text-primary">{slides[currentSlide].highlight}</span> de tecnología TIC
-                </>
-              ) : (
-                slides[currentSlide].title
-              )}
+              {slides[currentSlide].titleParts[0]}
+              <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
+              {slides[currentSlide].titleParts[2]}
             </motion.h1>
             <motion.p variants={fadeUp} className="text-base text-card/70 mb-7 max-w-md leading-relaxed">
               {slides[currentSlide].subtitle}
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-              <Link to={slides[currentSlide].ctaLink} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                {slides[currentSlide].cta} <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
-                Solicitar Cotización
-              </button>
+              {slides[currentSlide].cta.type === "link" ? (
+                <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <button onClick={() => openChat((slides[currentSlide].cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
             </motion.div>
             <motion.div variants={fadeUp} className="mt-5">
               <TrustBadges />
