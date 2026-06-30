@@ -36,6 +36,7 @@ const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const AdminBlogGeneratorPage = lazy(() => import("./pages/AdminBlogGeneratorPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
+const PoliticaDatosPage = lazy(() => import("./pages/PoliticaDatosPage"));
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
 
 function ScrollToTop() {
@@ -81,6 +82,7 @@ const App = () => (
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/admin/generador-fichas" element={<ProtectedAdminRoute><ProductSheetGeneratorPage /></ProtectedAdminRoute>} />
                       <Route path="/legal" element={<LegalPage />} />
+                      <Route path="/politica-datos" element={<PoliticaDatosPage />} />
                       <Route path="/admin" element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
                       <Route path="/admin/marcas" element={<ProtectedAdminRoute><AdminBrandsPage /></ProtectedAdminRoute>} />
                       <Route path="/admin/generador-blogs" element={<ProtectedAdminRoute><AdminBlogGeneratorPage /></ProtectedAdminRoute>} />
