@@ -123,7 +123,7 @@ export default function Header() {
       {/* Top bar */}
       <div className="bg-surface-dark">
         <div className="container mx-auto flex items-center justify-between py-2 px-6 text-xs text-surface-dark-foreground/80 font-medium">
-          <span>Envío a todo Colombia · Garantía oficial · Soporte técnico</span>
+          <span>Envío GRATIS en Bogotá · Envío a todo Colombia · Garantía oficial</span>
           <a
             href="tel:+573504609431"
             className="hidden sm:flex items-center gap-1.5 font-bold text-base md:text-lg text-white hover:text-secondary transition-colors tracking-wide"
@@ -138,7 +138,7 @@ export default function Header() {
         <div className="container mx-auto flex items-center justify-between h-20 px-6">
           {/* Logo — bigger */}
           <Link to="/" className="shrink-0">
-            <img alt="Netpower IT" className="h-16 md:h-20 w-auto" src="/lovable-uploads/b211c203-2311-4faf-9578-ac0b9b07f1e0.png" />
+            <img alt="Netpower IT" className="h-16 md:h-20 w-auto" src="/lovable-uploads/netpower-by-natan.jpeg" />
           </Link>
 
           {/* Desktop nav */}

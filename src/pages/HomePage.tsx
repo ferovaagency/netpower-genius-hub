@@ -14,33 +14,39 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
-const slides = [
+type SlideCTA =
+  | { type: "link"; label: string; to: string }
+  | { type: "chat"; label: string; mode: "general" | "quote" };
+
+type Slide = {
+  image: string;
+  badge: string | null;
+  titleParts: [string, string, string]; // before, highlight (text-primary), after
+  subtitle: string;
+  cta: SlideCTA;
+};
+
+const slides: Slide[] = [
   {
     image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&q=80",
-    badge: "NUEVO" as string | null,
-    title: "Ya está aquí la nueva generación de servidores HPE Gen12",
-    highlight: null as string | null,
-    subtitle: "Mayor rendimiento, eficiencia energética y seguridad para tu infraestructura.",
-    cta: "Ver servidores HPE Gen12",
-    ctaLink: "/categoria/servidores?marca=hpe",
+    badge: null,
+    titleParts: ["Ya está aquí la nueva generación de ", "servidores HPE Gen12", ""],
+    subtitle: "Mayor rendimiento y seguridad para tu infraestructura. Respaldo certificado: garantía directa con las marcas que nos respaldan. +120 empresas confían en nosotros.",
+    cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
   {
     image: heroBanner,
-    badge: null as string | null,
-    title: "Protegemos la energía de tu empresa para que tu operación nunca se detenga.",
-    highlight: null as string | null,
-    subtitle: "UPS, servidores, infraestructura y energía solar con garantía oficial y soporte técnico.",
-    cta: "Ver Tienda",
-    ctaLink: "/tienda",
+    badge: null,
+    titleParts: ["Protegemos la energía de tu empresa para que tu operación ", "nunca se detenga", "."],
+    subtitle: "UPS, servidores e infraestructura con garantía oficial. Las marcas nos respaldan y certifican. +120 empresas confían en nosotros.",
+    cta: { type: "chat", label: "Solicitar Cotización", mode: "quote" },
   },
   {
     image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
-    badge: "3% OFF",
-    title: "¡Descuento Mundialista 3% OFF!",
-    highlight: null as string | null,
-    subtitle: "Válido pagando con transferencia bancaria (Bancolombia, Nequi, Daviplata o Bre-b). No aplica con Wompi. Válido del 1 de mayo al 30 de junio de 2026.",
-    cta: "Ver productos",
-    ctaLink: "/tienda",
+    badge: "PRODUCTO DEL MES",
+    titleParts: ["Tu compra con ", "respaldo certificado", ""],
+    subtitle: "Garantía directa con las marcas que nos respaldan y certifican. +120 empresas confían en nosotros.",
+    cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
 ];
 
@@ -172,24 +178,23 @@ export default function HomePage() {
               </motion.div>
             )}
             <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
-              {slides[currentSlide].highlight ? (
-                <>
-                  Tu proveedor <span className="text-primary">{slides[currentSlide].highlight}</span> de tecnología TIC
-                </>
-              ) : (
-                slides[currentSlide].title
-              )}
+              {slides[currentSlide].titleParts[0]}
+              <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
+              {slides[currentSlide].titleParts[2]}
             </motion.h1>
             <motion.p variants={fadeUp} className="text-base text-card/70 mb-7 max-w-md leading-relaxed">
               {slides[currentSlide].subtitle}
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-              <Link to={slides[currentSlide].ctaLink} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                {slides[currentSlide].cta} <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button onClick={() => openChat("quote")} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/25 text-card font-semibold hover:bg-card/10 backdrop-blur-sm transition text-sm">
-                Solicitar Cotización
-              </button>
+              {slides[currentSlide].cta.type === "link" ? (
+                <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <button onClick={() => openChat((slides[currentSlide].cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
             </motion.div>
             <motion.div variants={fadeUp} className="mt-5">
               <TrustBadges />
@@ -246,7 +251,7 @@ export default function HomePage() {
             <p className="text-muted-foreground mt-2 text-sm">Todo para tu infraestructura TIC</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {categoriesWithCounts.map((cat, i) =>
+            {categoriesWithCounts.filter((c) => c.productCount > 0).map((cat, i) =>
             <motion.div key={cat.id} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.04 }}>
                 <Link to={`/categoria/${cat.slug}`} className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-card-hover transition-all">
                   <span className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-primary shrink-0">
