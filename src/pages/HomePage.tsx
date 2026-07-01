@@ -47,7 +47,7 @@ const slides: Slide[] = [
     image: bannerTricolor.url,
     badge: "PROMO TRICOLOR 🇨🇴",
     titleParts: ["Conectando el ", "orgullo colombiano", ""],
-    subtitle: "Compras desde $1 hasta $4.999.999 → apuntador de regalo. De $5M a $9.999.999 → teclado Logitech. Superiores a $10M → audífonos de casco Cubbit.",
+    subtitle: "Por compras superiores a $1.000.000 te obsequiamos un regalo especial (aplican términos y condiciones).",
     cta: { type: "link", label: "Aprovechar la Promo", to: "/tienda" },
   },
 ];
@@ -137,7 +137,7 @@ export default function HomePage() {
 
 
       {/* Hero Slider */}
-      <section className="relative overflow-hidden min-h-[480px] flex items-center">
+      <section className="relative overflow-hidden min-h-[480px] flex items-center bg-surface-dark">
         {slides.map((slide, idx) => (
           <div
             key={idx}
@@ -152,7 +152,7 @@ export default function HomePage() {
               fetchPriority={idx === 0 ? "high" : "low"}
               loading={idx === 0 ? "eager" : "lazy"}
               decoding={idx === 0 ? "sync" : "async"}
-              className="absolute inset-0 w-full h-full object-cover"
+              className={`absolute inset-0 w-full h-full ${idx === 1 ? "object-cover" : "object-contain md:object-cover md:scale-90 md:origin-right"}`}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent" />
           </div>
