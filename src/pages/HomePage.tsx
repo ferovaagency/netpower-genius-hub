@@ -30,25 +30,25 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&q=80",
+    image: bannerTienda.url,
     badge: null,
-    titleParts: ["Ya está aquí la nueva generación de ", "servidores HPE Gen12", ""],
-    subtitle: "Mayor rendimiento y seguridad para tu infraestructura. Respaldo certificado: garantía directa con las marcas que nos respaldan. +120 empresas confían en nosotros.",
+    titleParts: ["Explora nuestra ", "tienda online", " de tecnología"],
+    subtitle: "UPS, baterías, redes, energía solar y accesorios TIC con garantía oficial. Envío a todo Colombia y pago seguro.",
     cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
   {
-    image: heroBanner,
+    image: bannerCotizacion.url,
     badge: null,
-    titleParts: ["Protegemos la energía de tu empresa para que tu operación ", "nunca se detenga", "."],
-    subtitle: "UPS, servidores e infraestructura con garantía oficial. Las marcas nos respaldan y certifican. +120 empresas confían en nosotros.",
+    titleParts: ["¿Tienes un proyecto? ", "Cotiza con nosotros", ""],
+    subtitle: "Asesoría experta para tu infraestructura TI. Solicita tu cotización personalizada y recibe la mejor propuesta para tu empresa.",
     cta: { type: "chat", label: "Solicitar Cotización", mode: "quote" },
   },
   {
-    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80",
-    badge: "PRODUCTO DEL MES",
-    titleParts: ["Tu compra con ", "respaldo certificado", ""],
-    subtitle: "Garantía directa con las marcas que nos respaldan y certifican. +120 empresas confían en nosotros.",
-    cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
+    image: bannerTricolor.url,
+    badge: "PROMO TRICOLOR 🇨🇴",
+    titleParts: ["Conectando el ", "orgullo colombiano", ""],
+    subtitle: "Compras desde $1 hasta $4.999.999 → apuntador de regalo. De $5M a $9.999.999 → teclado Logitech. Superiores a $10M → audífonos de casco Cubbit.",
+    cta: { type: "link", label: "Aprovechar la Promo", to: "/tienda" },
   },
 ];
 
