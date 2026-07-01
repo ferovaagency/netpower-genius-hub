@@ -137,7 +137,7 @@ export default function HomePage() {
 
 
       {/* Hero Slider */}
-      <section className="relative overflow-hidden min-h-[480px] flex items-center">
+      <section className="relative overflow-hidden min-h-[480px] flex items-center bg-surface-dark">
         {slides.map((slide, idx) => (
           <div
             key={idx}
