@@ -8,19 +8,17 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
-}
-
-{
+  ],
   "redirects": [
     {
-      "source": "/:path*/feed/?",
+      "source": "/:path*/feed",
       "destination": "/:path*",
       "permanent": true
     },
     {
-      "source": "/feed/?",
+      "source": "/feed",
       "destination": "/",
       "permanent": true
     }
-  ],
+  ]
+}
