@@ -40,6 +40,15 @@ export default function CheckoutPage() {
   const discount = discountApplies ? Math.round(subtotal * 0.03) : 0;
   const total = subtotal - discount;
 
+  // ─── Promo Tricolor: obsequio por rango de compra ───
+  const getTricolorGift = (amount: number): { name: string; tier: string } | null => {
+    if (amount >= 10_000_000) return { name: "Audífonos de casco Cubbit", tier: "Tier 3 (≥ $10M)" };
+    if (amount >= 5_000_000) return { name: "Teclado Logitech", tier: "Tier 2 ($5M – $9.999.999)" };
+    if (amount >= 1) return { name: "Apuntador", tier: "Tier 1 ($1 – $4.999.999)" };
+    return null;
+  };
+  const tricolorGift = getTricolorGift(total);
+
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const isFormValid = !!(form.name && form.email && form.phone && form.idNumber && form.address && form.city && form.department);
@@ -94,6 +103,8 @@ export default function CheckoutPage() {
         idType: form.idType,
         idNumber: form.idNumber,
         notes: form.notes,
+        tricolor_gift: tricolorGift?.name || null,
+        tricolor_tier: tricolorGift?.tier || null,
       };
 
       // ─── Wompi: create signed checkout and redirect (NO confirmation here) ───
@@ -167,6 +178,7 @@ export default function CheckoutPage() {
         `📦 *Productos:*\n${itemLines}\n\n` +
         `💵 *TOTAL: ${formatCOP(total)}* (IVA incluido, envío a calcular)\n\n` +
         `💳 *Método:* ${methodLabel}\n` +
+        (tricolorGift ? `\n🇨🇴 *Promo Tricolor — Obsequio:* ${tricolorGift.name} (${tricolorGift.tier})\n` : "") +
         (receiptUrl ? `📎 Comprobante: ${receiptUrl}\n` : "") +
         (form.notes ? `\n📝 Notas: ${form.notes}` : "");
 
@@ -404,6 +416,15 @@ export default function CheckoutPage() {
                 <span className="font-bold text-foreground">Total</span>
                 <span className="text-xl font-extrabold text-primary">{formatCOP(total)}</span>
               </div>
+
+              {tricolorGift && (
+                <div className="rounded-lg border-2 border-primary/40 bg-gradient-to-r from-yellow-50 via-blue-50 to-red-50 p-3 text-xs">
+                  <p className="font-bold text-foreground mb-1">🇨🇴 Promo Tricolor — ¡Te ganaste un obsequio!</p>
+                  <p className="text-foreground"><span className="font-semibold">Regalo:</span> {tricolorGift.name}</p>
+                  <p className="text-muted-foreground text-[10px]">{tricolorGift.tier} · se entrega junto con tu pedido</p>
+                </div>
+              )}
+
               <p className="text-[10px] text-muted-foreground">
                 * Precios incluyen IVA. Envío se calcula al confirmar.
               </p>
