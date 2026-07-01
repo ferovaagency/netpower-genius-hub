@@ -7,6 +7,7 @@ import { formatCOP, categories, findProductById, decreaseInventory } from "@/dat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
+import PromoTricolorBox from "@/components/PromoTricolorBox";
 
 const WHATSAPP = "573504609431";
 
