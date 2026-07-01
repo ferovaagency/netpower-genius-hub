@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
  
-const tabs = ["Términos y Condiciones", "Tratamiento de Datos", "Política de Cookies", "Promo Tricolor"] as const;
+const tabs = ["Términos y Condiciones", "Envíos", "Tratamiento de Datos", "Política de Cookies", "Promo Tricolor"] as const;
 type Tab = typeof tabs[number];
  
 export default function LegalPage() {
@@ -14,6 +14,7 @@ export default function LegalPage() {
     if (t === "promo-tricolor") setActive("Promo Tricolor");
     else if (t === "datos") setActive("Tratamiento de Datos");
     else if (t === "cookies") setActive("Política de Cookies");
+    else if (t === "envios") setActive("Envíos");
   }, [params]);
 
  
