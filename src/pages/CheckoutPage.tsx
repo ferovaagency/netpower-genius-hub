@@ -417,10 +417,11 @@ export default function CheckoutPage() {
                 <span className="text-xl font-extrabold text-primary">{formatCOP(total)}</span>
               </div>
 
+              <PromoTricolorBox compact />
               {tricolorGift && (
-                <div className="rounded-lg border-2 border-primary/40 bg-gradient-to-r from-yellow-50 via-blue-50 to-red-50 p-3 text-xs">
-                  <p className="font-bold text-foreground mb-1">🇨🇴 Promo Tricolor — ¡Te ganaste un obsequio!</p>
-                  <p className="text-foreground"><span className="font-semibold">Regalo:</span> {tricolorGift.name}</p>
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+                  <p className="font-bold text-foreground mb-1">🎁 Tu obsequio Tricolor</p>
+                  <p className="text-foreground">{tricolorGift.name}</p>
                   <p className="text-muted-foreground text-[10px]">{tricolorGift.tier} · se entrega junto con tu pedido</p>
                 </div>
               )}
