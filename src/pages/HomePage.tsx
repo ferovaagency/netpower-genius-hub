@@ -9,8 +9,10 @@ import ProductCard from "@/components/store/ProductCard";
 import { getParentCategory } from "@/lib/catalog";
 import SeoHead from "@/components/SeoHead";
 import TrustBadges from "@/components/TrustBadges";
-import heroBanner from "@/assets/hero-banner.jpg";
 import ctaBanner from "@/assets/cta-banner.jpg";
+import bannerTienda from "@/assets/banner-tienda.jpg.asset.json";
+import bannerCotizacion from "@/assets/banner-cotizacion.jpg.asset.json";
+import bannerTricolor from "@/assets/banner-tricolor.jpg.asset.json";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
