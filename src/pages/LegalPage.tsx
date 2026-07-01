@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
  
-const tabs = ["Términos y Condiciones", "Tratamiento de Datos", "Política de Cookies"] as const;
+const tabs = ["Términos y Condiciones", "Tratamiento de Datos", "Política de Cookies", "Promo Tricolor"] as const;
 type Tab = typeof tabs[number];
  
 export default function LegalPage() {
+  const [params] = useSearchParams();
   const [active, setActive] = useState<Tab>("Términos y Condiciones");
+
+  useEffect(() => {
+    const t = params.get("tab");
+    if (t === "promo-tricolor") setActive("Promo Tricolor");
+    else if (t === "datos") setActive("Tratamiento de Datos");
+    else if (t === "cookies") setActive("Política de Cookies");
+  }, [params]);
+
  
   return (
     <>
@@ -112,10 +121,63 @@ export default function LegalPage() {
             </section>
           </div>
         )}
- 
+
+        {/* Promo Tricolor */}
+        {active === "Promo Tricolor" && (
+          <div className="space-y-6">
+            <p className="text-muted-foreground leading-relaxed">
+              Términos y Condiciones de la Promoción: <strong>"Regalos por tus Compras en Julio"</strong>. Al participar,
+              el usuario acepta estos términos en su totalidad.
+            </p>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">1. Vigencia</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                La promoción está vigente exclusivamente desde el <strong>1 de julio de 2026</strong> hasta el
+                <strong> 31 de julio de 2026 a las 11:59 p.m.</strong>, o hasta agotar existencias de los obsequios
+                disponibles (lo que ocurra primero).
+              </p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">2. Mecánica y montos</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Por compras acumuladas en un mismo pedido, el cliente recibirá un obsequio según el valor de su factura
+                (valores en COP - Pesos Colombianos):
+              </p>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li><strong>$1.000.000 a $4.999.999:</strong> Un (1) Apuntador Klip Xtreme KPS-006 o un (1) Apuntador Klip Xtreme KPS-005 (sujeto a disponibilidad de inventario).</li>
+                <li><strong>$5.000.000 a $9.999.999:</strong> Un (1) Teclado Logitech Pebble Keys 2 K380S.</li>
+                <li><strong>$10.000.000 en adelante:</strong> Unos (1) Audífonos Cubbitt Studio en color negro.</li>
+              </ul>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">3. Condiciones y restricciones</h2>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li><strong>No acumulable:</strong> los montos corresponden a un único pedido o factura; no se pueden sumar facturas diferentes para alcanzar un rango superior.</li>
+                <li><strong>Disponibilidad:</strong> la entrega del obsequio está sujeta al inventario disponible. Para el primer rango, se enviará el modelo KPS-006 o KPS-005 según disponibilidad, sin opción de elección por parte del cliente.</li>
+                <li><strong>Garantía de los obsequios:</strong> los productos entregados en calidad de regalo/obsequio no cuentan con cambio por gusto, ni son redimibles por dinero en efectivo, notas crédito o descuentos en la compra. No cuentan con garantía por daños de fábrica, golpes, rayones ni caídas.</li>
+                <li><strong>Devoluciones y cancelaciones:</strong> si el cliente solicita la devolución, retracto o cancelación de la compra principal que originó el regalo, deberá devolver también el obsequio en perfecto estado (empaque original sellado y sin usar). De lo contrario, se descontará el valor comercial del obsequio del saldo a devolver.</li>
+              </ul>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">4. Despacho y entrega</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                El obsequio se enviará de manera conjunta con los productos adquiridos en el pedido principal, a la
+                dirección de despacho registrada por el cliente.
+              </p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">5. Cotizaciones</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                La promoción también aplica a las cotizaciones formales emitidas durante la vigencia, siempre que la
+                orden de compra se facture y pague dentro del período vigente y cumpla con los rangos indicados.
+              </p>
+            </section>
+          </div>
+        )}
+
         <div className="mt-12 pt-6 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            Última actualización: marzo 2026 ·{" "}
+            Última actualización: julio 2026 ·{" "}
             <Link to="/" className="underline hover:text-primary">Volver al inicio</Link>
           </p>
         </div>
@@ -123,3 +185,5 @@ export default function LegalPage() {
     </>
   );
 }
+
+

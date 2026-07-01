@@ -330,9 +330,6 @@ export default function ProductDetailPage() {
 
                 <TrustBadges className="mb-4" compact />
 
-                <div className="mb-4">
-                  <PromoTricolorBox compact />
-                </div>
 
 
 
@@ -348,6 +345,12 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
+
+            {/* Promo Tricolor — aplica a compras y cotizaciones */}
+            <div className="mt-4">
+              <PromoTricolorBox compact />
+            </div>
+
 
             {/* Métodos de pago */}
             <div className="border border-border rounded-xl p-4 mt-4 space-y-3 bg-muted/30">
