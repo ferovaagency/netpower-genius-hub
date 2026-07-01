@@ -270,6 +270,7 @@ export default function AdminPage() {
             <TabsTrigger value="productos"><Package className="w-4 h-4 mr-1" /> Productos</TabsTrigger>
             <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
+            <TabsTrigger value="conversaciones"><MessageCircle className="w-4 h-4 mr-1" /> Conversaciones Neti</TabsTrigger>
           </TabsList>
 
 
