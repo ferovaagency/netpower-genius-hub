@@ -178,6 +178,7 @@ export default function CheckoutPage() {
         `📦 *Productos:*\n${itemLines}\n\n` +
         `💵 *TOTAL: ${formatCOP(total)}* (IVA incluido, envío a calcular)\n\n` +
         `💳 *Método:* ${methodLabel}\n` +
+        (tricolorGift ? `\n🇨🇴 *Promo Tricolor — Obsequio:* ${tricolorGift.name} (${tricolorGift.tier})\n` : "") +
         (receiptUrl ? `📎 Comprobante: ${receiptUrl}\n` : "") +
         (form.notes ? `\n📝 Notas: ${form.notes}` : "");
 
