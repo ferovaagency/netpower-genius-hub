@@ -103,6 +103,8 @@ export default function CheckoutPage() {
         idType: form.idType,
         idNumber: form.idNumber,
         notes: form.notes,
+        tricolor_gift: tricolorGift?.name || null,
+        tricolor_tier: tricolorGift?.tier || null,
       };
 
       // ─── Wompi: create signed checkout and redirect (NO confirmation here) ───
