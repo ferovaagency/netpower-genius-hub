@@ -188,6 +188,42 @@ export type Database = {
         }
         Relationships: []
       }
+      neti_conversations: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          message_count: number
+          messages: Json
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          message_count?: number
+          messages?: Json
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          message_count?: number
+          messages?: Json
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           availability_request_id: string | null
@@ -378,6 +414,7 @@ export type Database = {
           details: Json
           id: string
           message: string | null
+          nit_cedula: string | null
           source: string
           status: string
           subject: string | null
@@ -393,6 +430,7 @@ export type Database = {
           details?: Json
           id?: string
           message?: string | null
+          nit_cedula?: string | null
           source?: string
           status?: string
           subject?: string | null
@@ -408,6 +446,7 @@ export type Database = {
           details?: Json
           id?: string
           message?: string | null
+          nit_cedula?: string | null
           source?: string
           status?: string
           subject?: string | null
