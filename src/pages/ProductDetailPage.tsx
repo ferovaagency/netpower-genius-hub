@@ -11,6 +11,7 @@ import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
+import PromoTricolorBox from "@/components/PromoTricolorBox";
 
 const WHATSAPP_NUMBER = "573504609431";
 
