@@ -296,6 +296,14 @@ export default function AIChatWidget() {
     }
   }, [isOpen]);
 
+  // Re-focus input after assistant finishes replying so the user can keep typing.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!isLoading) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [isLoading, isOpen]);
+
   // Aparece 15s después de cargar la ruta (una vez por sesión) con mensaje transaccional B2B.
   useEffect(() => {
     if (sessionStorage.getItem("netpower_chat_shown")) return;
