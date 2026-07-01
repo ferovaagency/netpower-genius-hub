@@ -121,17 +121,7 @@ export default function LegalPage() {
             </section>
           </div>
         )}
- 
-        <div className="mt-12 pt-6 border-t border-border">
-          <p className="text-xs text-muted-foreground">
-            Última actualización: marzo 2026 ·{" "}
-            <Link to="/" className="underline hover:text-primary">Volver al inicio</Link>
-          </p>
-        </div>
-      </div>
-    </>
-  );
-}
+
         {/* Promo Tricolor */}
         {active === "Promo Tricolor" && (
           <div className="space-y-6">
@@ -184,4 +174,16 @@ export default function LegalPage() {
             </section>
           </div>
         )}
+
+        <div className="mt-12 pt-6 border-t border-border">
+          <p className="text-xs text-muted-foreground">
+            Última actualización: julio 2026 ·{" "}
+            <Link to="/" className="underline hover:text-primary">Volver al inicio</Link>
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
 
