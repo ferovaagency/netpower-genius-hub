@@ -40,6 +40,15 @@ export default function CheckoutPage() {
   const discount = discountApplies ? Math.round(subtotal * 0.03) : 0;
   const total = subtotal - discount;
 
+  // ─── Promo Tricolor: obsequio por rango de compra ───
+  const getTricolorGift = (amount: number): { name: string; tier: string } | null => {
+    if (amount >= 10_000_000) return { name: "Audífonos de casco Cubbit", tier: "Tier 3 (≥ $10M)" };
+    if (amount >= 5_000_000) return { name: "Teclado Logitech", tier: "Tier 2 ($5M – $9.999.999)" };
+    if (amount >= 1) return { name: "Apuntador", tier: "Tier 1 ($1 – $4.999.999)" };
+    return null;
+  };
+  const tricolorGift = getTricolorGift(total);
+
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const isFormValid = !!(form.name && form.email && form.phone && form.idNumber && form.address && form.city && form.department);
