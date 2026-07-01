@@ -83,6 +83,82 @@ export default function LegalPage() {
             </section>
           </div>
         )}
+
+        {/* Envíos */}
+        {active === "Envíos" && (
+          <div className="space-y-6">
+            <p className="text-muted-foreground leading-relaxed">
+              <strong>Términos y Condiciones de Envío</strong> — Netpower IT SAS (NIT 901.881.682-0).
+            </p>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">1. Cobertura</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">Realizamos envíos a todo el territorio nacional colombiano a través de transportadoras aliadas. Las entregas se clasifican en tres zonas:</p>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li><strong>Zona 0 – Bogotá:</strong> envío gratuito en todos los productos.</li>
+                <li><strong>Zona 1 – Ciudades principales:</strong> tarifa según el tipo de producto (ver sección 3).</li>
+                <li><strong>Zona 2 – Zonas remotas y de difícil acceso:</strong> aplica un recargo sobre la tarifa base debido a los costos adicionales de las transportadoras a estos destinos.</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-3">Para ciertos destinos apartados, la entrega puede requerir logística especial o recogida en la oficina de la transportadora más cercana, lo cual será informado antes de confirmar la compra.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">2. Cálculo del costo de envío</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">El costo de envío se calcula automáticamente en el momento de la compra con base en:</p>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li>El <strong>peso facturable</strong> de cada producto, entendido como el mayor valor entre su peso real y su peso volumétrico. El peso volumétrico se calcula según la fórmula estándar de las transportadoras (dimensiones de la caja en centímetros, largo × ancho × alto, dividido entre 2500).</li>
+                <li>La <strong>zona de destino</strong> según el departamento y ciudad de la dirección de entrega.</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-3">El valor exacto del envío se muestra siempre de forma separada en el resumen del pedido antes de finalizar la compra. No se cobrará ningún valor de envío que no haya sido informado y aceptado previamente por el comprador.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">3. Productos con condiciones especiales de envío</h2>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li><strong>Productos digitales (Licenciamiento – Microsoft y Antivirus):</strong> al tratarse de licencias de entrega electrónica, no generan costo de envío y se entregan por correo electrónico a la dirección registrada, sin importar la ciudad.</li>
+                <li><strong>Equipos de gran tamaño o peso (UPS de alta capacidad, servidores en rack, equipos superiores a 45 kg):</strong> por sus características, el envío de estos equipos se cotiza de forma individualizada con un asesor antes de la compra. En estos casos, el sitio no mostrará una tarifa automática; el comprador será atendido por nuestro equipo para acordar el valor, la transportadora y las condiciones de entrega. La compra solo se completa una vez aceptada dicha cotización.</li>
+              </ul>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">4. Envío gratis por monto de compra</h2>
+              <p className="text-muted-foreground leading-relaxed">Los pedidos cuyo subtotal iguale o supere el monto promocional vigente tendrán envío gratuito a nivel nacional (Zonas 1 y 2), siempre que no incluyan equipos que requieran cotización especial (sección 3). Esta promoción puede ser modificada o suspendida en cualquier momento sin previo aviso, respetando los pedidos ya confirmados.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">5. Tiempos de entrega</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">Los tiempos de entrega son estimados y se cuentan en días hábiles a partir de la confirmación del pago:</p>
+              <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li><strong>Zona 0 – Bogotá:</strong> 1 día hábil.</li>
+                <li><strong>Zona 1 – Ciudades principales:</strong> hasta 5 días hábiles.</li>
+                <li><strong>Zona 2 – Zonas remotas:</strong> de 5 a 8 días hábiles.</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-3">Estos plazos dependen de las transportadoras y pueden verse afectados por factores externos (clima, orden público, temporadas de alta demanda, novedades en la dirección). Cualquier retraso significativo será informado al comprador.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">6. Despacho y seguimiento</h2>
+              <p className="text-muted-foreground leading-relaxed">El despacho se realiza desde Bogotá una vez confirmado el pago. Cuando el pedido sea entregado a la transportadora, el comprador recibirá el número de guía para hacer seguimiento. Es responsabilidad del comprador suministrar una dirección completa, exacta y con datos de contacto vigentes; los reenvíos generados por direcciones erróneas o incompletas podrán tener un costo adicional a cargo del comprador.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">7. Recepción del pedido</h2>
+              <p className="text-muted-foreground leading-relaxed">Al momento de recibir, el comprador debe verificar el estado del empaque antes de firmar. Si el embalaje presenta daños visibles, debe dejarse constancia con la transportadora y notificarnos dentro de las 24 a 48 horas siguientes, adjuntando registro fotográfico, para gestionar la reclamación correspondiente. Los productos de alto valor viajan asegurados con valor declarado.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">8. Novedades, devoluciones por transporte y derecho de retracto</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">En caso de que el producto llegue averiado por el transporte, o no sea entregado, aplicaremos la garantía y los procesos de reclamación ante la transportadora conforme a la <strong>Ley 1480 de 2011</strong> (Estatuto del Consumidor).</p>
+              <p className="text-muted-foreground leading-relaxed">El comprador podrá ejercer el derecho de retracto dentro de los <strong>cinco (5) días hábiles</strong> siguientes a la entrega, en las condiciones previstas por la ley para ventas a distancia. En este caso, los costos de transporte de la devolución corren por cuenta del comprador, salvo que la devolución se origine en un defecto del producto o en un error de nuestra parte.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">9. Tratamiento de datos</h2>
+              <p className="text-muted-foreground leading-relaxed">Los datos personales suministrados para la gestión del envío (nombre, dirección, teléfono, correo) serán tratados conforme a la <strong>Ley 1581 de 2012</strong> y a nuestra <Link to="/politica-datos" className="underline hover:text-primary">Política de Tratamiento de Datos Personales</Link>, únicamente con el fin de procesar, despachar y hacer seguimiento al pedido, y compartidos solo con las transportadoras aliadas necesarias para la entrega.</p>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">10. Contacto</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                📧 <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a><br />
+                📱 WhatsApp: <a href="https://wa.me/573504609431" className="underline hover:text-primary">+57 350 460 9431</a><br />
+                🕐 Horario de atención: lunes a viernes, 8:00 a.m. – 6:00 p.m.
+              </p>
+            </section>
+          </div>
+        )}
+
+
  
         {/* Tratamiento de Datos */}
         {active === "Tratamiento de Datos" && (
