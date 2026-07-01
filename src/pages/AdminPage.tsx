@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
@@ -218,6 +218,38 @@ export default function AdminPage() {
     const m: Record<string, string> = { contact_form: "Formulario contacto", neti_chat: "Chat Neti (AI)", quote_page: "Página cotización" };
     return m[s] || s;
   };
+
+  // ── CONVERSACIONES NETI ───────────────────────────────────────
+  const [convs, setConvs] = useState<any[]>([]);
+  const [loadingConvs, setLoadingConvs] = useState(true);
+  const [convSearch, setConvSearch] = useState("");
+  const [selectedConv, setSelectedConv] = useState<any>(null);
+
+  const fetchConvs = useCallback(async () => {
+    const { data } = await supabase.from("neti_conversations").select("*").order("updated_at", { ascending: false }).limit(200);
+    setConvs(data || []);
+    setLoadingConvs(false);
+  }, []);
+
+  useEffect(() => {
+    fetchConvs();
+    const interval = setInterval(fetchConvs, 20000);
+    return () => clearInterval(interval);
+  }, [fetchConvs]);
+
+  const deleteConv = async (id: string) => {
+    if (!window.confirm("¿Eliminar esta conversación?")) return;
+    await supabase.from("neti_conversations").delete().eq("id", id);
+    setConvs(prev => prev.filter(c => c.id !== id));
+    setSelectedConv(null);
+    toast({ title: "Conversación eliminada" });
+  };
+
+  const filteredConvs = convs.filter(c =>
+    (c.customer_name || "").toLowerCase().includes(convSearch.toLowerCase()) ||
+    (c.customer_email || "").toLowerCase().includes(convSearch.toLowerCase()) ||
+    (c.session_id || "").toLowerCase().includes(convSearch.toLowerCase())
+  );
 
   return (
     <>
