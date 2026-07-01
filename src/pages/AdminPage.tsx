@@ -621,6 +621,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+                    <div><span className="font-semibold">NIT / Cédula:</span> {selectedQuote.nit_cedula || "—"}</div>
                     <div><span className="font-semibold">Email:</span> <a href={`mailto:${selectedQuote.customer_email}`} className="text-primary">{selectedQuote.customer_email || "—"}</a></div>
                     <div><span className="font-semibold">Teléfono:</span> {selectedQuote.customer_phone ? <a href={`https://wa.me/${selectedQuote.customer_phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="text-primary">{selectedQuote.customer_phone}</a> : "—"}</div>
                     <div><span className="font-semibold">Ciudad:</span> {selectedQuote.city || "—"}</div>
@@ -660,6 +661,85 @@ export default function AdminPage() {
                       )}
                     </div>
                     <Button size="sm" variant="destructive" onClick={() => deleteQuote(selectedQuote.id)}>
+                      <Trash2 className="w-3 h-3 mr-1" /> Eliminar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* CONVERSACIONES NETI */}
+          <TabsContent value="conversaciones">
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Buscar por nombre, email o sesión..." value={convSearch} onChange={e => setConvSearch(e.target.value)} className="max-w-md" />
+            </div>
+            {loadingConvs ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div> : filteredConvs.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">Aún no hay conversaciones con Neti</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">Cliente</th>
+                      <th className="px-4 py-3 text-left font-semibold">Contacto</th>
+                      <th className="px-4 py-3 text-left font-semibold">Mensajes</th>
+                      <th className="px-4 py-3 text-left font-semibold">Inicio</th>
+                      <th className="px-4 py-3 text-left font-semibold">Última actividad</th>
+                      <th className="px-4 py-3 text-left font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredConvs.map(c => (
+                      <tr key={c.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedConv(c)}>
+                        <td className="px-4 py-3 font-medium">{c.customer_name || <span className="text-muted-foreground italic">Anónimo</span>}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {c.customer_email && <div className="flex items-center gap-1"><Mail className="w-3 h-3" />{c.customer_email}</div>}
+                          {c.customer_phone && <div className="flex items-center gap-1 text-muted-foreground"><Phone className="w-3 h-3" />{c.customer_phone}</div>}
+                          {!c.customer_email && !c.customer_phone && <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="px-4 py-3">{c.message_count}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(c.created_at).toLocaleString("es-CO")}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(c.updated_at).toLocaleString("es-CO")}</td>
+                        <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                          <Button size="sm" variant="ghost" onClick={() => setSelectedConv(c)}><Eye className="w-4 h-4" /></Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {selectedConv && (
+              <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setSelectedConv(null)}>
+                <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg">Conversación · {selectedConv.customer_name || "Anónimo"}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedConv.customer_email || "sin email"} · {selectedConv.message_count} mensajes · {new Date(selectedConv.updated_at).toLocaleString("es-CO")}
+                      </p>
+                    </div>
+                    <button onClick={() => setSelectedConv(null)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                    {Array.isArray(selectedConv.messages) && selectedConv.messages.map((m: any, i: number) => (
+                      <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap ${
+                          m.role === "user" ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
+                        }`}>
+                          <p className="text-[10px] font-semibold uppercase opacity-70 mb-0.5">{m.role === "user" ? "Cliente" : "Neti"}</p>
+                          {m.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end mt-4 pt-4 border-t">
+                    <Button size="sm" variant="destructive" onClick={() => deleteConv(selectedConv.id)}>
                       <Trash2 className="w-3 h-3 mr-1" /> Eliminar
                     </Button>
                   </div>
