@@ -42,9 +42,9 @@ export default function CheckoutPage() {
 
   // ─── Promo Tricolor: obsequio por rango de compra ───
   const getTricolorGift = (amount: number): { name: string; tier: string } | null => {
-    if (amount >= 10_000_000) return { name: "Audífonos de casco Cubbit", tier: "Tier 3 (≥ $10M)" };
-    if (amount >= 5_000_000) return { name: "Teclado Logitech", tier: "Tier 2 ($5M – $9.999.999)" };
-    if (amount >= 1) return { name: "Apuntador", tier: "Tier 1 ($1 – $4.999.999)" };
+    if (amount >= 10_000_000) return { name: "Audífonos Cubbit Studio (negro)", tier: "Tier 3 (≥ $10.000.000)" };
+    if (amount >= 5_000_000) return { name: "Teclado Logitech Pebble Keys 2 K380S", tier: "Tier 2 ($5.000.000 – $9.999.999)" };
+    if (amount >= 1_000_000) return { name: "Apuntador Klip Xtreme KPS-006 o KPS-005", tier: "Tier 1 ($1.000.000 – $4.999.999)" };
     return null;
   };
   const tricolorGift = getTricolorGift(total);
