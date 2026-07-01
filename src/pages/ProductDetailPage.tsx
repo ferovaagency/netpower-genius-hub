@@ -346,6 +346,12 @@ export default function ProductDetailPage() {
               </>
             )}
 
+            {/* Promo Tricolor — aplica a compras y cotizaciones */}
+            <div className="mt-4">
+              <PromoTricolorBox compact />
+            </div>
+
+
             {/* Métodos de pago */}
             <div className="border border-border rounded-xl p-4 mt-4 space-y-3 bg-muted/30">
               <h4 className="font-semibold text-sm flex items-center gap-2">💳 Métodos de pago</h4>
