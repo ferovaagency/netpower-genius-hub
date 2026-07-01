@@ -9,15 +9,17 @@ import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 
 export default function ContactPage() {
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", nit_cedula: "", email: "", phone: "", city: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [consent, setConsent] = useState(false);
 
   const schema = z.object({
     name: z.string().trim().min(2, "Nombre requerido").max(100),
+    nit_cedula: z.string().trim().min(5, "NIT o cédula requerido").max(40),
     email: z.string().trim().email("Email inválido").max(255),
     phone: z.string().trim().min(7, "Teléfono inválido").max(30),
+    city: z.string().trim().min(2, "Ciudad requerida").max(80),
     message: z.string().trim().min(5, "Mensaje requerido").max(1500),
   });
 
@@ -38,17 +40,32 @@ export default function ContactPage() {
       customer_name: parsed.data.name,
       customer_email: parsed.data.email,
       customer_phone: parsed.data.phone,
+      city: parsed.data.city,
+      nit_cedula: parsed.data.nit_cedula,
       subject: "Mensaje desde formulario de contacto",
       message: parsed.data.message,
       status: "new",
     });
+    if (!error) {
+      supabase.functions.invoke("brevo-sync-contact", {
+        body: {
+          email: parsed.data.email,
+          name: parsed.data.name,
+          phone: parsed.data.phone,
+          city: parsed.data.city,
+          nit_cedula: parsed.data.nit_cedula,
+          project: parsed.data.message,
+          source: "contact_form",
+        },
+      }).catch((err) => console.error("Brevo sync failed:", err));
+    }
     setLoading(false);
     if (error) {
       toast({ title: "Error al enviar", description: error.message, variant: "destructive" });
       return;
     }
     setSent(true);
-    setForm({ name: "", email: "", phone: "", message: "" });
+    setForm({ name: "", nit_cedula: "", email: "", phone: "", city: "", message: "" });
     setConsent(false);
     toast({ title: "✅ Mensaje enviado", description: "Te contactaremos en menos de 1 hora hábil." });
   };
@@ -122,8 +139,10 @@ export default function ContactPage() {
             )}
             {[
               { id: "name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
+              { id: "nit_cedula", label: "NIT o Cédula", type: "text", placeholder: "900123456-7 / 1023456789" },
               { id: "email", label: "Email", type: "email", placeholder: "tu@email.com" },
               { id: "phone", label: "Teléfono", type: "tel", placeholder: "+57 350 460 9431" },
+              { id: "city", label: "Ciudad", type: "text", placeholder: "Bogotá" },
             ].map(f => (
               <div key={f.id}>
                 <label htmlFor={`contact-${f.id}`} className="text-sm font-medium text-foreground mb-1 block">{f.label}</label>

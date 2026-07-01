@@ -147,6 +147,17 @@ export default function AIChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const prevModeRef = useRef(mode);
   const submittedQuotesRef = useRef<Set<string>>(new Set());
+  const sessionIdRef = useRef<string>("");
+  if (!sessionIdRef.current) {
+    if (typeof window !== "undefined") {
+      let sid = sessionStorage.getItem("neti_session_id");
+      if (!sid) {
+        sid = (crypto as any).randomUUID?.() || `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem("neti_session_id", sid);
+      }
+      sessionIdRef.current = sid;
+    }
+  }
 
   // Detect [[QUOTE_DATA:{...}]] in assistant messages and persist once
   useEffect(() => {
@@ -166,6 +177,7 @@ export default function AIChatWidget() {
         customer_email: data.email || null,
         customer_phone: data.phone || null,
         city: data.city || null,
+        nit_cedula: data.nit_cedula || data.nit || data.cedula || null,
         subject: "Cotización solicitada vía Neti (AI chat)",
         message: data.project || "",
         details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript },
@@ -173,7 +185,57 @@ export default function AIChatWidget() {
       }).then(({ error }) => {
         if (error) console.error("Failed to save quote:", error);
       });
+      // Sync to Brevo list #9 (fire and forget)
+      if (data.email) {
+        supabase.functions.invoke("brevo-sync-contact", {
+          body: {
+            email: data.email,
+            name: data.name || "",
+            phone: data.phone || "",
+            city: data.city || "",
+            nit_cedula: data.nit_cedula || data.nit || data.cedula || "",
+            project: data.project || "",
+            source: "neti_chat",
+          },
+        }).catch((e) => console.error("Brevo sync failed:", e));
+      }
     }
+  }, [messages]);
+
+  // Persist the Neti conversation (upsert by session_id) so admins can review it later.
+  useEffect(() => {
+    if (!sessionIdRef.current || messages.length === 0) return;
+    const sid = sessionIdRef.current;
+    // Capture the last known contact data from any QUOTE_DATA marker.
+    let name: string | null = null, email: string | null = null, phone: string | null = null;
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const m = msg.content.match(/\[\[QUOTE_DATA:(\{[\s\S]*?\})\]\]/);
+      if (m) {
+        try {
+          const d = JSON.parse(m[1]);
+          name = d.name || name; email = d.email || email; phone = d.phone || phone;
+        } catch {}
+      }
+    }
+    const cleanMsgs = messages.map(x => ({
+      role: x.role,
+      content: x.content.replace(/\[\[QUOTE_DATA:[\s\S]*?\]\]/g, "").trim(),
+    }));
+    const t = setTimeout(() => {
+      supabase.from("neti_conversations").upsert({
+        session_id: sid,
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        messages: cleanMsgs,
+        message_count: cleanMsgs.length,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "session_id" }).then(({ error }) => {
+        if (error) console.error("Failed to save conversation:", error);
+      });
+    }, 800);
+    return () => clearTimeout(t);
   }, [messages]);
 
 
