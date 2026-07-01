@@ -329,6 +329,11 @@ export default function ProductDetailPage() {
 
                 <TrustBadges className="mb-4" compact />
 
+                <div className="mb-4">
+                  <PromoTricolorBox compact />
+                </div>
+
+
 
                 <div className="grid grid-cols-2 gap-3">
                   {[
