@@ -63,7 +63,11 @@ export default function LegalPage() {
             </section>
             <section>
               <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">3. Envíos y entregas</h2>
-              <p className="text-muted-foreground leading-relaxed">Los tiempos de entrega estimados son de 2 a 5 días hábiles para Bogotá y de 5 a 10 días hábiles para el resto de Colombia. El cliente es responsable de proporcionar una dirección de entrega correcta y completa. Netpower IT no se hace responsable por demoras causadas por información incorrecta o factores externos como fuerza mayor.</p>
+              <p className="text-muted-foreground leading-relaxed">
+                Realizamos envíos a todo Colombia. Envío gratis en Bogotá. Los tiempos, tarifas por zona, productos con
+                cotización especial (UPS de alta capacidad, servidores en rack) y condiciones de entrega están detallados
+                en nuestra <button onClick={() => setActive("Envíos")} className="underline hover:text-primary font-semibold">Política de Envíos</button>.
+              </p>
             </section>
             <section>
               <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">4. Devoluciones</h2>
