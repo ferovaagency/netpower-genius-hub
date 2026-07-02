@@ -295,11 +295,12 @@ export default function ProductDetailPage() {
 
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
+                    <button aria-label="Disminuir cantidad" onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-muted transition">
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold border-x border-border">{qty}</span>
                     <button
+                      aria-label="Aumentar cantidad"
                       onClick={() => setQty(Math.min(product.stock ?? qty + 1, qty + 1))}
                       className="w-10 h-10 flex items-center justify-center hover:bg-muted transition"
                     >
