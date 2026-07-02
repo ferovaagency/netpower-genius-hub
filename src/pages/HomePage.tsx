@@ -149,7 +149,7 @@ export default function HomePage() {
               alt=""
               width={1920}
               height={800}
-              fetchpriority={idx === 0 ? "high" : "low"}
+              {...({ fetchpriority: idx === 0 ? "high" : "low" } as any)}
               loading={idx === 0 ? "eager" : "lazy"}
               decoding={idx === 0 ? "sync" : "async"}
               className="absolute inset-0 w-full h-full object-cover"
