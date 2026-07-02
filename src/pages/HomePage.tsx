@@ -137,11 +137,11 @@ export default function HomePage() {
 
 
       {/* Hero Slider */}
-      <section className="relative overflow-hidden min-h-[480px] flex items-center bg-surface-dark px-4 md:px-8">
+      <section className="relative overflow-hidden min-h-[480px] flex items-center bg-surface-dark">
         {slides.map((slide, idx) => (
           <div
             key={idx}
-            className={`absolute inset-4 md:inset-8 rounded-2xl overflow-hidden transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            className={`absolute inset-0 overflow-hidden transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             aria-hidden={idx !== currentSlide}
           >
             <img
