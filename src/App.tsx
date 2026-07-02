@@ -12,7 +12,11 @@ import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import HomePage from "./pages/HomePage";
 
+import DeferredMount from "@/components/layout/DeferredMount";
+
 // Lazy-load para mejorar LCP/TTI: solo HomePage se carga eager.
+// AIChatWidget y SocialProofPopup se difieren hasta que el navegador esté idle
+// o haya interacción del usuario — así no bloquean el primer render.
 const AIChatWidget = lazy(() => import("@/components/layout/AIChatWidget"));
 const SocialProofPopup = lazy(() => import("@/components/layout/SocialProofPopup"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
@@ -98,10 +102,12 @@ const App = () => (
                 </main>
                 <Footer />
                 <WhatsAppButton />
-                <Suspense fallback={null}>
-                  <AIChatWidget />
-                  <SocialProofPopup />
-                </Suspense>
+                <DeferredMount>
+                  <Suspense fallback={null}>
+                    <AIChatWidget />
+                    <SocialProofPopup />
+                  </Suspense>
+                </DeferredMount>
               </div>
             </BrowserRouter>
           </TooltipProvider>
