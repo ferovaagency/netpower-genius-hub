@@ -154,7 +154,7 @@ export default function HomePage() {
               decoding={idx === 0 ? "sync" : "async"}
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent" />
+            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-l from-surface-dark/95 via-surface-dark/70 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
           </div>
         ))}
 
@@ -165,12 +165,12 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className="max-w-xl"
+            className={currentSlide === 2 ? "max-w-2xl ml-auto text-right" : "max-w-xl"}
           >
             {slides[currentSlide].badge && (
               <motion.span
                 variants={fadeUp}
-                className="inline-block bg-secondary text-secondary-foreground font-black text-2xl md:text-3xl px-5 py-1.5 rounded-full mb-5 animate-pulse"
+                className="inline-block bg-secondary text-secondary-foreground font-black text-3xl md:text-4xl lg:text-5xl px-6 py-2 rounded-full mb-6 animate-pulse shadow-lg"
               >
                 {slides[currentSlide].badge}
               </motion.span>
@@ -180,12 +180,12 @@ export default function HomePage() {
                 <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
               </motion.div>
             )}
-            <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
+            <motion.h1 variants={fadeUp} className={`font-extrabold text-card leading-tight mb-4 ${currentSlide === 2 ? "text-4xl md:text-5xl lg:text-6xl" : "text-3xl md:text-4xl lg:text-5xl"}`}>
               {slides[currentSlide].titleParts[0]}
               <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
               {slides[currentSlide].titleParts[2]}
             </motion.h1>
-            <motion.p variants={fadeUp} className="text-base text-card/70 mb-7 max-w-md leading-relaxed">
+            <motion.p variants={fadeUp} className={`mb-7 leading-relaxed ${currentSlide === 2 ? "text-lg md:text-xl text-card/90 max-w-xl ml-auto font-medium" : "text-base text-card/70 max-w-md"}`}>
               {slides[currentSlide].subtitle}
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
