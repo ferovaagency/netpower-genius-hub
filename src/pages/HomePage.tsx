@@ -188,7 +188,7 @@ export default function HomePage() {
             <motion.p variants={fadeUp} className={`mb-7 leading-relaxed ${currentSlide === 2 ? "text-lg md:text-xl text-card/90 max-w-xl ml-auto font-medium" : "text-base text-card/70 max-w-md"}`}>
               {slides[currentSlide].subtitle}
             </motion.p>
-            <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
+            <motion.div variants={fadeUp} className={`flex flex-wrap gap-3 ${currentSlide === 2 ? "justify-end" : ""}`}>
               {slides[currentSlide].cta.type === "link" ? (
                 <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
                   {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
