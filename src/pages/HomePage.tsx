@@ -154,55 +154,78 @@ export default function HomePage() {
               decoding={idx === 0 ? "sync" : "async"}
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-l from-surface-dark/95 via-surface-dark/70 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
+            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-r from-surface-dark/95 via-surface-dark/75 to-surface-dark/70" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
           </div>
         ))}
 
 
         <div className="container mx-auto px-6 py-20 md:py-24 relative z-10">
-          <motion.div
-            key={currentSlide}
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className={currentSlide === 2 ? "max-w-2xl ml-auto text-right" : "max-w-xl"}
-          >
-            {slides[currentSlide].badge && (
-              <motion.span
-                variants={fadeUp}
-                className="inline-block bg-secondary text-secondary-foreground font-black text-3xl md:text-4xl lg:text-5xl px-6 py-2 rounded-full mb-6 animate-pulse shadow-lg"
+          <div className={currentSlide === 2 ? "grid md:grid-cols-2 gap-8 items-center" : ""}>
+            <motion.div
+              key={currentSlide}
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+              className="max-w-xl"
+            >
+              {slides[currentSlide].badge && (
+                <motion.span
+                  variants={fadeUp}
+                  className="inline-block bg-secondary text-secondary-foreground font-black text-2xl md:text-3xl px-5 py-1.5 rounded-full mb-5 animate-pulse shadow-lg"
+                >
+                  {slides[currentSlide].badge}
+                </motion.span>
+              )}
+              {!slides[currentSlide].badge && (
+                <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
+                  <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
+                </motion.div>
+              )}
+              <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
+                {slides[currentSlide].titleParts[0]}
+                <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
+                {slides[currentSlide].titleParts[2]}
+              </motion.h1>
+              {currentSlide !== 2 && (
+                <motion.p variants={fadeUp} className="text-base text-card/70 mb-7 max-w-md leading-relaxed">
+                  {slides[currentSlide].subtitle}
+                </motion.p>
+              )}
+              <motion.div variants={fadeUp} className={`flex flex-wrap gap-3 ${currentSlide === 2 ? "mt-6" : ""}`}>
+                {slides[currentSlide].cta.type === "link" ? (
+                  <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                    {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <button onClick={() => openChat((slides[currentSlide].cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                    {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+              </motion.div>
+              <motion.div variants={fadeUp} className="mt-5">
+                <TrustBadges />
+              </motion.div>
+            </motion.div>
+
+            {currentSlide === 2 && (
+              <motion.div
+                key="tricolor-desc"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                className="hidden md:block"
               >
-                {slides[currentSlide].badge}
-              </motion.span>
-            )}
-            {!slides[currentSlide].badge && (
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
-                <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
+                <div className="rounded-2xl bg-surface-dark/60 backdrop-blur-md border-2 border-primary/40 p-8 shadow-2xl">
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-card leading-tight">
+                    Por compras superiores a <span className="text-primary">$1.000.000</span> te obsequiamos un <span className="text-secondary">regalo especial</span> 🎁
+                  </p>
+                  <p className="mt-4 text-base md:text-lg text-card/80 leading-relaxed">
+                    Celebra con nosotros el orgullo colombiano. Aplican términos y condiciones.
+                  </p>
+                </div>
               </motion.div>
             )}
-            <motion.h1 variants={fadeUp} className={`font-extrabold text-card leading-tight mb-4 ${currentSlide === 2 ? "text-4xl md:text-5xl lg:text-6xl" : "text-3xl md:text-4xl lg:text-5xl"}`}>
-              {slides[currentSlide].titleParts[0]}
-              <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
-              {slides[currentSlide].titleParts[2]}
-            </motion.h1>
-            <motion.p variants={fadeUp} className={`mb-7 leading-relaxed ${currentSlide === 2 ? "text-lg md:text-xl text-card/90 max-w-xl ml-auto font-medium" : "text-base text-card/70 max-w-md"}`}>
-              {slides[currentSlide].subtitle}
-            </motion.p>
-            <motion.div variants={fadeUp} className={`flex flex-wrap gap-3 ${currentSlide === 2 ? "justify-end" : ""}`}>
-              {slides[currentSlide].cta.type === "link" ? (
-                <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <button onClick={() => openChat((slides[currentSlide].cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                  {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-            </motion.div>
-            <motion.div variants={fadeUp} className="mt-5">
-              <TrustBadges />
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Indicadores */}
