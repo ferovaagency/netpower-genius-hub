@@ -90,9 +90,13 @@ export default function HomePage() {
       if (error || !data || cancelled) return;
 
       const nextCounts = Object.fromEntries(categories.map((category) => [category.name, 0])) as Record<string, number>;
+      const categoryById = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+      const categoryBySlug = Object.fromEntries(categories.map((c) => [c.slug, c.name]));
 
       data.forEach((product) => {
-        const normalizedCategory = getParentCategory(product.category);
+        const raw = product.category ?? "";
+        const mapped = categoryById[raw] ?? categoryBySlug[raw] ?? null;
+        const normalizedCategory = mapped ?? getParentCategory(raw);
         nextCounts[normalizedCategory] = (nextCounts[normalizedCategory] ?? 0) + 1;
       });
 
