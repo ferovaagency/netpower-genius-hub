@@ -10,9 +10,9 @@ import { getParentCategory } from "@/lib/catalog";
 import SeoHead from "@/components/SeoHead";
 import TrustBadges from "@/components/TrustBadges";
 import ctaBanner from "@/assets/cta-banner.jpg";
-import bannerTienda from "@/assets/banner-tienda.jpg.asset.json";
-import bannerCotizacion from "@/assets/banner-cotizacion.jpg.asset.json";
-import bannerTricolor from "@/assets/banner-tricolor.jpg.asset.json";
+import bannerTienda from "@/assets/banner-tienda.jpg";
+import bannerCotizacion from "@/assets/banner-cotizacion.jpg";
+import bannerTricolor from "@/assets/banner-tricolor.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
@@ -30,21 +30,21 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    image: bannerTienda.url,
+    image: bannerTienda,
     badge: null,
     titleParts: ["Explora nuestra ", "tienda online", " de tecnología"],
     subtitle: "UPS, baterías, redes, energía solar y accesorios TIC con garantía oficial. Envío a todo Colombia y pago seguro.",
     cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
   },
   {
-    image: bannerCotizacion.url,
+    image: bannerCotizacion,
     badge: null,
     titleParts: ["¿Tienes un proyecto? ", "Cotiza con nosotros", ""],
     subtitle: "Asesoría experta para tu infraestructura TI. Solicita tu cotización personalizada y recibe la mejor propuesta para tu empresa.",
     cta: { type: "chat", label: "Solicitar Cotización", mode: "quote" },
   },
   {
-    image: bannerTricolor.url,
+    image: bannerTricolor,
     badge: "PROMO TRICOLOR 🇨🇴",
     titleParts: ["Conectando el ", "orgullo colombiano", ""],
     subtitle: "Por compras superiores a $1.000.000 te obsequiamos un regalo especial (aplican términos y condiciones).",
