@@ -50,6 +50,22 @@ export interface GeneratedSheet {
 
 type TabMode = "create" | "edit";
 
+// supabase-js reduce cualquier respuesta no-2xx de una Edge Function al mensaje genérico
+// "Edge Function returned a non-2xx status code" — el motivo real (401/403 admin,
+// 402 créditos agotados, 429 límite, 500 con detalle) va en el body de esa respuesta.
+async function extractEdgeFunctionError(invokeError: any): Promise<string> {
+  const context = invokeError?.context;
+  if (context && typeof context.json === "function") {
+    try {
+      const body = await context.json();
+      if (body?.error) return body.error;
+    } catch {
+      // el body no era JSON — usamos el mensaje genérico
+    }
+  }
+  return invokeError?.message || "Error al generar la ficha";
+}
+
 export default function ProductSheetGeneratorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -174,7 +190,7 @@ export default function ProductSheetGeneratorPage() {
         body: { productName, brand, category, sku, specs, additionalNotes: aiNotes },
       });
 
-      if (invokeError) throw new Error(invokeError.message || "Error al generar la ficha");
+      if (invokeError) throw new Error(await extractEdgeFunctionError(invokeError));
       if (data?.error) throw new Error(data.error);
       if (data?.data) setResult(data.data);
     } catch (e: any) {
