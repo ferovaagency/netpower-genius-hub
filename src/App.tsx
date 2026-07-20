@@ -27,6 +27,7 @@ const QuotePage = lazy(() => import("./pages/QuotePage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
+const FerovaPage = lazy(() => import("./pages/FerovaPage"));
 const ProductSheetGeneratorPage = lazy(() => import("./pages/ProductSheetGeneratorPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -83,6 +84,7 @@ const App = () => (
                       <Route path="/contacto" element={<ContactPage />} />
                       <Route path="/marcas" element={<BrandsPage />} />
                       <Route path="/nosotros" element={<AboutPage />} />
+                      <Route path="/ferova" element={<FerovaPage />} />
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/admin/generador-fichas" element={<ProtectedAdminRoute><ProductSheetGeneratorPage /></ProtectedAdminRoute>} />
                       <Route path="/legal" element={<LegalPage />} />

@@ -45,6 +45,7 @@ const navLinks = [
 { label: "Tienda", path: "/tienda" },
 { label: "Blog", path: "/blog" },
 { label: "Quiénes Somos", path: "/nosotros" },
+{ label: "Ferova", path: "/ferova" },
 { label: "Servicios IT", path: "https://avaconit.com/", external: true },
 { label: "Contacto", path: "/contacto" }];
 

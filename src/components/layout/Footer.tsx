@@ -58,6 +58,7 @@ export default function Footer() {
             <h3 className="font-semibold text-sm uppercase tracking-wider mb-4 text-surface-dark-foreground/80">Empresa</h3>
             <ul className="space-y-2 mb-6">
               <li><Link to="/nosotros" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Quiénes somos</Link></li>
+              <li><Link to="/ferova" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Ferova (IA)</Link></li>
               <li><Link to="/contacto" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Contacto</Link></li>
               <li><Link to="/cotizacion" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Cotizaciones</Link></li>
               <li><Link to="/tienda" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Tienda</Link></li>
