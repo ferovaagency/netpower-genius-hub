@@ -111,7 +111,7 @@ export default function ContactPage() {
             {[
               { icon: Mail, label: "Email", value: "aosorio@netpowerit.co", href: "mailto:aosorio@netpowerit.co" },
               { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 350 460 9431", href: "tel:+573504609431" },
-              { icon: MapPin, label: "Ubicación", value: "Bogotá, Colombia · Servicio en toda Colombia e internacional", href: undefined },
+              { icon: MapPin, label: "Ubicación", value: "AK 7 #156-80, NorthPoint Torre 2, Oficina 1004, Bogotá", href: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Bogota" },
               { icon: Clock, label: "Horario", value: "Lun-Vie 8am-6pm | Sáb 9am-1pm", href: undefined },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border shadow-card">
@@ -121,7 +121,7 @@ export default function ContactPage() {
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{item.label}</p>
                   {item.href ? (
-                    <a href={item.href} className="font-semibold text-card-foreground hover:text-primary transition">{item.value}</a>
+                    <a href={item.href} target={item.label === "Ubicación" ? "_blank" : undefined} rel={item.label === "Ubicación" ? "noopener noreferrer" : undefined} className="font-semibold text-card-foreground hover:text-primary transition">{item.value}</a>
                   ) : (
                     <p className="font-semibold text-card-foreground">{item.value}</p>
                   )}

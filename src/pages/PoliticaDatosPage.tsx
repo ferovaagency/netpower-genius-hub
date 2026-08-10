@@ -17,7 +17,7 @@ export default function PoliticaDatosPage() {
           Política de Tratamiento de Datos Personales
         </h1>
         <p className="text-sm text-muted-foreground mb-10">
-          Netpower IT SAS · NIT 901.881.682-0 · Calle 147 #13-67, Bogotá D.C., Colombia ·{" "}
+          Netpower IT SAS · NIT 901.881.682-0 · AK 7 #156-80, NorthPoint Torre 2, Oficina 1004, Bogotá D.C., Colombia ·{" "}
           <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">
             aosorio@netpowerit.co
           </a>{" "}
@@ -28,7 +28,8 @@ export default function PoliticaDatosPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">1. Responsable del tratamiento</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Netpower IT SAS, identificada con NIT 901.881.682-0, con domicilio en la Calle 147 #13-67, Bogotá D.C.,
+              Netpower IT SAS, identificada con NIT 901.881.682-0, con domicilio en la AK 7 #156-80, NorthPoint Torre 2,
+              Oficina 1004, Bogotá D.C.,
               Colombia, es responsable del tratamiento de los datos personales recolectados a través de su sitio web,
               formularios, canales de venta y su asesor de inteligencia artificial. Esta política se rige por la Ley
               1581 de 2012, el Decreto 1377 de 2013 y demás normas aplicables.

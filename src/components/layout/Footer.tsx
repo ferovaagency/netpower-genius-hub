@@ -39,7 +39,7 @@ export default function Footer() {
             <h3 className="font-semibold text-sm uppercase tracking-wider mb-4 text-surface-dark-foreground/80">Contacto</h3>
             <div className="flex flex-col gap-3 text-sm text-surface-dark-foreground/60">
               <address className="not-italic flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Bogotá, Colombia · Servicio en toda Colombia e internacional
+                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" /> AK 7 #156-80, NorthPoint Torre 2, Oficina 1004, Bogotá
               </address>
               <a href="tel:+573504609431" className="flex items-center gap-2 hover:text-primary transition">
                 <Phone className="w-4 h-4 text-primary shrink-0" /> +57 350 460 9431
