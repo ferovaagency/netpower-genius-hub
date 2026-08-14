@@ -1,219 +1,239 @@
 import { useState } from "react";
-import { Download, Globe, Mail, Phone, Share2, Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Download,
+  ExternalLink,
+  Globe,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Share2,
+} from "lucide-react";
+import logoImg from "@/assets/logo-netpower-it.png";
+import anaMariaPhoto from "@/assets/team/ana-maria-osorio.png";
+
+const contact = {
+  name: "Ana María Osorio",
+  firstName: "Ana María",
+  lastName: "Osorio",
+  role: "CEO",
+  company: "NetPower IT",
+  phone: "+57 350 460 9431",
+  phoneRaw: "+573504609431",
+  whatsapp: "573504609431",
+  email: "aosorio@netpowerit.co",
+  web: "https://netpowerit.co",
+  address: "AK 7 #156-80, NorthPoint Torre 2, Oficina 1004, Bogotá",
+  maps: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Oficina+1004+Bogota",
+};
+
+const escapeVCard = (value: string) =>
+  value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
 
 export default function VCardNetpower() {
-  const [nombre, setNombre] = useState("");
-  const [listo, setListo] = useState(false);
-  const [error, setError] = useState(false);
+  const [visitorName, setVisitorName] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
 
-  const info = {
-    nombre: "Ana Maria Osorio",
-    cargo: "CEO",
-    empresa: "Netpower IT",
-    telefono: "+573504609431",
-    email: "aosorio@netpowerit.co",
-    web: "https://netpowerit.co",
-    whatsapp: "573504609431",
-  };
-
-  const handleAccion = () => {
-    if (!nombre.trim()) {
-      setError(true);
-      setTimeout(() => setError(false), 2000);
-      return;
-    }
-
-    // 1 — Abrir WhatsApp PRIMERO (inmediato al clic)
-    const mensaje = encodeURIComponent(
-      `Hola Ana María, soy ${nombre.trim()} fue un gusto conocerte, sigamos en contacto`,
-    );
-    window.open(`https://wa.me/${info.whatsapp}?text=${mensaje}`, "_blank");
-
-    // 2 — Descargar .vcf al mismo tiempo
+  const downloadVCard = () => {
     const vcard = [
       "BEGIN:VCARD",
       "VERSION:3.0",
-      `FN:${info.nombre}`,
-      `N:Osorio;Ana Maria;;;`,
-      `ORG:${info.empresa}`,
-      `TITLE:${info.cargo}`,
-      `TEL;TYPE=CELL:${info.telefono}`,
-      `EMAIL:${info.email}`,
-      `URL:${info.web}`,
-      `NOTE:CEO de Netpower IT — Tecnología e infraestructura TIC para empresas`,
+      `FN:${escapeVCard(contact.name)}`,
+      `N:${escapeVCard(contact.lastName)};${escapeVCard(contact.firstName)};;;`,
+      `ORG:${escapeVCard(contact.company)}`,
+      `TITLE:${escapeVCard(contact.role)}`,
+      `TEL;TYPE=CELL,VOICE:${contact.phoneRaw}`,
+      `EMAIL;TYPE=WORK:${contact.email}`,
+      `URL:${contact.web}`,
+      `ADR;TYPE=WORK:;;${escapeVCard("AK 7 #156-80, NorthPoint Torre 2, Oficina 1004")};Bogotá;Bogotá D.C.;;Colombia`,
+      `NOTE:${escapeVCard("CEO de NetPower IT — Tecnología e infraestructura TIC para empresas")}`,
       "END:VCARD",
-    ].join("\n");
+    ].join("\r\n");
 
     const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "AnaMariaOsorio-NetpowerIT.vcf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "AnaMariaOsorio-NetPowerIT.vcf";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setSaved(true);
+  };
 
-    setListo(true);
+  const openWhatsApp = () => {
+    const intro = visitorName.trim() ? `Hola Ana María, soy ${visitorName.trim()}.` : "Hola Ana María.";
+    const message = encodeURIComponent(`${intro} Fue un gusto conocerte. Sigamos en contacto.`);
+    window.open(`https://wa.me/${contact.whatsapp}?text=${message}`, "_blank", "noopener,noreferrer");
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus("copied");
+    } catch {
+      setShareStatus("error");
+    }
+  };
+
+  const shareContact = async () => {
+    setShareStatus("idle");
+    if (!navigator.share) {
+      await copyLink();
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: `${contact.name} — ${contact.company}`,
+        text: `${contact.role} de ${contact.company}`,
+        url: window.location.href,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      await copyLink();
+    }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12"
-      style={{ background: "linear-gradient(135deg, #0a0f1e 0%, #0d1529 50%, #0a0f1e 100%)" }}
-    >
-      <div className="w-full max-w-xs">
-        <div
-          className="rounded-3xl overflow-hidden shadow-2xl"
-          style={{
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: "linear-gradient(160deg, #0f1c38, #0a1428)",
-          }}
-        >
-          {/* Franja azul */}
-          <div className="h-20 relative" style={{ background: "linear-gradient(135deg, #0f3460, #1a5276, #2980b9)" }}>
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)",
-                backgroundSize: "18px 18px",
-              }}
-            />
-          </div>
+    <>
+      <Helmet>
+        <title>Ana María Osorio | CEO de NetPower IT</title>
+        <meta
+          name="description"
+          content="Contacto digital de Ana María Osorio, CEO de NetPower IT. Guarda sus datos o comunícate por WhatsApp, teléfono y correo."
+        />
+        <link rel="canonical" href="https://netpowerit.co/contacto-digital" />
+        <meta property="og:title" content="Ana María Osorio | NetPower IT" />
+        <meta property="og:description" content="CEO de NetPower IT — Tecnología e infraestructura TIC para empresas." />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content="https://netpowerit.co/contacto-digital" />
+      </Helmet>
 
-          {/* Logo */}
-          <div className="flex justify-center -mt-12 mb-3 px-6">
-            <div
-              className="w-24 h-24 rounded-2xl border-4 overflow-hidden shadow-xl flex items-center justify-center"
-              style={{ borderColor: "#2980b9", background: "#0f1c38" }}
+      <main className="relative min-h-dvh overflow-hidden bg-[#eef7f5] text-foreground">
+        <div className="pointer-events-none absolute -left-28 top-16 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 bottom-12 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
+
+        <div className="relative mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+          <header className="mb-5 flex items-center justify-between sm:mb-7">
+            <Link
+              to="/"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-white/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Volver a NetPower IT
+            </Link>
+            <img src={logoImg} alt="NetPower IT" className="h-auto w-32 sm:w-40" />
+          </header>
+
+          <article className="my-auto grid overflow-hidden rounded-2xl bg-white shadow-[0_28px_80px_-42px_hsl(174_95%_24%/0.45)] lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="relative min-h-72 overflow-hidden bg-surface-dark sm:min-h-96 lg:min-h-[620px]">
               <img
-                src="/netpower-logo.png"
-                alt="Netpower IT"
-                className="w-full h-full object-contain p-2"
-                onError={(e) => {
-                  const el = e.target as HTMLImageElement;
-                  el.style.display = "none";
-                  el.parentElement!.innerHTML =
-                    '<span style="font-size:1.4rem;font-weight:900;color:#2980b9;text-align:center;line-height:1.2">NET<br/>POWER</span>';
-                }}
+                src={anaMariaPhoto}
+                alt="Ana María Osorio, CEO de NetPower IT"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+                width={1024}
+                height={1024}
               />
-            </div>
-          </div>
-
-          <div className="px-6 pb-7">
-            <div className="text-center mb-5">
-              <h1 className="text-lg font-bold text-white mb-0.5">{info.nombre}</h1>
-              <p className="text-sm font-semibold" style={{ color: "#2980b9" }}>
-                {info.cargo}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {info.empresa}
-              </p>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-surface-dark/85 via-surface-dark/20 to-transparent px-6 pb-6 pt-24 text-white lg:hidden">
+                <h1 className="text-3xl font-extrabold tracking-[-0.03em]">{contact.name}</h1>
+                <p className="mt-1 text-sm font-semibold text-primary-foreground/85">{contact.role} · {contact.company}</p>
+              </div>
             </div>
 
-            <div className="space-y-1.5 mb-5">
-              {[
-                { icon: Phone, text: info.telefono, href: `tel:${info.telefono}` },
-                { icon: Mail, text: info.email, href: `mailto:${info.email}` },
-                { icon: Globe, text: "netpowerit.co", href: info.web },
-              ].map((item, i) => (
-                <a
-                  key={i}
-                  href={item.href}
-                  target={i === 2 ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all hover:bg-white/5"
-                  style={{ color: "rgba(255,255,255,0.55)" }}
+            <div className="flex flex-col p-6 sm:p-8 lg:p-10">
+              <div className="hidden lg:block">
+                <h1 className="text-4xl font-extrabold tracking-[-0.03em] text-foreground">{contact.name}</h1>
+                <p className="mt-2 text-base font-bold text-primary">{contact.role} · {contact.company}</p>
+              </div>
+
+              <p className="mt-0 max-w-xl text-sm leading-6 text-muted-foreground lg:mt-6">
+                Lidero la estrategia comercial y operativa de NetPower IT, construyendo relaciones de largo plazo con empresas que buscan tecnología e infraestructura TIC confiable.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={downloadVCard}
+                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-button transition-transform hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:col-span-1"
                 >
-                  <item.icon className="w-3.5 h-3.5 shrink-0" style={{ color: "#2980b9" }} />
-                  {item.text}
+                  {saved ? <Check className="h-4 w-4" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
+                  {saved ? "Contacto guardado" : "Guardar contacto"}
+                </button>
+                <button
+                  type="button"
+                  onClick={openWhatsApp}
+                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-surface-dark px-5 text-sm font-bold text-white transition-transform hover:-translate-y-0.5 hover:bg-surface-dark/90 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:col-span-1"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  Escribir por WhatsApp
+                </button>
+              </div>
+
+              <div className="mt-5">
+                <label htmlFor="visitor-name" className="text-xs font-semibold text-muted-foreground">
+                  Personaliza tu mensaje de WhatsApp <span className="font-normal">(opcional)</span>
+                </label>
+                <input
+                  id="visitor-name"
+                  type="text"
+                  value={visitorName}
+                  onChange={(event) => setVisitorName(event.target.value)}
+                  placeholder="Tu nombre"
+                  autoComplete="name"
+                  className="mt-2 min-h-11 w-full rounded-xl bg-muted/70 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:bg-white focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <address className="mt-6 grid gap-1 not-italic">
+                <a href={`tel:${contact.phoneRaw}`} className="group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <Phone className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="font-semibold">{contact.phone}</span>
                 </a>
-              ))}
-            </div>
+                <a href={`mailto:${contact.email}`} className="group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <Mail className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="font-semibold">{contact.email}</span>
+                </a>
+                <a href={contact.web} target="_blank" rel="noopener noreferrer" className="group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <Globe className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="font-semibold">netpowerit.co</span>
+                  <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                </a>
+                <a href={contact.maps} target="_blank" rel="noopener noreferrer" className="group flex min-h-11 items-start gap-3 rounded-xl px-3 py-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="font-semibold leading-5">{contact.address}</span>
+                  <ExternalLink className="ml-auto mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </a>
+              </address>
 
-            <div className="mb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-
-            <div className="mb-3">
-              <label
-                className="block text-xs font-semibold mb-2 uppercase tracking-wider"
-                style={{ color: "rgba(255,255,255,0.4)" }}
-              >
-                ¿Cómo te llamas?
-              </label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => {
-                  setNombre(e.target.value);
-                  setError(false);
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleAccion()}
-                placeholder="Tu nombre completo..."
-                className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 focus:outline-none transition-all"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: `1px solid ${error ? "hsl(0,70%,55%)" : "rgba(255,255,255,0.1)"}`,
-                }}
-              />
-              {error && (
-                <p className="text-xs mt-1.5" style={{ color: "hsl(0,70%,65%)" }}>
-                  Escribe tu nombre para continuar
+              <div className="mt-auto pt-6">
+                <button
+                  type="button"
+                  onClick={shareContact}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {shareStatus === "copied" ? <Copy className="h-4 w-4" aria-hidden="true" /> : <Share2 className="h-4 w-4" aria-hidden="true" />}
+                  {shareStatus === "copied" ? "Enlace copiado" : "Compartir contacto digital"}
+                </button>
+                <p aria-live="polite" className="mt-2 min-h-5 text-center text-xs text-muted-foreground">
+                  {shareStatus === "error" ? "No pudimos copiar el enlace. Copia la URL desde el navegador." : saved ? "El archivo .vcf está listo para agregarlo a tus contactos." : ""}
                 </p>
-              )}
+              </div>
             </div>
+          </article>
 
-            <button
-              onClick={handleAccion}
-              disabled={listo}
-              className="w-full py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 active:scale-95"
-              style={{
-                background: listo
-                  ? "linear-gradient(135deg, #22c55e, #16a34a)"
-                  : "linear-gradient(135deg, #0f3460, #2980b9)",
-                color: "white",
-              }}
-            >
-              {listo ? (
-                <>
-                  <Check className="w-4 h-4" /> ¡Listo! Revisa WhatsApp
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" /> Guardar contacto y escribirme
-                </>
-              )}
-            </button>
-
-            <p className="text-center text-xs mt-3" style={{ color: "rgba(255,255,255,0.25)" }}>
-              Guarda el contacto y te abre WhatsApp al instante
-            </p>
-          </div>
+          <footer className="mt-5 text-center text-xs text-muted-foreground sm:mt-7">
+            © {new Date().getFullYear()} NetPower IT · Tecnología para empresas
+          </footer>
         </div>
-
-        <button
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({
-                title: "Ana Maria Osorio — Netpower IT",
-                text: "CEO de Netpower IT",
-                url: window.location.href,
-              });
-            } else {
-              navigator.clipboard.writeText(window.location.href);
-              alert("¡Link copiado!");
-            }
-          }}
-          className="w-full mt-3 py-3 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-all hover:bg-white/5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }}
-        >
-          <Share2 className="w-3.5 h-3.5" /> Compartir mi contacto digital
-        </button>
-
-        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.15)" }}>
-          © {new Date().getFullYear()} Netpower IT
-        </p>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

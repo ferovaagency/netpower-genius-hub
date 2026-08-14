@@ -59,21 +59,17 @@ const PageFallback = () => (
   </div>
 );
 
-const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <ChatProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="flex flex-col min-h-screen">
-                <ScrollToTop />
-                <Header />
-                <main className="flex-1">
-                  <Suspense fallback={<PageFallback />}>
-                    <Routes>
+function AppContent() {
+  const { pathname } = useLocation();
+  const isDigitalContact = pathname === "/contacto-digital";
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <ScrollToTop />
+      {!isDigitalContact && <Header />}
+      <main className={isDigitalContact ? "min-h-dvh" : "flex-1"}>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/tienda" element={<ShopPage />} />
                       <Route path="/categoria/:slug" element={<ShopPage />} />
@@ -99,18 +95,35 @@ const App = () => (
                       <Route path="/contacto-digital" element={<VCardNetpower />} />
                       <Route path="/resultado-pago" element={<PaymentResult />} />
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </main>
-                <Footer />
-                <WhatsAppButton />
-                <DeferredMount>
-                  <Suspense fallback={null}>
-                    <AIChatWidget />
-                    <SocialProofPopup />
-                  </Suspense>
-                </DeferredMount>
-              </div>
+          </Routes>
+        </Suspense>
+      </main>
+      {!isDigitalContact && (
+        <>
+          <Footer />
+          <WhatsAppButton />
+          <DeferredMount>
+            <Suspense fallback={null}>
+              <AIChatWidget />
+              <SocialProofPopup />
+            </Suspense>
+          </DeferredMount>
+        </>
+      )}
+    </div>
+  );
+}
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <CartProvider>
+        <ChatProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
             </BrowserRouter>
           </TooltipProvider>
         </ChatProvider>
