@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { Product } from "@/types/store";
 import { supabase } from "@/integrations/supabase/client";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
+import { trackCotizacionEnviada } from "@/lib/analytics";
+import { getAttributionForDetails, hasClickId } from "@/lib/attribution";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -183,7 +185,17 @@ export default function AIChatWidget() {
         details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript },
         status: "new",
       }).then(({ error }) => {
-        if (error) console.error("Failed to save quote:", error);
+        if (error) { console.error("Failed to save quote:", error); return; }
+        // Conversion principal. Una vez por fila creada: submittedQuotesRef
+        // ya marca la clave ANTES del insert, asi que no se duplica.
+        const atr = getAttributionForDetails();
+        trackCotizacionEnviada({
+          lead_source: "neti_chat",
+          utm_source: atr.utm_source,
+          utm_medium: atr.utm_medium,
+          utm_campaign: atr.utm_campaign,
+          tiene_gclid: hasClickId(),
+        });
       });
       // Sync to Brevo list #9 (fire and forget)
       if (data.email) {

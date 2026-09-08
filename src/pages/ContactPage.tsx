@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
+import { trackCotizacionEnviada } from "@/lib/analytics";
+import { getAttributionForDetails, hasClickId } from "@/lib/attribution";
 
 export default function ContactPage() {
   const { toast } = useToast();
@@ -35,7 +37,9 @@ export default function ContactPage() {
       return;
     }
     setLoading(true);
+    const atribucion = getAttributionForDetails();
     const { error } = await supabase.from("quote_requests").insert({
+      details: { atribucion },
       source: "contact_form",
       customer_name: parsed.data.name,
       customer_email: parsed.data.email,
@@ -64,6 +68,15 @@ export default function ContactPage() {
       toast({ title: "Error al enviar", description: error.message, variant: "destructive" });
       return;
     }
+    // Conversion principal. Va aqui, despues del return por error:
+    // solo se emite cuando la fila entro de verdad en quote_requests.
+    trackCotizacionEnviada({
+      lead_source: "contact_form",
+      utm_source: atribucion.utm_source,
+      utm_medium: atribucion.utm_medium,
+      utm_campaign: atribucion.utm_campaign,
+      tiene_gclid: hasClickId(),
+    });
     setSent(true);
     setForm({ name: "", nit_cedula: "", email: "", phone: "", city: "", message: "" });
     setConsent(false);

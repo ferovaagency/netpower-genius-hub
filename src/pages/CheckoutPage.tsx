@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 import PromoTricolorBox from "@/components/PromoTricolorBox";
+import { trackCompraCompletada } from "@/lib/analytics";
 
 const WHATSAPP = "573504609431";
 
@@ -158,6 +159,16 @@ export default function CheckoutPage() {
         shipping_address: shippingAddress,
       } as never);
       if (orderErr) throw orderErr;
+
+      // Ingreso medido. Idempotente por transaction_id: recargar la
+      // confirmacion o volver con el boton atras no duplica la compra.
+      trackCompraCompletada({
+        transaction_id: orderRef,
+        value: total,
+        currency: "COP",
+        payment_method: paymentMethod,
+        item_count: orderItems.length,
+      });
 
       decreaseInventory(items.map((item) => ({ productId: item.product.id, quantity: item.quantity })));
 

@@ -10,6 +10,9 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import WhatsAppClickTracker from "@/components/analytics/WhatsAppClickTracker";
+import { trackPageView } from "@/lib/analytics";
+import { captureAttribution } from "@/lib/attribution";
 import HomePage from "./pages/HomePage";
 
 import DeferredMount from "@/components/layout/DeferredMount";
@@ -49,6 +52,30 @@ function ScrollToTop() {
   React.useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
   return null;
 }
+
+// Emite page_view en cada cambio de ruta. Necesario porque index.html carga GA4
+// con send_page_view:false: en una SPA la vista automatica solo cuenta la carga
+// inicial y todas las paginas internas quedan sin contar.
+function RouteAnalytics() {
+  const { pathname, search } = useLocation();
+  React.useEffect(() => {
+    // Antes del pageview: si el aterrizaje trae ?gclid= o ?utm_*, queda
+    // persistido aunque esta ruta redirija enseguida a otra.
+    captureAttribution();
+    // setTimeout(0): las rutas son lazy(); da un tick para que el chunk monte.
+    // El clearTimeout cancela el doble efecto de StrictMode en desarrollo.
+    // Sin page_title a proposito: en este tick Helmet aun no aplico el titulo
+    // de la ruta nueva y se enviaria el de la anterior. GA4 lo resuelve solo.
+    const id = window.setTimeout(() => {
+      trackPageView({
+        page_path: pathname + search,
+        page_location: window.location.href,
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [pathname, search]);
+  return null;
+}
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false } },
 });
@@ -66,6 +93,8 @@ function AppContent() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
+      <RouteAnalytics />
+      <WhatsAppClickTracker />
       {!isDigitalContact && <Header />}
       <main className={isDigitalContact ? "min-h-dvh" : "flex-1"}>
         <Suspense fallback={<PageFallback />}>
