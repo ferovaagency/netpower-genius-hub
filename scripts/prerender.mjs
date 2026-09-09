@@ -17,7 +17,7 @@
  * estáticas, avisa por consola y termina con código 0.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -34,8 +34,25 @@ function normalizeTemplate(html) {
     .replace(new RegExp(`\\s*${MARK_START}[\\s\\S]*?${MARK_END}`, "g"), "");
 }
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+/**
+ * Vite lee el .env por su cuenta, pero este script es Node puro y no lo ve.
+ * En Vercel las variables llegan por process.env; en local y cuando no están
+ * configuradas en el panel, se leen del .env del repo. Lo que ya venga en el
+ * entorno siempre manda sobre el archivo.
+ */
+function cargarEnvLocal() {
+  const archivo = path.join(ROOT, ".env");
+  if (!existsSync(archivo)) return;
+  for (const linea of readFileSync(archivo, "utf8").split(/\r?\n/)) {
+    const m = linea.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+    if (!m || linea.trimStart().startsWith("#")) continue;
+    const [, clave, bruto] = m;
+    if (process.env[clave]) continue;
+    process.env[clave] = bruto.replace(/^["']|["']$/g, "");
+  }
+}
+
+const env = (clave) => process.env[clave];
 
 // ─── utilidades ──────────────────────────────────────────────────────────────
 
@@ -151,6 +168,8 @@ const BLOG_COLUMNS = [
 
 /** Lee una tabla completa por páginas de 1000 filas. */
 async function fetchTable(query) {
+  const SUPABASE_URL = env("VITE_SUPABASE_URL");
+  const SUPABASE_KEY = env("VITE_SUPABASE_PUBLISHABLE_KEY");
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("faltan VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY");
   }
@@ -288,6 +307,7 @@ const STATIC_ROUTES = [
 ];
 
 async function main() {
+  cargarEnvLocal();
   if (!existsSync(path.join(DIST, "index.html"))) {
     console.error("[prerender] no existe dist/index.html. Corre `vite build` antes.");
     process.exit(1);
