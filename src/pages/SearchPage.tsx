@@ -48,6 +48,7 @@ export default function SearchPage() {
     <>
       <Helmet>
         <title>{q ? `Buscar: ${q} | Netpower IT` : "Buscar Productos | Netpower IT"}</title>
+        <meta name="robots" content="noindex, follow" />
         <meta name="description" content={q ? `Resultados de búsqueda para "${q}" en Netpower IT. Encuentra computadores, servidores, redes e impresoras.` : "Busca productos TIC: computadores, servidores, equipos de red, UPS y más en Netpower IT Colombia."} />
         <meta property="og:title" content={q ? `Buscar: ${q}` : "Buscar Productos"} />
         <meta property="og:description" content="Encuentra productos TIC en Netpower IT Colombia." />

@@ -1,5 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { MessageCircle, Home, ShoppingBag } from "lucide-react";
 
 const WHATSAPP_NUMBER = "573504609431";
@@ -16,6 +17,13 @@ const NotFound = () => {
   );
 
   return (
+    <>
+      <Helmet>
+        <title>Página no encontrada (404) | Netpower IT</title>
+        <meta name="description" content="La página que buscas no existe o cambió de dirección. Explora la tienda o escríbenos por WhatsApp." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
+
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="text-center px-6 max-w-md">
         <h1 className="mb-3 text-5xl font-extrabold text-foreground">404</h1>
@@ -45,6 +53,7 @@ const NotFound = () => {
         </Link>
       </div>
     </div>
+    </>
   );
 };
 

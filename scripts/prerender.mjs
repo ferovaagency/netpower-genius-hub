@@ -144,24 +144,27 @@ const PRODUCT_COLUMNS = [
   "sku", "stock", "images", "category", "brand", "meta_title", "meta_description",
 ].join(",");
 
-async function fetchProducts() {
+const BLOG_COLUMNS = [
+  "slug", "h1", "meta_title", "meta_description", "resumen_intro",
+  "imagen_portada", "imagen_alt", "autor", "fecha_publicacion",
+].join(",");
+
+/** Lee una tabla completa por páginas de 1000 filas. */
+async function fetchTable(query) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("faltan VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY");
   }
   const PAGE = 1000;
   const all = [];
   for (let from = 0; ; from += PAGE) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=${PRODUCT_COLUMNS}&active=eq.true&order=slug.asc`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Range: `${from}-${from + PAGE - 1}`,
-          "Range-Unit": "items",
-        },
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Range: `${from}-${from + PAGE - 1}`,
+        "Range-Unit": "items",
       },
-    );
+    });
     if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
     const rows = await res.json();
     all.push(...rows);
@@ -169,6 +172,12 @@ async function fetchProducts() {
   }
   return all;
 }
+
+const fetchProducts = () =>
+  fetchTable(`products?select=${PRODUCT_COLUMNS}&active=eq.true&order=slug.asc`);
+
+const fetchBlogs = () =>
+  fetchTable(`blogs?select=${BLOG_COLUMNS}&publicado=eq.true&order=slug.asc`);
 
 // ─── bloques estáticos de contenido ──────────────────────────────────────────
 
@@ -186,6 +195,18 @@ function productBody(p, cat, brandName) {
     desc ? `<div>${esc(desc)}</div>` : "",
     p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" width="600" height="600">` : "",
     `<p><a href="/cotizacion">Solicitar cotización</a></p></main>`,
+  ].join("");
+}
+
+function blogBody(post) {
+  return [
+    `<nav aria-label="Ruta"><a href="/">Inicio</a> / <a href="/blog">Blog</a> / <span>${esc(post.h1)}</span></nav>`,
+    `<main><article><h1>${esc(post.h1)}</h1>`,
+    post.autor ? `<p>Por ${esc(post.autor)}</p>` : "",
+    post.fecha_publicacion ? `<p><time datetime="${esc(post.fecha_publicacion)}">${esc(String(post.fecha_publicacion).slice(0, 10))}</time></p>` : "",
+    post.imagen_portada ? `<img src="${esc(post.imagen_portada)}" alt="${esc(post.imagen_alt || post.h1)}" width="1200" height="630">` : "",
+    post.resumen_intro ? `<p>${esc(stripTags(post.resumen_intro))}</p>` : "",
+    `</article></main>`,
   ].join("");
 }
 
@@ -213,7 +234,7 @@ const STATIC_ROUTES = [
     title: "Netpower IT – UPS, Servidores y Soluciones TIC en Colombia",
     description:
       "Compra UPS, baterías, servidores HPE, infraestructura de red y energía solar con garantía oficial. Envío a toda Colombia y pago seguro con Wompi, PSE y tarjetas.",
-    h1: "Tecnología TIC para empresas en Colombia",
+    h1: "Explora nuestra tienda online de tecnología",
   },
   {
     route: "/cotizacion",
@@ -290,8 +311,15 @@ async function main() {
 
   // 2. Productos y categorías
   let products = [];
+  let posts = [];
   try {
-    products = await fetchProducts();
+    [products, posts] = await Promise.all([
+      fetchProducts(),
+      fetchBlogs().catch((err) => {
+        console.warn(`[prerender] no se pudieron leer los articulos del blog (${err.message}); se omiten.`);
+        return [];
+      }),
+    ]);
   } catch (err) {
     console.warn(`[prerender] no se pudieron leer los productos (${err.message}).`);
     console.warn("[prerender] se emitieron solo las rutas estáticas; el build continúa.");
@@ -400,7 +428,46 @@ async function main() {
     written++;
   }
 
-  console.log(`[prerender] ${written} rutas escritas (${products.length} productos, ${categories.length} categorías).`);
+  for (const post of posts) {
+    if (!post.slug || !post.h1) continue;
+    const url = `${DOMAIN}/blog/${post.slug}`;
+    const title = post.meta_title || `${post.h1} | Netpower IT`;
+    const description = clamp(post.meta_description || post.resumen_intro || post.h1, 160);
+    const image = post.imagen_portada || OG_IMAGE_DEFAULT;
+
+    await emit(`/blog/${post.slug}`, applyBody(applyHead(template, {
+      title, description, canonical: url, ogType: "article", ogImage: image,
+      schemas: [
+        {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "@id": `${url}#post`,
+          headline: post.h1,
+          description,
+          image,
+          url,
+          datePublished: post.fecha_publicacion || undefined,
+          author: { "@type": post.autor ? "Person" : "Organization", name: post.autor || "Netpower IT" },
+          publisher: { "@id": `${DOMAIN}/#organization` },
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Inicio", item: DOMAIN },
+            { "@type": "ListItem", position: 2, name: "Blog", item: `${DOMAIN}/blog` },
+            { "@type": "ListItem", position: 3, name: post.h1, item: url },
+          ],
+        },
+      ],
+    }), blogBody(post)));
+    written++;
+  }
+
+  console.log(
+    `[prerender] ${written} rutas escritas (${products.length} productos, ${categories.length} categorías, ${posts.length} artículos).`,
+  );
 }
 
 main().catch((err) => {

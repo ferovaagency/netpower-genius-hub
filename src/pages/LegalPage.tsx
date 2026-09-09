@@ -21,6 +21,7 @@ export default function LegalPage() {
     <>
       <Helmet>
         <title>Información Legal | Netpower IT</title>
+        <link rel="canonical" href="https://netpowerit.co/legal" />
         <meta name="description" content="Términos y condiciones, política de tratamiento de datos y política de cookies de Netpower IT." />
       </Helmet>
       <div className="max-w-4xl mx-auto px-4 py-12">

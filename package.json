@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prerender": "node scripts/prerender.mjs"
+    "prerender": "node scripts/prerender.mjs",
+    "verificar:html": "node scripts/verificar-html.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
