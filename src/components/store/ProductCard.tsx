@@ -104,6 +104,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {showQuote ? (
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+            data-wa-origen="tarjeta_producto"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 w-full h-10 rounded-lg bg-success text-success-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"

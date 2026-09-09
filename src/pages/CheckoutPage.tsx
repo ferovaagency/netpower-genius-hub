@@ -7,7 +7,6 @@ import { formatCOP, categories, findProductById, decreaseInventory } from "@/dat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
-import PromoTricolorBox from "@/components/PromoTricolorBox";
 import { trackCompraCompletada } from "@/lib/analytics";
 
 const WHATSAPP = "573504609431";
@@ -41,15 +40,6 @@ export default function CheckoutPage() {
     (transferMethods as readonly string[]).includes(paymentMethod);
   const discount = discountApplies ? Math.round(subtotal * 0.03) : 0;
   const total = subtotal - discount;
-
-  // ─── Promo Tricolor: obsequio por rango de compra ───
-  const getTricolorGift = (amount: number): { name: string; tier: string } | null => {
-    if (amount >= 10_000_000) return { name: "Audífonos Cubbit Studio (negro)", tier: "Tier 3 (≥ $10.000.000)" };
-    if (amount >= 5_000_000) return { name: "Teclado Logitech Pebble Keys 2 K380S", tier: "Tier 2 ($5.000.000 – $9.999.999)" };
-    if (amount >= 1_000_000) return { name: "Apuntador Klip Xtreme KPS-006 o KPS-005", tier: "Tier 1 ($1.000.000 – $4.999.999)" };
-    return null;
-  };
-  const tricolorGift = getTricolorGift(total);
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -105,8 +95,6 @@ export default function CheckoutPage() {
         idType: form.idType,
         idNumber: form.idNumber,
         notes: form.notes,
-        tricolor_gift: tricolorGift?.name || null,
-        tricolor_tier: tricolorGift?.tier || null,
       };
 
       // ─── Wompi: create signed checkout and redirect (NO confirmation here) ───
@@ -190,7 +178,6 @@ export default function CheckoutPage() {
         `📦 *Productos:*\n${itemLines}\n\n` +
         `💵 *TOTAL: ${formatCOP(total)}* (IVA incluido, envío a calcular)\n\n` +
         `💳 *Método:* ${methodLabel}\n` +
-        (tricolorGift ? `\n🇨🇴 *Promo Tricolor — Obsequio:* ${tricolorGift.name} (${tricolorGift.tier})\n` : "") +
         (receiptUrl ? `📎 Comprobante: ${receiptUrl}\n` : "") +
         (form.notes ? `\n📝 Notas: ${form.notes}` : "");
 
@@ -428,15 +415,6 @@ export default function CheckoutPage() {
                 <span className="font-bold text-foreground">Total</span>
                 <span className="text-xl font-extrabold text-primary">{formatCOP(total)}</span>
               </div>
-
-              <PromoTricolorBox compact />
-              {tricolorGift && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
-                  <p className="font-bold text-foreground mb-1">🎁 Tu obsequio Tricolor</p>
-                  <p className="text-foreground">{tricolorGift.name}</p>
-                  <p className="text-muted-foreground text-[10px]">{tricolorGift.tier} · se entrega junto con tu pedido</p>
-                </div>
-              )}
 
               <p className="text-[10px] text-muted-foreground">
                 * Precios incluyen IVA. Envío se calcula al confirmar.

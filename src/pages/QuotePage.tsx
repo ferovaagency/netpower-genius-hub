@@ -39,6 +39,7 @@ export default function QuotePage() {
               <p className="text-sm text-muted-foreground mb-6 flex-1">{t.desc}</p>
               <a
                 href={`https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20de%20${encodeURIComponent(t.title)}`}
+                data-wa-origen="cotizador_tarjeta"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:text-secondary transition"
@@ -53,6 +54,7 @@ export default function QuotePage() {
           <p className="text-muted-foreground text-sm">¿Prefieres hablar con un asesor directamente?</p>
           <a
             href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
+            data-wa-origen="cotizador_principal"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all"

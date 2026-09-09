@@ -26,6 +26,7 @@ const NotFound = () => {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+            data-wa-origen="pagina_404"
             target="_blank"
             rel="noopener noreferrer"
             className="h-11 px-6 rounded-lg bg-[hsl(145,63%,42%)] text-[hsl(0,0%,100%)] font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"

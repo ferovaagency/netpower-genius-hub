@@ -111,6 +111,7 @@ export default function PaymentResult() {
               </div>
               <a
                 href="https://wa.me/573504609431"
+                data-wa-origen="resultado_pago_ok"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
@@ -137,6 +138,7 @@ export default function PaymentResult() {
                 </Link>
                 <a
                   href="https://wa.me/573504609431"
+                  data-wa-origen="resultado_pago_error"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block bg-success text-success-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"

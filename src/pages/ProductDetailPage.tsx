@@ -11,7 +11,6 @@ import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
-import PromoTricolorBox from "@/components/PromoTricolorBox";
 
 const WHATSAPP_NUMBER = "573504609431";
 
@@ -77,6 +76,7 @@ export default function ProductDetailPage() {
         <div className="flex flex-col gap-3">
           <a
             href={`https://wa.me/573504609431?text=${waMessage}`}
+            data-wa-origen="ficha_barra_movil"
             target="_blank"
             rel="noopener noreferrer"
             className="h-11 rounded-lg bg-success text-success-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition"
@@ -231,6 +231,7 @@ export default function ProductDetailPage() {
 
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                  data-wa-origen="ficha_principal"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
@@ -262,6 +263,7 @@ export default function ProductDetailPage() {
 
                 <a
                   href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
+                  data-wa-origen="ficha_sin_precio"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full h-12 rounded-lg bg-success text-success-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-3"
@@ -321,6 +323,7 @@ export default function ProductDetailPage() {
                   </button>
                   <a
                     href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                    data-wa-origen="ficha_secundario"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="h-10 px-4 rounded-lg border border-border text-sm font-medium flex items-center gap-2 hover:bg-accent transition"
@@ -346,12 +349,6 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
-
-            {/* Promo Tricolor — aplica a compras y cotizaciones */}
-            <div className="mt-4">
-              <PromoTricolorBox compact />
-            </div>
-
 
             {/* Métodos de pago */}
             <div className="border border-border rounded-xl p-4 mt-4 space-y-3 bg-muted/30">

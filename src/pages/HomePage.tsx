@@ -383,6 +383,7 @@ export default function HomePage() {
             </button>
             <a
               href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
+              data-wa-origen="home_cta"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-surface-dark-foreground/25 text-surface-dark-foreground font-semibold hover:bg-surface-dark-foreground/10 transition text-sm">

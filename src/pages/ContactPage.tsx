@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Mail, Phone, MapPin, Clock, Loader2 } from "lucide-react";
@@ -12,6 +12,10 @@ import { getAttributionForDetails, hasClickId } from "@/lib/attribution";
 export default function ContactPage() {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", nit_cedula: "", email: "", phone: "", city: "", message: "" });
+  // Antispam. `empresaWeb` es un honeypot: invisible para personas, los bots lo llenan.
+  const [empresaWeb, setEmpresaWeb] = useState("");
+  // Marca de montaje: un envio en menos de 1,5 s no lo hace una persona escribiendo.
+  const montadoEn = useRef<number>(Date.now());
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -27,6 +31,15 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Honeypot lleno: es un bot. Exito falso para que no reintente, sin insertar.
+    if (empresaWeb.trim() !== "") {
+      setSent(true);
+      return;
+    }
+    // Envio muy rapido: NO se descarta, porque el autocompletado del navegador
+    // rellena en menos de un segundo y perderiamos un lead real. Se marca.
+    const sospechaBot = Date.now() - montadoEn.current < 1500;
+
     if (!consent) {
       toast({ title: "Autorización requerida", description: "Debes aceptar la Política de Tratamiento de Datos Personales.", variant: "destructive" });
       return;
@@ -39,7 +52,7 @@ export default function ContactPage() {
     setLoading(true);
     const atribucion = getAttributionForDetails();
     const { error } = await supabase.from("quote_requests").insert({
-      details: { atribucion },
+      details: { atribucion, sospecha_bot: sospechaBot },
       source: "contact_form",
       customer_name: parsed.data.name,
       customer_email: parsed.data.email,
@@ -144,6 +157,12 @@ export default function ContactPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border shadow-card p-6 space-y-4">
+            {/* Honeypot: fuera de pantalla, sin tabIndex y sin autocompletado. */}
+            <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
+              <label htmlFor="contact-empresa-web">No completar</label>
+              <input id="contact-empresa-web" name="empresa_web" type="text" tabIndex={-1}
+                autoComplete="off" value={empresaWeb} onChange={e => setEmpresaWeb(e.target.value)} />
+            </div>
             <h2 className="font-bold text-foreground mb-2">Envíanos un mensaje</h2>
             {sent && (
               <div className="rounded-lg bg-success/10 border border-success/30 px-4 py-3 text-sm text-success font-medium">
