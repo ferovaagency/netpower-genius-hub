@@ -23,7 +23,7 @@ import nstarLogo from "@/assets/brands/3nstar.png";
 
 export const categories: Category[] = [
   { id: "1", slug: "baterias-ups", name: "Baterías Para UPS", description: "Baterías de reemplazo para UPS de todas las marcas", image: "", icon: "🔋", lucideIcon: createElement(Battery, { className: "w-4 h-4" }), productCount: 45 },
-  { id: "2", slug: "ups-accesorios", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", lucideIcon: createElement(Zap, { className: "w-4 h-4" }), productCount: 68 },
+  { id: "2", slug: "ups", name: "UPS y Accesorios", description: "Sistemas de alimentación ininterrumpida y accesorios", image: "", icon: "⚡", lucideIcon: createElement(Zap, { className: "w-4 h-4" }), productCount: 68 },
   { id: "3", slug: "infraestructura-tic", name: "Infraestructura TIC", description: "Equipos de red, switches, routers y cableado estructurado", image: "", icon: "🌐", lucideIcon: createElement(Network, { className: "w-4 h-4" }), productCount: 52 },
   { id: "4", slug: "energia-solar", name: "Energía Solar", description: "Paneles solares, inversores y sistemas fotovoltaicos", image: "", icon: "☀️", lucideIcon: createElement(Sun, { className: "w-4 h-4" }), productCount: 34 },
   { id: "5", slug: "servidores", name: "Servidores", description: "Servidores rack, torre y accesorios para data center", image: "", icon: "🖥️", lucideIcon: createElement(Server, { className: "w-4 h-4" }), productCount: 28 },
@@ -59,6 +59,23 @@ export const brands: Brand[] = [
   { id: "24", slug: "lenovo", name: "Lenovo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Lenovo_logo_2015.svg/512px-Lenovo_logo_2015.svg.png" },
   { id: "25", slug: "teltonika", name: "Teltonika", logo: "https://teltonika-networks.com/wp-content/uploads/2022/01/Teltonika-Networks-Logo.png" },
   { id: "26", slug: "vertiv", name: "Vertiv", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Vertiv_logo.svg/512px-Vertiv_logo.svg.png" },
+  // Marcas que ya existian en el catalogo pero no estaban en esta lista, asi
+  // que no aparecian en el filtro de la tienda. Sin logo: la home cae al
+  // nombre en texto cuando `logo` esta vacio.
+  { id: "27", slug: "forza", name: "Forza", logo: "" },
+  { id: "28", slug: "tp-link", name: "TP-Link", logo: "" },
+  { id: "29", slug: "kaspersky", name: "Kaspersky", logo: "" },
+  { id: "30", slug: "mercusys", name: "Mercusys", logo: "" },
+  { id: "31", slug: "canon", name: "Canon", logo: "" },
+  { id: "32", slug: "sandisk", name: "SanDisk", logo: "" },
+  { id: "33", slug: "huawei", name: "Huawei", logo: "" },
+  { id: "34", slug: "linksys", name: "Linksys", logo: "" },
+  { id: "35", slug: "viewsonic", name: "ViewSonic", logo: "" },
+  { id: "36", slug: "asus", name: "ASUS", logo: "" },
+  { id: "37", slug: "benq", name: "BenQ", logo: "" },
+  { id: "38", slug: "foocus", name: "Foocus", logo: "" },
+  { id: "39", slug: "western-digital", name: "Western Digital", logo: "" },
+  { id: "40", slug: "attech", name: "Attech", logo: "" },
 ];
 
 export const products = [];

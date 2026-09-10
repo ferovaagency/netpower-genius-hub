@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { useChat } from "@/contexts/ChatContext";
 import quoteBanner from "@/assets/quote-banner.jpg";
 
 const types = [
@@ -13,6 +13,11 @@ const types = [
 ];
 
 export default function QuotePage() {
+  // Las tarjetas abren a Neti en modo cotizacion, igual que el boton
+  // "Cotizar" del menu. Antes sacaban al visitante a WhatsApp: la cotizacion
+  // se perdia fuera del sitio y no quedaba registrada en `quote_requests`.
+  const { openChat } = useChat();
+
   return (
     <>
       <Helmet>
@@ -37,29 +42,41 @@ export default function QuotePage() {
               <span className="text-4xl mb-4">{t.icon}</span>
               <h2 className="text-lg font-bold text-foreground mb-1">{t.title}</h2>
               <p className="text-sm text-muted-foreground mb-6 flex-1">{t.desc}</p>
-              <a
-                href={`https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20de%20${encodeURIComponent(t.title)}`}
-                data-wa-origen="cotizador_tarjeta"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => openChat("quote")}
                 className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:text-secondary transition"
               >
                 Iniciar cotización <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
             </div>
           ))}
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-muted-foreground text-sm">¿Prefieres hablar con un asesor directamente?</p>
+          <h2 className="text-xl font-bold text-foreground mb-2">¿Cómo funciona?</h2>
+          <ol className="text-sm text-muted-foreground max-w-md mx-auto text-left space-y-1 list-decimal list-inside mb-6">
+            <li>Cuéntale a Neti qué necesitas: equipo, cantidad y para qué lo vas a usar.</li>
+            <li>Te pide los datos de facturación, incluido el NIT o la cédula. Sin ese dato no podemos emitir una cotización formal.</li>
+            <li>La solicitud queda registrada y un asesor la revisa y te responde.</li>
+          </ol>
+          <button
+            type="button"
+            onClick={() => openChat("quote")}
+            className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all"
+          >
+            <MessageCircle className="w-4 h-4" /> Cotizar con Neti
+          </button>
+
+          <p className="text-muted-foreground text-sm mt-8">¿Prefieres hablar con un asesor por WhatsApp?</p>
           <a
             href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
             data-wa-origen="cotizador_principal"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all"
+            className="inline-flex mt-3 h-10 px-6 items-center gap-2 rounded-lg border border-border text-foreground text-sm font-semibold hover:bg-accent transition-all"
           >
-            Chatear por WhatsApp
+            Escribir por WhatsApp
           </a>
         </div>
       </div>

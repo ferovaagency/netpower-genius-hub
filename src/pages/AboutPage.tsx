@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ShieldCheck, Users, Headphones, Globe, Award, Truck } from "lucide-react";
-import anaMariaPhoto from "@/assets/team/ana-maria-osorio.png";
+// La foto venia como PNG de 1024x1024 y 2 MB, con el canal alpha completamente
+// opaco: era un JPEG disfrazado. Se muestra en un circulo de 112 px (w-28 h-28),
+// asi que 256x256 ya va a doble densidad. Ahora pesa 13 KB.
+import anaMariaPhoto from "@/assets/team/ana-maria-osorio.jpg";
 import gonzaloPhoto from "@/assets/team/gonzalo.jpeg";
 
 const team = [

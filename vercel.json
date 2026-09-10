@@ -4,6 +4,9 @@
     { "src": "/(.*)/feed", "status": 308, "headers": { "Location": "/$1" } },
     { "src": "/(.+)/", "status": 308, "headers": { "Location": "/$1" } },
 
+    { "src": "/categoria/ups-accesorios", "status": 301, "headers": { "Location": "/categoria/ups" } },
+    { "src": "/producto/300mbps-2", "status": 301, "headers": { "Location": "/producto/router-mercusys-mw302r-300mbps-2" } },
+
     {
       "src": "/functions/v1/(.*)",
       "dest": "https://uyqroiydexhdazxzrypd.supabase.co/functions/v1/$1"

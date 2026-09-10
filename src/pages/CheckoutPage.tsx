@@ -7,7 +7,7 @@ import { formatCOP, categories, findProductById, decreaseInventory } from "@/dat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
-import { trackCompraCompletada, guardarCompraPendiente } from "@/lib/analytics";
+import { guardarCompraPendiente } from "@/lib/analytics";
 
 const WHATSAPP = "573504609431";
 
@@ -159,10 +159,13 @@ export default function CheckoutPage() {
       } as never);
       if (orderErr) throw orderErr;
 
-      // Ingreso medido. Idempotente por transaction_id: recargar la
-      // confirmacion o volver con el boton atras no duplica la compra.
-      trackCompraCompletada({
-        transaction_id: orderRef,
+      // El pedido queda en `pending_verification`: el cliente dice que pago,
+      // pero nadie ha confirmado el pago todavia. Una compra es una compra solo
+      // cuando el dinero entro, asi que aqui NO se emite `compra_completada`.
+      // Se guarda el dato y el evento se emite en /resultado-pago cuando el
+      // pedido figure `completed`.
+      guardarCompraPendiente({
+        reference: orderRef,
         value: total,
         currency: "COP",
         payment_method: paymentMethod,

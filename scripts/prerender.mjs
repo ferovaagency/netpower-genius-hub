@@ -17,7 +17,7 @@
  * estáticas, avisa por consola y termina con código 0.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -267,6 +267,37 @@ async function emit(route, html) {
 
 // ─── main ────────────────────────────────────────────────────────────────────
 
+/**
+ * Preload de la imagen LCP de la home.
+ *
+ * El slider marca la primera diapositiva con fetchpriority="high", pero eso
+ * solo ordena la cola una vez que el navegador YA descubrio la imagen, y aqui
+ * la descubre tarde: el `src` vive dentro del bundle, asi que hay que bajar y
+ * ejecutar 729 KB de JavaScript antes de que exista la peticion de la imagen.
+ * Medido en produccion el 10 sep: LCP movil 6,4 s con FCP 4,7 s.
+ *
+ * Declarando el preload en el HTML servido, el escaner de precarga la pide en
+ * el primer parseo, en paralelo con el JS, no despues.
+ *
+ * El nombre lleva hash de contenido y cambia en cada build, asi que se busca en
+ * dist/assets en vez de escribirlo a mano. Si no aparece, no se emite nada y el
+ * build sigue: es una optimizacion, no un requisito.
+ */
+function preloadHero() {
+  try {
+    const dir = path.join(DIST, "assets");
+    if (!existsSync(dir)) return "";
+    const hero = readdirSync(dir).find((f) => /^banner-tienda-.*\.jpg$/.test(f));
+    if (!hero) {
+      console.warn("[prerender] no se encontro banner-tienda-*.jpg en dist/assets; sin preload de LCP");
+      return "";
+    }
+    return `<link rel="preload" as="image" href="/assets/${hero}" fetchpriority="high">`;
+  } catch {
+    return "";
+  }
+}
+
 const STATIC_ROUTES = [
   {
     route: "/",
@@ -367,12 +398,18 @@ async function main() {
   }
 
   // 1. Rutas estáticas
+  const heroPreload = preloadHero();
   for (const s of STATIC_ROUTES) {
     const canonical = s.route === "/" ? DOMAIN : `${DOMAIN}${s.route}`;
     const body = `<main><h1>${esc(s.h1)}</h1><p>${esc(s.description)}</p></main>`;
-    await emit(s.route, applyBody(applyHead(template, {
+    let head = applyHead(template, {
       title: s.title, description: s.description, canonical,
-    }), body));
+    });
+    // Solo la home: es la unica ruta cuyo LCP es el slider.
+    if (s.route === "/" && heroPreload) {
+      head = head.replace("</head>", `${MARK_START}${heroPreload}${MARK_END}\n</head>`);
+    }
+    await emit(s.route, applyBody(head, body));
     written++;
   }
 

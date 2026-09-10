@@ -16,6 +16,20 @@
     <link rel="dns-prefetch" href="https://uyqroiydexhdazxzrypd.supabase.co">
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
 
+    <!-- Fuente Montserrat. Antes venia por @import dentro de src/index.css, lo que
+         la escondia detras de la descarga del CSS del bundle y encadenaba tres
+         viajes en serie. Declarada aqui se descubre en el primer parseo del HTML.
+         El preload arranca la descarga con prioridad alta; el link sigue siendo
+         bloqueante a proposito, para no introducir salto de texto (CLS hoy es 0).
+         Se quito el peso 300: no aparece en el CSS compilado, no lo usa nadie. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&amp;display=swap">
+
+    <!-- Imagenes de producto y de storage -->
+    <link rel="preconnect" href="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" crossorigin>
+
     
     
     <meta property="og:type" content="website" />
@@ -96,17 +110,45 @@
   gtag('config', 'G-MWRV7ZNCB9', { send_page_view: false });
 </script>
 
-<!-- Microsoft Clarity -->
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xibgzvgnp4");
-</script>
+<!-- Clarity y Apollo se cargan DESPUES del evento load.
+     Antes se inyectaban durante el parseo del head y cada uno arrastra su propia
+     cadena de redirecciones: www.clarity.ms -> scripts.clarity.ms -> k.clarity.ms,
+     y assets.apollo.io -> aplo-evnt.com. Medido en produccion el 10 sep: 563 ms y
+     495 ms respectivamente, y PageSpeed movil las cuenta como 630 ms de redirecciones.
+     Ninguno de los dos pinta nada en pantalla, asi que no hay razon para que compitan
+     con el primer render.
+     CONTRAPARTIDA: Clarity deja de grabar los primeros instantes de la sesion, los
+     que van desde el primer pintado hasta el evento load. Si eso importa mas que la
+     velocidad, este bloque se devuelve al head tal como estaba.
+     GA4 se deja donde esta: es async, no redirige, y de el depende la medicion. -->
+<script>
+  (function () {
+    var yaCargo = false;
+    function cargarTerceros() {
+      if (yaCargo) return;
+      yaCargo = true;
 
-<!-- Apollo.io Website Tracker -->
-<script>function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script");o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,o.onload=function(){window.trackingFunctions.onLoad({appId:"6a5978fddad56500107ad4c7"})},document.head.appendChild(o)}initApollo();</script>
+      // Microsoft Clarity
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "xibgzvgnp4");
+
+      // Apollo.io Website Tracker
+      var n = Math.random().toString(36).substring(7);
+      var o = document.createElement("script");
+      o.src = "https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=" + n;
+      o.async = true; o.defer = true;
+      o.onload = function () {
+        if (window.trackingFunctions) window.trackingFunctions.onLoad({ appId: "6a5978fddad56500107ad4c7" });
+      };
+      document.head.appendChild(o);
+    }
+    if (document.readyState === "complete") cargarTerceros();
+    else window.addEventListener("load", cargarTerceros, { once: true });
+  })();
+</script>
 </head>
 
   <body>

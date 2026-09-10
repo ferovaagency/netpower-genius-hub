@@ -4,13 +4,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: Bingbot
@@ -19,13 +18,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: GPTBot
@@ -34,13 +32,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: anthropic-ai
@@ -49,13 +46,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: Claude-Web
@@ -64,13 +60,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: PerplexityBot
@@ -79,13 +74,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: Google-Extended
@@ -94,13 +88,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: CCBot
@@ -109,13 +102,12 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
 User-agent: *
@@ -124,13 +116,15 @@ Disallow: /admin
 Disallow: /tienda?categoria=*
 Disallow: /buscar
 Disallow: /generador-fichas
-Disallow: /admin/generador-blogs 
-Disallow: /admin/marcas 
-Disallow: /auth 
-Disallow: /carrito 
-Disallow: /checkout 
-Disallow: /legal 
-Disallow: /mi-cuenta 
+Disallow: /admin/generador-blogs
+Disallow: /admin/marcas
+Disallow: /auth
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mi-cuenta
 Disallow: /resultado-pago
 
-Sitemap: https://netpowerit.co/functions/v1/generate-sitemap
+# Un solo punto de entrada: /sitemap.xml es un indice que apunta al sitemap
+# dinamico. Antes se declaraba el dinamico aqui y ademas habia un sitemap.xml
+# estatico con URLs propias, enviado por separado a Search Console.
+Sitemap: https://netpowerit.co/sitemap.xml

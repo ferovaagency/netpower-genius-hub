@@ -40,9 +40,14 @@ export default function ShopPage() {
   const navigate = useNavigate();
   const legacyCatParam = searchParams.get("categoria");
   const queryParam = searchParams.get("q") || "";
+  // La home, el pie de pagina y /marcas enlazan a /tienda?marca=<slug>.
+  // Hasta ahora ShopPage nunca leia ese parametro, asi que todos esos enlaces
+  // caian en la tienda sin filtrar.
+  const marcaParam = searchParams.get("marca") || "";
 
   const [selectedCategory, setSelectedCategory] = useState(slugParam || legacyCatParam || "");
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState(marcaParam);
+  useEffect(() => { setSelectedBrand(marcaParam); }, [marcaParam]);
   const [sort, setSort] = useState<SortOption>("relevance");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(true);
