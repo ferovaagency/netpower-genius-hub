@@ -6,10 +6,19 @@ import { useChat } from "@/contexts/ChatContext";
 
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImg from "@/assets/logo-netpower-it.png";
 
 type SubCat = { label: string; q: string };
 type ParentCat = { slug: string; label: string; categoria: string; subs: SubCat[] };
+type SearchProduct = {
+  id: string;
+  slug: string;
+  name: string;
+  price: number | null;
+  sale_price: number | null;
+  images: string[] | null;
+  sku: string | null;
+  brand: string | null;
+};
 
 const categoryMenu: ParentCat[] = [
   { slug: "ups", label: "UPS", categoria: "ups-accesorios", subs: [
@@ -56,7 +65,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchProduct[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
@@ -123,11 +132,11 @@ export default function Header() {
     <header className="sticky top-0 z-50">
       {/* Top bar */}
       <div className="bg-surface-dark">
-        <div className="container mx-auto flex items-center justify-between py-2 px-6 text-xs text-surface-dark-foreground/80 font-medium">
-          <span>Envío GRATIS en Bogotá · Envío a todo Colombia · Garantía oficial</span>
+        <div className="container mx-auto flex min-h-9 items-center justify-between px-4 py-1.5 text-[11px] font-medium text-surface-dark-foreground/85 md:px-6 md:text-xs">
+          <span className="truncate pr-3">Envío gratis en Bogotá · Cobertura nacional · Garantía oficial</span>
           <a
             href="tel:+573504609431"
-            className="hidden sm:flex items-center gap-1.5 font-bold text-base md:text-lg text-white hover:text-secondary transition-colors tracking-wide"
+            className="hidden min-h-8 items-center gap-1.5 rounded-sm font-bold text-white transition-colors duration-150 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary sm:flex"
           >
             <Phone className="w-4 h-4" /> +57 350 460 9431
           </a>
@@ -135,20 +144,19 @@ export default function Header() {
       </div>
 
       {/* Main header */}
-      <div className="bg-card border-b border-border/50 shadow-sm backdrop-blur-md">
-        <div className="container mx-auto flex items-center justify-between h-20 px-6">
-          {/* Logo — bigger */}
-          <Link to="/" className="shrink-0">
-            <img alt="Netpower IT" className="h-16 md:h-20 w-auto" src="/lovable-uploads/netpower-by-natan.jpeg" />
+      <div className="border-b border-border bg-card shadow-sm">
+        <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4 md:h-20 md:px-6">
+          <Link to="/" className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+            <img alt="Netpower IT" className="h-10 w-auto md:h-12" src="/lovable-uploads/netpower-by-natan.jpeg" />
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-7 ml-10">
+          <nav className="hidden items-center gap-4 xl:flex">
             {navLinks.slice(0, 2).map((l) =>
             <Link
               key={l.label}
               to={l.path}
-              className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
+              className={`rounded-sm py-2 text-sm font-semibold transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
               
                 {l.label}
               </Link>
@@ -158,17 +166,19 @@ export default function Header() {
             <div ref={catRef} className="relative" onMouseEnter={() => setCatOpen(true)} onMouseLeave={() => setCatOpen(false)}>
               <button
                 onClick={() => setCatOpen(!catOpen)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition py-2">
+                aria-expanded={catOpen}
+                aria-haspopup="true"
+                className="flex items-center gap-1.5 rounded-sm py-2 text-sm font-semibold text-foreground transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
                 Categorías <ChevronDown className={`w-3.5 h-3.5 transition-transform ${catOpen ? "rotate-180" : ""}`} />
               </button>
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {catOpen &&
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-full left-0 w-[680px] bg-card rounded-xl shadow-elevated border border-border/60 p-4 z-50 grid grid-cols-5 gap-3">
+                  className="absolute left-0 top-full z-50 grid w-[680px] grid-cols-5 gap-3 rounded-xl border border-border bg-card p-4 shadow-elevated">
                     {categoryMenu.map((parent) => (
                       <div key={parent.slug} className="flex flex-col">
                         <Link
@@ -205,7 +215,7 @@ export default function Header() {
                   href={l.path}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold tracking-wide transition hover:text-primary text-foreground flex items-center gap-1"
+                    className="flex items-center gap-1 rounded-sm py-2 text-sm font-semibold text-foreground transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   {l.label}
                   <ExternalLink className="w-3 h-3 opacity-60" />
@@ -214,7 +224,7 @@ export default function Header() {
                 <Link
                   key={l.label}
                   to={l.path}
-                  className={`text-sm font-semibold tracking-wide transition hover:text-primary ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
+                  className={`rounded-sm py-2 text-sm font-semibold transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
                   {l.label}
                 </Link>
               )
@@ -222,7 +232,7 @@ export default function Header() {
           </nav>
 
           {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
+          <div className="relative mx-2 hidden min-w-[14rem] max-w-md flex-1 md:flex xl:mx-4">
             <div ref={searchRef} className="relative w-full">
               <form onSubmit={(e) => { e.preventDefault(); goSearch(); }} className="relative">
                 <button type="submit" aria-label="Buscar" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition">
@@ -234,14 +244,14 @@ export default function Header() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") goSearch(); }}
-                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-10 text-sm outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-primary/40" />
                 {searching && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}
               </form>
               {showResults && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border rounded-xl shadow-elevated z-50 overflow-hidden">
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-elevated">
                   {results.length > 0 ? (
                     <>
-                      {results.map((product: any) => (
+                      {results.map((product) => (
                         <Link
                           key={product.id}
                           to={`/producto/${product.slug}`}
@@ -286,16 +296,16 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
-            <button onClick={() => openChat("quote")} className="hidden sm:inline-flex h-10 px-6 items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-button">
+          <div className="flex items-center gap-1 md:gap-2">
+            <button onClick={() => openChat("quote")} className="hidden h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground shadow-button transition-opacity duration-150 hover:opacity-90 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 lg:inline-flex">
               Cotizar Proyecto
             </button>
 
-            <button onClick={() => setSearchOpen(!searchOpen)} aria-label={searchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"} className="md:hidden p-2 text-foreground hover:text-primary transition">
+            <button onClick={() => setSearchOpen(!searchOpen)} aria-label={searchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"} className="flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors duration-150 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 md:hidden">
               <Search className="w-5 h-5" />
             </button>
 
-            <Link to="/carrito" aria-label={`Carrito de compras${totalItems > 0 ? ` (${totalItems} artículos)` : ""}`} className="relative p-2 text-foreground hover:text-primary transition">
+            <Link to="/carrito" aria-label={`Carrito de compras${totalItems > 0 ? ` (${totalItems} artículos)` : ""}`} className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors duration-150 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
               <ShoppingCart className="w-5 h-5" />
               {totalItems > 0 &&
               <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
@@ -304,7 +314,7 @@ export default function Header() {
               }
             </Link>
 
-            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"} className="lg:hidden p-2 text-foreground hover:text-primary transition">
+            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={mobileOpen} className="flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors duration-150 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 xl:hidden">
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
@@ -312,13 +322,13 @@ export default function Header() {
       </div>
 
       {/* Mobile menu */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {mobileOpen &&
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="lg:hidden border-b border-border overflow-hidden bg-card">
+          className="max-h-[calc(100vh-7rem)] overflow-y-auto border-b border-border bg-card xl:hidden">
           
             <nav className="flex flex-col p-5 gap-1">
               {navLinks.map((l) =>
@@ -376,7 +386,7 @@ export default function Header() {
       </AnimatePresence>
 
       {/* Mobile search */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {searchOpen &&
         <motion.div
           initial={{ height: 0, opacity: 0 }}

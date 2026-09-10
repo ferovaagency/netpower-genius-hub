@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Eye, Heart, MessageCircle } from "lucide-react";
+import { MessageCircle, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/store";
 import { formatCOP, getDiscountPercentage, categories } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
@@ -24,16 +24,19 @@ export default function ProductCard({ product }: { product: Product }) {
   const waMessage = encodeURIComponent(`Hola Netpower IT, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`);
 
   return (
-    <div className="group bg-card rounded-xl border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col">
-      {/* Image area — todas las imágenes con el mismo tamaño (cuadrado) y centradas */}
-      <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card-hover">
+      <Link
+        to={`/producto/${product.slug}`}
+        aria-label={`Ver ${product.name}`}
+        className="relative flex aspect-square items-center justify-center overflow-hidden bg-white outline outline-1 -outline-offset-1 outline-black/10 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary"
+      >
         {product.images && product.images.length > 0 && product.images[0] ? (
           <img
             src={product.images[0]}
             alt={product.name}
             loading="lazy"
             decoding="async"
-            className="max-w-full max-h-full w-auto h-auto object-contain p-4 mx-auto my-auto"
+            className="h-full w-full object-contain p-5 transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
           <div className="text-4xl">{category?.icon || "📦"}</div>
@@ -57,35 +60,23 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
 
-        <div className="absolute inset-0 bg-foreground/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-          <Link
-            to={`/producto/${product.slug}`}
-            aria-label={`Ver detalles de ${product.name}`}
-            className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition shadow-sm"
-          >
-            <Eye className="w-4 h-4" />
-          </Link>
-          <button aria-label={`Añadir ${product.name} a favoritos`} className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-destructive hover:text-destructive-foreground transition shadow-sm">
-            <Heart className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      </Link>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-4 gap-2">
-        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">SKU: {product.sku}</p>
-        <Link to={`/producto/${product.slug}`} className="font-semibold text-sm leading-snug text-card-foreground hover:text-primary transition line-clamp-2 min-h-[2.5rem]">
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">SKU: {product.sku || "No disponible"}</p>
+        <Link to={`/producto/${product.slug}`} className="line-clamp-2 min-h-[2.75rem] rounded-sm text-sm font-bold leading-snug text-card-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
           {product.name}
         </Link>
-        <p className="text-xs text-muted-foreground line-clamp-1">{product.shortDesc}</p>
+        {product.shortDesc && <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{product.shortDesc}</p>}
 
         <div className="mt-auto pt-3">
           {showQuote ? (
-            <p className="text-sm font-semibold text-secondary">Consulte disponibilidad y precio</p>
+            <p className="text-sm font-bold text-secondary">Precio y disponibilidad bajo consulta</p>
           ) : (
             <>
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-extrabold text-foreground">
+                <span className="text-lg font-extrabold tabular-nums text-foreground">
                   {formatCOP(product.salePrice || product.price)}
                 </span>
                 {product.salePrice && (
@@ -94,8 +85,8 @@ export default function ProductCard({ product }: { product: Product }) {
                   </span>
                 )}
               </div>
-              <p className={`text-xs mt-1 font-medium ${product.stock !== null && product.stock > 5 ? "text-success" : "text-secondary"}`}>
-                {product.stock !== null && product.stock > 5 ? "En stock" : `Solo ${product.stock} disponibles`}
+              <p className={`mt-1 text-xs font-semibold ${product.stock !== null && product.stock > 5 ? "text-success" : "text-secondary"}`}>
+                {product.stock !== null && product.stock > 5 ? "Disponible" : `${product.stock} disponibles`}
               </p>
             </>
           )}
@@ -107,30 +98,22 @@ export default function ProductCard({ product }: { product: Product }) {
             data-wa-origen="tarjeta_producto"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 w-full h-10 rounded-lg bg-success text-success-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-success text-sm font-bold text-success-foreground transition-opacity duration-150 hover:opacity-90 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2"
           >
             <MessageCircle className="w-4 h-4" /> Cotizar por WhatsApp
           </a>
         ) : (
           <button
             onClick={() => addItem(product)}
-            className="mt-3 w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-button hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-button transition-opacity duration-150 hover:opacity-90 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <ShoppingCart className="w-4 h-4" />
             Agregar al carrito
           </button>
         )}
 
-        {/* Trust badges */}
-        <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
-          <span className="text-[10px] bg-success/10 text-success border border-success/30 rounded-full px-2 py-0.5 flex items-center gap-1">
-            🚚 Envío a toda Colombia
-          </span>
-          <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 rounded-full px-2 py-0.5 flex items-center gap-1">
-            🛡️ Garantía incluida
-          </span>
-        </div>
+        <p className="mt-1 border-t border-border pt-2 text-center text-[11px] font-medium text-muted-foreground">Envío nacional · Garantía oficial</p>
       </div>
-    </div>
+    </article>
   );
 }
