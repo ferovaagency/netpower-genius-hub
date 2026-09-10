@@ -7,7 +7,7 @@ import { formatCOP, categories, findProductById, decreaseInventory } from "@/dat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
-import { trackCompraCompletada } from "@/lib/analytics";
+import { trackCompraCompletada, guardarCompraPendiente } from "@/lib/analytics";
 
 const WHATSAPP = "573504609431";
 
@@ -111,6 +111,17 @@ export default function CheckoutPage() {
         });
         if (error) throw error;
         if (!data?.checkoutUrl) throw new Error("No se pudo generar el enlace de pago");
+
+        // El evento de compra NO se emite aqui: todavia no hay pago. Se guarda
+        // lo minimo para poder emitirlo con su valor cuando Wompi devuelva al
+        // comprador a /resultado-pago y la verificacion diga APPROVED.
+        guardarCompraPendiente({
+          reference: orderRef,
+          value: total,
+          currency: "COP",
+          payment_method: "wompi",
+          item_count: orderItems.length,
+        });
 
         // Redirect to Wompi — payment must complete there before order is confirmed
         window.location.href = data.checkoutUrl;

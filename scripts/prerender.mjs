@@ -200,6 +200,17 @@ const fetchBlogs = () =>
 
 // ─── bloques estáticos de contenido ──────────────────────────────────────────
 
+/**
+ * Traduce el stock a schema.org. Los tres casos son distintos y no se mezclan:
+ *   > 0    hay unidades              -> InStock
+ *   = 0    agotado de verdad         -> OutOfStock
+ *   null   se vende bajo cotizacion  -> BackOrder (se consigue por encargo)
+ */
+function disponibilidad(stock) {
+  if (stock === null || stock === undefined) return "https://schema.org/BackOrder";
+  return Number(stock) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+}
+
 function productBody(p, cat, brandName) {
   const price = Number(p.sale_price ?? p.price ?? 0);
   const desc = stripTags(p.description || p.short_description || "");
@@ -211,6 +222,15 @@ function productBody(p, cat, brandName) {
     brandName ? `<p>Marca: ${esc(brandName)}</p>` : "",
     p.sku ? `<p>SKU: ${esc(p.sku)}</p>` : "",
     price > 0 ? `<p>Precio: $${price.toLocaleString("es-CO")} COP</p>` : `<p>Precio bajo cotización</p>`,
+    price > 0
+      ? `<p>Disponibilidad: ${
+          p.stock === null || p.stock === undefined
+            ? "bajo pedido, consúltanos"
+            : Number(p.stock) > 0
+              ? "disponible"
+              : "agotado"
+        }</p>`
+      : `<p>Disponibilidad: bajo pedido, escríbenos para cotizar</p>`,
     desc ? `<div>${esc(desc)}</div>` : "",
     p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" width="600" height="600">` : "",
     `<p><a href="/cotizacion">Solicitar cotización</a></p></main>`,
@@ -319,6 +339,33 @@ async function main() {
 
   let written = 0;
 
+  // 0. Página 404 estática. Vercel la sirve con estado 404 real cuando ninguna
+  //    ruta la reclama, siempre que vercel.json deje de reescribirlo todo a
+  //    index.html. Se emite igual aunque esa configuración aún no esté puesta:
+  //    un archivo de más no molesta a nadie.
+  {
+    const html404 = applyBody(
+      applyHead(template, {
+        title: "Página no encontrada (404) | Netpower IT",
+        description:
+          "La página que buscas no existe o cambió de dirección. Explora la tienda o escríbenos por WhatsApp.",
+        canonical: `${DOMAIN}/404`,
+      }).replace(
+        "</head>",
+        '<meta name="robots" content="noindex, follow">\n</head>',
+      ),
+      `<main><h1>Página no encontrada</h1>` +
+        `<p>La dirección que abriste no existe o cambió.</p>` +
+        `<ul>` +
+        `<li><a href="/">Ir al inicio</a></li>` +
+        `<li><a href="/tienda">Ver la tienda</a></li>` +
+        `<li><a href="/cotizacion">Solicitar una cotización</a></li>` +
+        `</ul></main>`,
+    );
+    await writeFile(path.join(DIST, "404.html"), html404, "utf8");
+    written++;
+  }
+
   // 1. Rutas estáticas
   for (const s of STATIC_ROUTES) {
     const canonical = s.route === "/" ? DOMAIN : `${DOMAIN}${s.route}`;
@@ -417,17 +464,21 @@ async function main() {
       sku: p.sku || undefined,
       brand: { "@type": "Brand", name: brand?.name || "Netpower IT" },
       image,
-      offers: {
-        "@type": "Offer",
-        url,
-        priceCurrency: "COP",
-        price: String(price),
-        availability:
-          p.stock !== null && p.stock !== undefined && Number(p.stock) > 0
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
-        seller: { "@type": "Organization", "@id": `${DOMAIN}/#organization`, name: "Netpower IT" },
-      },
+      // Precio 0 significa "bajo cotización": no se declara Offer. Publicar
+      // price: "0" haría que Google lo lea como producto gratis y es motivo
+      // de rechazo en Merchant.
+      ...(price > 0
+        ? {
+            offers: {
+              "@type": "Offer",
+              url,
+              priceCurrency: "COP",
+              price: String(price),
+              availability: disponibilidad(p.stock),
+              seller: { "@type": "Organization", "@id": `${DOMAIN}/#organization`, name: "Netpower IT" },
+            },
+          }
+        : {}),
     };
 
     const breadcrumb = {

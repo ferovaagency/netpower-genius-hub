@@ -1,24 +1,30 @@
 {
-  "rewrites": [
+  "routes": [
+    { "src": "/feed", "status": 308, "headers": { "Location": "/" } },
+    { "src": "/(.*)/feed", "status": 308, "headers": { "Location": "/$1" } },
+    { "src": "/(.+)/", "status": 308, "headers": { "Location": "/$1" } },
+
     {
-      "source": "/functions/v1/:path*",
-      "destination": "https://uyqroiydexhdazxzrypd.supabase.co/functions/v1/:path*"
+      "src": "/functions/v1/(.*)",
+      "dest": "https://uyqroiydexhdazxzrypd.supabase.co/functions/v1/$1"
     },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/:path*/feed",
-      "destination": "/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/feed",
-      "destination": "/",
-      "permanent": true
-    }
+
+    { "handle": "filesystem" },
+
+    { "src": "/carrito", "dest": "/index.html" },
+    { "src": "/checkout", "dest": "/index.html" },
+    { "src": "/auth", "dest": "/index.html" },
+    { "src": "/admin(/.*)?", "dest": "/index.html" },
+    { "src": "/buscar", "dest": "/index.html" },
+    { "src": "/mi-cuenta", "dest": "/index.html" },
+    { "src": "/contacto-digital", "dest": "/index.html" },
+    { "src": "/resultado-pago", "dest": "/index.html" },
+    { "src": "/ferova", "dest": "/index.html" },
+
+    { "src": "/producto/[^/]+", "dest": "/index.html" },
+    { "src": "/categoria/[^/]+", "dest": "/index.html" },
+    { "src": "/blog/[^/]+", "dest": "/index.html" },
+
+    { "src": "/(.*)", "status": 404, "dest": "/404.html" }
   ]
 }

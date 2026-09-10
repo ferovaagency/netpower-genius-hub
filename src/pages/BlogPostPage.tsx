@@ -30,6 +30,10 @@ export default function BlogPostPage() {
   if (loading) return <div className="container mx-auto px-4 py-20"><div className="animate-pulse h-96 bg-muted rounded-xl" /></div>;
   if (!blog) return (
     <div className="container mx-auto px-4 py-20 text-center">
+      <Helmet>
+        <title>Artículo no encontrado | Netpower IT</title>
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <h1 className="text-2xl font-bold mb-4">Artículo no encontrado</h1>
       <Link to="/blog" className="text-primary underline">Ver todos los artículos</Link>
     </div>

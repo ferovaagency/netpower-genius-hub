@@ -79,6 +79,7 @@ PROHIBICIONES ABSOLUTAS:
 - No inventar fuentes, URLs, estudios ni autores.
 - No inventar estadísticas con porcentajes específicos.
 - No prometer resultados garantizados.
+- No incluir campañas promocionales temporales ni menciones a la antigua "Promo Tricolor", regalos por monto de compra u ofertas vencidas.
 - Nada de clickbait.
 - No copiar estructura ni frases de otros sitios.
 

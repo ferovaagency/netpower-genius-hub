@@ -71,6 +71,10 @@ export default function ProductDetailPage() {
     const waMessage = encodeURIComponent(`Hola NetPower IT, estoy buscando el producto "${slug}" pero no lo encuentro en la tienda. ¿Está disponible?`);
     return (
       <div className="container mx-auto px-4 py-20 text-center max-w-md">
+        <Helmet>
+          <title>Producto no encontrado | Netpower IT</title>
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
         <h1 className="text-2xl font-bold text-foreground mb-2">Producto no encontrado</h1>
         <p className="text-sm text-muted-foreground mb-6">¿Buscas un producto que no aparece? Pregúntanos si está disponible.</p>
         <div className="flex flex-col gap-3">

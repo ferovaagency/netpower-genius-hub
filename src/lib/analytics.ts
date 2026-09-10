@@ -26,7 +26,10 @@ type EventMap = {
   whatsapp_click: { origen: string; page_path: string };
   compra_completada: {
     transaction_id: string;
-    value: number;
+    /** Opcional a proposito: en el retorno de Wompi desde otro dispositivo no
+     *  hay forma de saber el monto sin exponerlo en la respuesta publica de la
+     *  funcion de verificacion. Mejor una compra sin valor que ninguna. */
+    value?: number;
     currency: Currency;
     payment_method: string;
     item_count?: number;
@@ -170,3 +173,60 @@ export function trackCompraCompletada(p: Params<"compra_completada">): void {
   if (!p.transaction_id) return;
   oncePersisted(`purchase:${p.transaction_id}`, () => send("compra_completada", p));
 }
+
+// ─── Compra pendiente de confirmar (pasarela externa) ────────────────────────
+//
+// Wompi se lleva al comprador fuera del sitio. Al volver a /resultado-pago ya
+// no existe el carrito ni el total: quedan la referencia y el id de la
+// transaccion. Aqui se guarda lo minimo para poder emitir `compra_completada`
+// con su valor cuando la verificacion diga APPROVED.
+//
+// No se guarda ningun dato personal: solo referencia, monto, moneda, metodo y
+// numero de lineas.
+
+const COMPRA_PENDIENTE_KEY = "npit_compra_pendiente_v1";
+
+export type CompraPendiente = {
+  reference: string;
+  value: number;
+  currency: Currency;
+  payment_method: string;
+  item_count: number;
+  guardada_en: number;
+};
+
+/** Vale 24 horas: pasado ese plazo el dato es basura y se descarta. */
+const COMPRA_PENDIENTE_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function guardarCompraPendiente(c: Omit<CompraPendiente, "guardada_en">): void {
+  try {
+    if (typeof window === "undefined") return;
+    const payload: CompraPendiente = { ...c, guardada_en: Date.now() };
+    window.localStorage.setItem(COMPRA_PENDIENTE_KEY, JSON.stringify(payload));
+  } catch {
+    /* almacenamiento bloqueado: se emitira la compra sin valor */
+  }
+}
+
+export function leerCompraPendiente(reference: string): CompraPendiente | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const crudo = window.localStorage.getItem(COMPRA_PENDIENTE_KEY);
+    if (!crudo) return null;
+    const c = JSON.parse(crudo) as CompraPendiente;
+    if (c.reference !== reference) return null;
+    if (Date.now() - c.guardada_en > COMPRA_PENDIENTE_TTL_MS) return null;
+    return c;
+  } catch {
+    return null;
+  }
+}
+
+export function limpiarCompraPendiente(): void {
+  try {
+    if (typeof window !== "undefined") window.localStorage.removeItem(COMPRA_PENDIENTE_KEY);
+  } catch {
+    /* nada que limpiar */
+  }
+}
+

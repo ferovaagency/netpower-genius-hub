@@ -3,6 +3,11 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  trackCompraCompletada,
+  leerCompraPendiente,
+  limpiarCompraPendiente,
+} from "@/lib/analytics";
 
 type Status = "loading" | "success" | "pending" | "error";
 
@@ -15,6 +20,24 @@ export default function PaymentResult() {
   const [status, setStatus] = useState<Status>(
     wompiTxId ? "loading" : (explicitStatus === "pending" ? "pending" : "loading")
   );
+
+  // Emite la compra cuando —y solo cuando— el pago quedo confirmado.
+  // Es idempotente por referencia dentro de trackCompraCompletada, asi que
+  // recargar esta pagina o volver con el boton atras no duplica el ingreso.
+  const emitirCompra = (referencia: string) => {
+    if (!referencia || referencia === "—") return;
+    const pendiente = leerCompraPendiente(referencia);
+    trackCompraCompletada({
+      transaction_id: referencia,
+      // Si el comprador volvio desde otro dispositivo o borro el
+      // almacenamiento, se emite sin valor antes que no emitir nada.
+      value: pendiente?.value,
+      currency: "COP",
+      payment_method: pendiente?.payment_method ?? "wompi",
+      item_count: pendiente?.item_count,
+    });
+    limpiarCompraPendiente();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +58,7 @@ export default function PaymentResult() {
           if (cancelled) return;
           if (error) throw error;
 
-          if (data?.status === "APPROVED") setStatus("success");
+          if (data?.status === "APPROVED") { emitirCompra(orderId); setStatus("success"); }
           else if (data?.status === "PENDING") setStatus("pending");
           else setStatus("error");
         } catch (e) {
@@ -50,7 +73,7 @@ export default function PaymentResult() {
         const { data } = await supabase.rpc("get_order_status_by_reference", { _reference: orderId });
         const row = Array.isArray(data) && data.length ? data[0] as { status: string } : null;
         if (cancelled) return;
-        if (row?.status === "completed") setStatus("success");
+        if (row?.status === "completed") { emitirCompra(orderId); setStatus("success"); }
         else if (row?.status === "pending_verification" || row?.status === "pending") setStatus("pending");
         else setStatus("error");
       } else {
