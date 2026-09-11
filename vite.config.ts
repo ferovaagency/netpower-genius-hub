@@ -14,11 +14,27 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   build: {
+    // NO volver a meter `manualChunks` aqui sin probar el build antes.
+    //
+    // El 10 sep 2026 se intento separar los vendor (React, Router, Query, Radix,
+    // Supabase, framer-motion) en chunks propios. El build paso sin error, pero
+    // en produccion la SPA no monto: el navegador lanzaba
+    //   ReferenceError: Cannot access 'se' before initialization
+    // en vendor-*.js, y la pagina se quedaba mostrando solo el bloque estatico
+    // del prerender. Es el fallo clasico de orden de inicializacion: al repartir
+    // el grafo en chunks, uno queda evaluandose antes que la dependencia que
+    // necesita en tiempo de modulo.
+    //
+    // Separar el bundle sigue siendo deseable, pero exige comprobarlo con
+    // `npm run build` y abrir el `dist` servido, no solo ver que compile.
     chunkSizeWarningLimit: 1500,
+<<<<<<< Updated upstream
     // Sin manualChunks: el split manual de vendors provocaba un error de
     // inicializacion ("Cannot access 'se' before initialization") por
     // dependencias circulares entre chunks, y la pagina quedaba en blanco
     // en produccion. Rollup hace un split seguro por su cuenta.
+=======
+>>>>>>> Stashed changes
   },
   resolve: {
     alias: {
