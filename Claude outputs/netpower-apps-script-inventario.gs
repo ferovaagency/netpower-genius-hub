@@ -53,16 +53,24 @@ function onOpen() {
  */
 function alEditar(e) {
   if (!e || !e.range) return;
+  var ss = SpreadsheetApp.getActive();
   var hoja = e.range.getSheet();
-  if (hoja.getName() === HOJA_INVENTARIO) return;
 
-  var valores = hoja.getDataRange().getValues();
-  if (valores.length < 2) return;
-  // Si la pestaña no tiene columna de nombre, no es una lista de actualización.
-  if (buscarColumna_(valores[ubicarEncabezado_(valores)],
-      /(descripcion|descripción|nombre|producto)/i) < 0) return;
-  // Una edición dentro del encabezado no cambia nada que comparar.
-  if (e.range.getLastRow() <= ubicarEncabezado_(valores) + 1) return;
+  if (hoja.getName() === HOJA_INVENTARIO) {
+    // Tocar Inventario tambien tiene que repintar: si le ponés el precio nuevo
+    // a mano, el amarillo se tiene que ir. Se recompara contra la ultima lista.
+    var ultima = PropertiesService.getDocumentProperties().getProperty('ULTIMA_LISTA');
+    hoja = ultima ? ss.getSheetByName(ultima) : null;
+    if (!hoja) return;
+  } else {
+    var valores = hoja.getDataRange().getValues();
+    if (valores.length < 2) return;
+    var enc = ubicarEncabezado_(valores);
+    // Si la pestaña no tiene columna de nombre, no es una lista de actualización.
+    if (buscarColumna_(valores[enc], /(descripcion|descripción|nombre|producto)/i) < 0) return;
+    // Una edición dentro del encabezado no cambia nada que comparar.
+    if (e.range.getLastRow() <= enc + 1) return;
+  }
 
   // Si ya hay una corrida en curso, esta se descarta: la siguiente edición
   // vuelve a lanzarla y el resultado es el mismo.
@@ -455,6 +463,10 @@ function comparar_(hoja) {
   // ── volcar ───────────────────────────────────────────────────────────────
   if (totLis > 0) pintar_(hoja, priLis + 1, fondosLis, notasLis, anchoLis);
   if (totInv > 0) pintar_(inv, priInv + 1, fondosInv, notasInv, anchoInv);
+
+  // Se recuerda cual fue la ultima lista comparada, para poder repintar
+  // cuando la edicion ocurre del lado de Inventario.
+  PropertiesService.getDocumentProperties().setProperty('ULTIMA_LISTA', hoja.getName());
 
   return {
     hoja: hoja.getName(),
