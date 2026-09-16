@@ -55,8 +55,9 @@ function alEditar(e) {
   if (!e || !e.range) return;
   var ss = SpreadsheetApp.getActive();
   var hoja = e.range.getSheet();
+  var maestra = hojaMaestra_(ss);
 
-  if (hoja.getName() === HOJA_INVENTARIO) {
+  if (maestra && hoja.getSheetId() === maestra.getSheetId()) {
     // Tocar Inventario tambien tiene que repintar: si le ponés el precio nuevo
     // a mano, el amarillo se tiene que ir. Se recompara contra la ultima lista.
     var ultima = PropertiesService.getDocumentProperties().getProperty('ULTIMA_LISTA');
@@ -290,8 +291,31 @@ function ponerNotaEn_(nota, ancho, col) {
 
 /* ─────────────────────────────── acciones ───────────────────────────────── */
 
-/** Nombre de la pestaña maestra. */
+/** Como se llama la pestaña maestra. Si la renombran, igual se encuentra. */
 var HOJA_INVENTARIO = 'Inventario';
+
+/**
+ * Ubica la pestaña maestra sin depender del nombre exacto: primero el nombre
+ * de arriba, despues cualquiera que empiece por "inventario", y al final la
+ * primera que tenga columnas de SKU y de Slug.
+ */
+function hojaMaestra_(ss) {
+  var exacta = ss.getSheetByName(HOJA_INVENTARIO);
+  if (exacta) return exacta;
+
+  var hojas = ss.getSheets();
+  var i;
+  for (i = 0; i < hojas.length; i++) {
+    if (/^\s*inventario/i.test(hojas[i].getName())) return hojas[i];
+  }
+  for (i = 0; i < hojas.length; i++) {
+    var v = hojas[i].getDataRange().getValues();
+    if (!v.length) continue;
+    var enc = v[ubicarEncabezado_(v)];
+    if (buscarColumna_(enc, /sku/i) >= 0 && buscarColumna_(enc, /slug/i) >= 0) return hojas[i];
+  }
+  return null;
+}
 
 /**
  * Compara la pestaña activa (la lista nueva del proveedor) contra la pestaña
@@ -306,12 +330,11 @@ var HOJA_INVENTARIO = 'Inventario';
 function comparar_(hoja) {
   var ss = SpreadsheetApp.getActive();
 
-  if (hoja.getName() === HOJA_INVENTARIO) {
-    return { error: 'Parate en la pestaña de la lista nueva, no en Inventario.' };
+  var inv = hojaMaestra_(ss);
+  if (!inv) return { error: 'No encontré la pestaña del inventario. Debe llamarse "Inventario" o empezar por esa palabra.' };
+  if (hoja.getSheetId() === inv.getSheetId()) {
+    return { error: 'Parate en la pestaña de la lista nueva, no en "' + inv.getName() + '".' };
   }
-
-  var inv = ss.getSheetByName(HOJA_INVENTARIO);
-  if (!inv) return { error: 'No encontré la pestaña "' + HOJA_INVENTARIO + '".' };
 
   // ── la lista nueva ───────────────────────────────────────────────────────
   var vLis = hoja.getDataRange().getValues();
@@ -522,7 +545,7 @@ function limpiarColores() {
   }
 
   limpiar(hoja);
-  var inv = ss.getSheetByName(HOJA_INVENTARIO);
+  var inv = hojaMaestra_(ss);
   if (inv && inv.getSheetId() !== hoja.getSheetId()) limpiar(inv);
 
   SpreadsheetApp.getUi().alert('Listo, quite los colores y las notas de: ' + nombres.join(' y ') + '.');
