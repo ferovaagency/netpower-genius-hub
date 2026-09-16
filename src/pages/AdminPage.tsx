@@ -65,6 +65,10 @@ export default function AdminPage() {
   const [loadingProds, setLoadingProds] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [soloSinSku, setSoloSinSku] = useState(false);
+  const [editandoSku, setEditandoSku] = useState<string | null>(null);
+  const [borradorSku, setBorradorSku] = useState("");
+  const [guardandoSku, setGuardandoSku] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -88,10 +92,56 @@ export default function AdminPage() {
   };
 
   const filteredProds = products.filter(p => {
+    if (soloSinSku && (p.sku || "").trim()) return false;
     const t = prodSearch.trim().toLowerCase();
     if (!t) return true;
     return (p.name || "").toLowerCase().includes(t) || (p.sku || "").toLowerCase().includes(t);
   });
+
+  // ── EDICION RAPIDA DEL SKU ────────────────────────────────────
+  // Para asignar los SKU de la hoja sin entrar a la ficha de cada producto.
+  const abrirEdicionSku = (p: any) => {
+    setEditandoSku(p.id);
+    setBorradorSku(p.sku || "");
+  };
+
+  const guardarSku = async (id: string, avanzarA?: string) => {
+    const valor = borradorSku.trim();
+    const actual = products.find(x => x.id === id);
+    if (!actual) return;
+
+    if (valor === (actual.sku || "")) {
+      setEditandoSku(avanzarA ?? null);
+      if (avanzarA) setBorradorSku(products.find(x => x.id === avanzarA)?.sku || "");
+      return;
+    }
+
+    // Un SKU repetido rompe el cruce con la hoja, asi que se avisa antes de guardar.
+    if (valor) {
+      const repetido = products.find(x => x.id !== id && (x.sku || "").trim().toLowerCase() === valor.toLowerCase());
+      if (repetido) {
+        toast({
+          title: "Ese SKU ya está usado",
+          description: repetido.name,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setGuardandoSku(id);
+    const { error } = await supabase.from("products").update({ sku: valor || null }).eq("id", id);
+    setGuardandoSku(null);
+
+    if (error) {
+      toast({ title: "No se pudo guardar el SKU", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setProducts(prev => prev.map(x => x.id === id ? { ...x, sku: valor || null } : x));
+    setEditandoSku(avanzarA ?? null);
+    setBorradorSku(avanzarA ? (products.find(x => x.id === avanzarA)?.sku || "") : "");
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -373,6 +423,15 @@ export default function AdminPage() {
                 <Download className="w-4 h-4 mr-1" />
                 Descargar Excel ({filteredProds.length})
               </Button>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={soloSinSku}
+                  onChange={e => setSoloSinSku(e.target.checked)}
+                  className="rounded cursor-pointer"
+                />
+                Solo sin SKU
+              </label>
             </div>
 
             {selectedIds.length > 0 && (
@@ -409,7 +468,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProds.map(p => (
+                    {filteredProds.map((p, idx) => (
                       <tr key={p.id} className={`border-t border-border hover:bg-muted/30 transition-colors ${selectedIds.includes(p.id) ? "bg-destructive/5" : ""}`}>
                         <td className="px-4 py-3">
                           <input
@@ -426,7 +485,35 @@ export default function AdminPage() {
                             <span className="font-medium line-clamp-1 max-w-[200px]">{p.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{p.sku || "\u2014"}</td>
+                        <td className="px-4 py-3">
+                          {editandoSku === p.id ? (
+                            <input
+                              autoFocus
+                              value={borradorSku}
+                              onChange={e => setBorradorSku(e.target.value)}
+                              onBlur={() => guardarSku(p.id)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  guardarSku(p.id, filteredProds[idx + 1]?.id);
+                                } else if (e.key === "Escape") {
+                                  e.preventDefault();
+                                  setEditandoSku(null);
+                                }
+                              }}
+                              placeholder="SKU"
+                              className="w-28 px-2 py-1 rounded-lg border border-primary bg-background font-mono text-xs outline-none"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => abrirEdicionSku(p)}
+                              title="Clic para asignar el SKU. Enter guarda y pasa al siguiente."
+                              className={`w-28 text-left px-2 py-1 rounded-lg border border-dashed border-transparent hover:border-border hover:bg-accent transition font-mono text-xs ${p.sku ? "text-foreground" : "text-muted-foreground"}`}
+                            >
+                              {guardandoSku === p.id ? "guardando..." : (p.sku || "+ SKU")}
+                            </button>
+                          )}
+                        </td>
                         <td className="px-4 py-3">${(p.sale_price || p.price || 0).toLocaleString("es-CO")}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
