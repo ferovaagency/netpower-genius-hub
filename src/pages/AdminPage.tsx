@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { descargarCatalogo } from "@/lib/exportProducts";
+import { InventarioPanel } from "@/components/admin/InventarioPanel";
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -323,6 +324,7 @@ export default function AdminPage() {
               {newQuotesCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{newQuotesCount}</span>}
             </TabsTrigger>
             <TabsTrigger value="productos"><Package className="w-4 h-4 mr-1" /> Productos</TabsTrigger>
+            <TabsTrigger value="inventario"><RefreshCw className="w-4 h-4 mr-1" /> Inventario</TabsTrigger>
             <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
             <TabsTrigger value="conversaciones"><MessageCircle className="w-4 h-4 mr-1" /> Conversaciones Neti</TabsTrigger>
@@ -543,6 +545,10 @@ export default function AdminPage() {
                 {filteredProds.length === 0 && <p className="text-center text-muted-foreground py-8">No hay productos</p>}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="inventario">
+            <InventarioPanel onSincronizado={fetchProducts} />
           </TabsContent>
 
           {/* PEDIDOS */}
