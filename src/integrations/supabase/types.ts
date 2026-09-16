@@ -403,6 +403,294 @@ export type Database = {
         }
         Relationships: []
       }
+      products_brand_backup_20260916: {
+        Row: {
+          brand: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          brand?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          brand?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      products_category_backup_20260916: {
+        Row: {
+          category: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          category?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          category?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      products_dup_backup_20260916: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          name: string | null
+          price: number | null
+          rn: number | null
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          price?: number | null
+          rn?: number | null
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          price?: number | null
+          rn?: number | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      products_eliminados_20260916: {
+        Row: {
+          active: boolean | null
+          brand: string | null
+          category: string | null
+          condition: string | null
+          created_at: string | null
+          description: string | null
+          discount_percent: number | null
+          featured: boolean | null
+          id: string | null
+          images: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          price: number | null
+          reviews: Json | null
+          sale_price: number | null
+          short_description: string | null
+          sku: string | null
+          slug: string | null
+          specs: Json | null
+          stock: number | null
+          updated_at: string | null
+          warranty: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percent?: number | null
+          featured?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          price?: number | null
+          reviews?: Json | null
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string | null
+          specs?: Json | null
+          stock?: number | null
+          updated_at?: string | null
+          warranty?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percent?: number | null
+          featured?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          price?: number | null
+          reviews?: Json | null
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string | null
+          specs?: Json | null
+          stock?: number | null
+          updated_at?: string | null
+          warranty?: string | null
+        }
+        Relationships: []
+      }
+      products_price_backup_20260916: {
+        Row: {
+          id: string | null
+          name: string | null
+          price: number | null
+        }
+        Insert: {
+          id?: string | null
+          name?: string | null
+          price?: number | null
+        }
+        Update: {
+          id?: string | null
+          name?: string | null
+          price?: number | null
+        }
+        Relationships: []
+      }
+      products_price_backup_todos_20260916: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          name: string | null
+          price: number | null
+          sale_price: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          price?: number | null
+          sale_price?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          price?: number | null
+          sale_price?: number | null
+        }
+        Relationships: []
+      }
+      products_sku_backup_20260916: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          name: string | null
+          sku: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+        }
+        Relationships: []
+      }
+      products_sku_backup2_20260916: {
+        Row: {
+          id: string | null
+          name: string | null
+          sku: string | null
+          slug: string | null
+        }
+        Insert: {
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Update: {
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      products_sku_backup3_20260916: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          name: string | null
+          sku: string | null
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      products_sku_backup4_20260916: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          name: string | null
+          sku: string | null
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          id?: string | null
+          name?: string | null
+          sku?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      products_stock_backup_20260916: {
+        Row: {
+          id: string | null
+          stock: number | null
+        }
+        Insert: {
+          id?: string | null
+          stock?: number | null
+        }
+        Update: {
+          id?: string | null
+          stock?: number | null
+        }
+        Relationships: []
+      }
       prospects: {
         Row: {
           created_at: string
@@ -475,6 +763,42 @@ export type Database = {
           status?: string
           subject?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_inventario_log: {
+        Row: {
+          actualizados: number
+          creados: number
+          created_at: string
+          detalle: Json | null
+          errores: number
+          filas_hoja: number
+          id: string
+          sin_cambio: number
+          sin_fila_en_hoja: number
+        }
+        Insert: {
+          actualizados?: number
+          creados?: number
+          created_at?: string
+          detalle?: Json | null
+          errores?: number
+          filas_hoja?: number
+          id?: string
+          sin_cambio?: number
+          sin_fila_en_hoja?: number
+        }
+        Update: {
+          actualizados?: number
+          creados?: number
+          created_at?: string
+          detalle?: Json | null
+          errores?: number
+          filas_hoja?: number
+          id?: string
+          sin_cambio?: number
+          sin_fila_en_hoja?: number
         }
         Relationships: []
       }
