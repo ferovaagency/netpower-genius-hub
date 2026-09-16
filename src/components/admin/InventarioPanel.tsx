@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CloudDownload, Eye, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, CloudDownload, Eye, Clock, AlertTriangle, CheckCircle2, PlusCircle } from "lucide-react";
 
 type Cambio = {
   sku: string;
@@ -20,12 +20,15 @@ type Respuesta = {
     productosConSku: number;
     actualizados: number;
     sinCambio: number;
-    skuDeLaHojaSinProducto: number;
+    creados: number;
+    sinNombreEnLaHoja: number;
     productosSinFilaEnLaHoja: number;
     skuRepetidoEnHoja: number;
+    nuevosQuedanPublicados: boolean;
   };
   detalle?: Cambio[];
-  skuNoEncontrado?: string[];
+  nuevos?: { sku: string; name: string; slug: string; stock: number; price: number }[];
+  sinNombre?: string[];
   sinFilaEnLaHoja?: { sku: string; nombre: string }[];
   errores?: string[];
 };
@@ -60,14 +63,15 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
   const { toast } = useToast();
   const [cargando, setCargando] = useState<"" | "revisar" | "aplicar">("");
   const [res, setRes] = useState<Respuesta | null>(null);
-  const [ultima, setUltima] = useState<{ created_at: string; actualizados: number } | null>(null);
+  const [ultima, setUltima] = useState<{ created_at: string; actualizados: number; creados: number } | null>(null);
+  const [crearActivos, setCrearActivos] = useState(false);
 
   const cargarUltima = useCallback(async () => {
     // types.ts lo genera Lovable y todavia no conoce esta tabla; el cast se quita
     // solo cuando se regeneren los tipos.
     const { data } = await (supabase as any)
       .from("sync_inventario_log")
-      .select("created_at, actualizados")
+      .select("created_at, actualizados, creados")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -80,7 +84,9 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
     setCargando(simulacion ? "revisar" : "aplicar");
     setRes(null);
     try {
-      const { data, error } = await supabase.functions.invoke("inventory-sync", { body: { simulacion } });
+      const { data, error } = await supabase.functions.invoke("inventory-sync", {
+        body: { simulacion, crearActivos },
+      });
       if (error) throw error;
       const r = data as Respuesta;
       if (r.error) throw new Error(r.error);
@@ -88,7 +94,7 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
       if (!simulacion) {
         toast({
           title: "Inventario sincronizado",
-          description: `${r.resumen?.actualizados ?? 0} productos actualizados.`,
+          description: `${r.resumen?.actualizados ?? 0} actualizados · ${r.resumen?.creados ?? 0} creados.`,
         });
         await cargarUltima();
         await onSincronizado?.();
@@ -115,17 +121,27 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
           {cargando === "aplicar" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CloudDownload className="w-4 h-4 mr-2" />}
           Sincronizar ahora
         </Button>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={crearActivos}
+            onChange={(e) => setCrearActivos(e.target.checked)}
+            className="rounded cursor-pointer"
+          />
+          Publicar los productos nuevos de una
+        </label>
         <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
           Última sincronización: {haceCuanto(ultima?.created_at ?? null)}
-          {ultima ? ` · ${ultima.actualizados} actualizados` : ""}
+          {ultima ? ` · ${ultima.actualizados} actualizados, ${ultima.creados} creados` : ""}
         </span>
       </div>
 
       <p className="text-xs text-muted-foreground bg-muted/50 border rounded-lg px-3 py-2">
-        Cruza por SKU contra la hoja «Inventario» y escribe solo stock y precio. No crea productos,
-        no desactiva nada y no toca el contenido de las fichas. Lo que esté en la web y no aparezca
-        en la hoja se reporta abajo, pero no se modifica.
+        Cruza por SKU contra la hoja «Inventario». A los que ya existen les escribe stock y precio;
+        los SKU que no estén en la web se crean. No desactiva nada y no toca el contenido de las
+        fichas que ya existían. Lo que esté en la web y no aparezca en la hoja se reporta abajo,
+        pero no se modifica.
       </p>
 
       {res?.error && (
@@ -139,7 +155,7 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Ficha etiqueta={res?.simulacion ? "Van a cambiar" : "Actualizados"} valor={r.actualizados} tono="bien" />
             <Ficha etiqueta="Sin cambios" valor={r.sinCambio} />
-            <Ficha etiqueta="SKU de la hoja sin producto" valor={r.skuDeLaHojaSinProducto} tono={r.skuDeLaHojaSinProducto ? "alerta" : undefined} />
+            <Ficha etiqueta={res?.simulacion ? "Se van a crear" : "Creados"} valor={r.creados} tono={r.creados ? "bien" : undefined} />
             <Ficha etiqueta="En la web, sin fila en la hoja" valor={r.productosSinFilaEnLaHoja} tono={r.productosSinFilaEnLaHoja ? "alerta" : undefined} />
           </div>
 
@@ -195,15 +211,53 @@ export function InventarioPanel({ onSincronizado }: { onSincronizado?: () => voi
             </div>
           )}
 
-          {!!res?.skuNoEncontrado?.length && (
+          {!!res?.nuevos?.length && (
             <div>
-              <p className="text-sm font-semibold mb-2">SKU que están en la hoja y no en la web ({r.skuDeLaHojaSinProducto})</p>
-              <p className="text-xs text-muted-foreground mb-2">
-                Estos productos hay que crearlos a mano desde el generador de fichas. La sincronización no los crea.
+              <p className="text-sm font-semibold mb-2">
+                {res?.simulacion ? "Se van a crear" : "Productos creados"} ({r.creados})
               </p>
+              <p className="text-xs text-muted-foreground mb-2">
+                {r.nuevosQuedanPublicados
+                  ? "Quedan publicados de una. Ojo: sin foto ni descripción son fichas pobres; pásalas por el generador."
+                  : "Quedan desactivados a propósito. Complétalos en el generador de fichas y ahí los publicas."}
+              </p>
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">SKU</th>
+                      <th className="px-3 py-2 text-left font-semibold">Producto</th>
+                      <th className="px-3 py-2 text-left font-semibold">URL</th>
+                      <th className="px-3 py-2 text-left font-semibold">Stock</th>
+                      <th className="px-3 py-2 text-left font-semibold">Precio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {res.nuevos.map((n, i) => (
+                      <tr key={n.sku + i} className="border-t">
+                        <td className="px-3 py-2 font-mono text-xs">{n.sku}</td>
+                        <td className="px-3 py-2 max-w-[320px] truncate" title={n.name}>{n.name}</td>
+                        <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">/producto/{n.slug}</td>
+                        <td className="px-3 py-2">{n.stock}</td>
+                        <td className="px-3 py-2">{cop(n.price)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {!!res?.sinNombre?.length && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-semibold text-amber-800 mb-1">
+                <PlusCircle className="w-4 h-4 inline mr-1" />
+                {res.sinNombre.length} SKU de la hoja no se pudieron crear
+              </p>
+              <p className="text-xs text-amber-900 mb-2">Les falta el nombre en la hoja. Sin nombre no hay ficha que crear.</p>
               <div className="flex flex-wrap gap-1.5">
-                {res.skuNoEncontrado.map((s) => (
-                  <span key={s} className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-destructive/10 text-destructive">{s}</span>
+                {res.sinNombre.map((s2) => (
+                  <span key={s2} className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">{s2}</span>
                 ))}
               </div>
             </div>

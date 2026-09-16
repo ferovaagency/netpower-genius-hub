@@ -3,14 +3,23 @@
 // Cruza por SKU, que es la llave que Mafe asigno a mano en la hoja. No por
 // nombre: el nombre cambia y el cruce difuso se equivoca.
 //
-// Lo que escribe: stock y precio. Nada mas.
+// Lo que escribe:
+//   - en los que ya existen: stock y precio, nada mas
+//   - los SKU de la hoja que no existen en la web se CREAN, con nombre, slug,
+//     sku, stock y precio. Crear por SKU es seguro: un SKU que no esta en la
+//     base es un producto nuevo, no un duplicado. Por nombre no lo seria.
+//
+// Los productos nuevos nacen DESACTIVADOS salvo que se pida lo contrario
+// (crearActivos: true). Una ficha con solo nombre y precio, sin foto ni
+// descripcion, es contenido pobre: se publica despues de pasarla por el
+// generador de fichas.
+//
 // Lo que NO hace, a proposito:
-//   - no crea productos que esten en la hoja y no en la web (se crean a mano
-//     desde el generador de fichas, para no duplicar URLs ya indexadas)
 //   - no desactiva ni pone en stock 0 lo que no aparezca en la hoja: se reporta
 //     y ya. Si la hoja se desincroniza, apagar el catalogo solo seria peor que
 //     el problema que resuelve.
-//   - no toca descripcion, imagenes, marca, categoria ni el estado activo.
+//   - no toca descripcion, imagenes, marca, categoria ni el estado activo de
+//     los productos que ya existian.
 //
 // Se llama con el JWT de un admin (boton "Sincronizar ahora") o con la
 // service-role key. verify_jwt = false en config.toml porque la validacion se
@@ -66,7 +75,15 @@ function aNumero(v: string): number | null {
   return Number.isFinite(x) ? x : null;
 }
 
-interface FilaHoja { sku: string; stock: number | null; precio: number | null }
+interface FilaHoja { sku: string; nombre: string; stock: number | null; precio: number | null }
+
+/** Slug al mismo estilo que el resto del catalogo: sin tildes, hasta 30 caracteres. */
+function aSlug(nombre: string): string {
+  return (nombre || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 30).replace(/-+$/, '') || 'producto';
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -93,7 +110,8 @@ serve(async (req) => {
     if (!autorizado) return json({ error: 'No autorizado' }, 401);
 
     const cuerpo = await req.json().catch(() => ({} as Record<string, unknown>));
-    const simulacion = cuerpo?.simulacion === true; // dry run: calcula y no escribe
+    const simulacion = cuerpo?.simulacion === true;        // dry run: calcula y no escribe
+    const crearActivos = cuerpo?.crearActivos === true;    // publicar los nuevos de una
 
     // ── leer la hoja ─────────────────────────────────────────────
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq` +
@@ -113,6 +131,7 @@ serve(async (req) => {
     const enc = grid[0].map((h) => h.trim().toLowerCase());
     const col = (re: RegExp) => enc.findIndex((h) => re.test(h));
     const iSku = col(/^sku$/);
+    const iNombre = col(/nombre|descripcion|descripción|producto/);
     const iStock = col(/stock|cantidad|existencia|disponible/);
     const iPrecio = col(/precio/);
     if (iSku < 0) return json({ error: 'La hoja no tiene una columna llamada SKU.' }, 400);
@@ -127,6 +146,7 @@ serve(async (req) => {
       vistos.add(sku);
       hoja.push({
         sku,
+        nombre: iNombre >= 0 ? (grid[r][iNombre] || '').trim() : '',
         stock: iStock >= 0 ? aNumero(grid[r][iStock]) : null,
         precio: iPrecio >= 0 ? aNumero(grid[r][iPrecio]) : null,
       });
@@ -148,13 +168,33 @@ serve(async (req) => {
     // ── qué cambia ───────────────────────────────────────────────
     const cambios: { id: string; patch: Record<string, number> }[] = [];
     const detalle: any[] = [];
-    const skuNoEncontrado: string[] = [];
+    const nuevos: any[] = [];
+    const sinNombre: string[] = [];
     let sinCambio = 0;
     const usados = new Set<string>();
 
+    // slugs ya tomados, para no chocar con uno existente
+    const slugsUsados = new Set<string>(productos!.map((p: any) => String(p.slug)));
+
     for (const f of hoja) {
       const p = porSku.get(f.sku);
-      if (!p) { if (skuNoEncontrado.length < 100) skuNoEncontrado.push(f.sku); continue; }
+      if (!p) {
+        // SKU que no esta en la base: producto nuevo
+        if (!f.nombre) { if (sinNombre.length < 50) sinNombre.push(f.sku); continue; }
+        let slug = aSlug(f.nombre);
+        let n = 2;
+        while (slugsUsados.has(slug)) slug = `${aSlug(f.nombre)}-${n++}`;
+        slugsUsados.add(slug);
+        nuevos.push({
+          name: f.nombre,
+          slug,
+          sku: f.sku,
+          stock: f.stock !== null ? Math.max(0, Math.round(f.stock)) : 0,
+          price: f.precio !== null ? Math.max(0, Math.round(f.precio)) : 0,
+          active: crearActivos,
+        });
+        continue;
+      }
       usados.add(f.sku);
 
       const patch: Record<string, number> = {};
@@ -187,13 +227,15 @@ serve(async (req) => {
       productosConSku: porSku.size,
       actualizados: cambios.length,
       sinCambio,
-      skuDeLaHojaSinProducto: skuNoEncontrado.length,
+      creados: nuevos.length,
+      sinNombreEnLaHoja: sinNombre.length,
       productosSinFilaEnLaHoja: sinFilaEnLaHoja.length,
       skuRepetidoEnHoja: skuRepetidoEnHoja.length,
+      nuevosQuedanPublicados: crearActivos,
     };
 
     if (simulacion) {
-      return json({ ok: true, simulacion: true, resumen, detalle, skuNoEncontrado, sinFilaEnLaHoja, skuRepetidoEnHoja });
+      return json({ ok: true, simulacion: true, resumen, detalle, nuevos: nuevos.slice(0, 200), sinNombre, sinFilaEnLaHoja, skuRepetidoEnHoja });
     }
 
     // ── escribir ─────────────────────────────────────────────────
@@ -206,17 +248,25 @@ serve(async (req) => {
       for (const r of res) if (r.error && errores.length < 10) errores.push(r.error.message);
     }
 
+    let creados = 0;
+    for (let i = 0; i < nuevos.length; i += 200) {
+      const { data, error } = await admin.from('products').insert(nuevos.slice(i, i + 200)).select('id');
+      if (error) { if (errores.length < 10) errores.push(`crear: ${error.message}`); }
+      else creados += data?.length ?? 0;
+    }
+    resumen.creados = creados;
+
     await admin.from('sync_inventario_log').insert({
       filas_hoja: resumen.filasHoja,
       actualizados: resumen.actualizados - errores.length,
       sin_cambio: resumen.sinCambio,
-      sku_sin_producto: resumen.skuDeLaHojaSinProducto,
+      creados: resumen.creados,
       sin_fila_en_hoja: resumen.productosSinFilaEnLaHoja,
       errores: errores.length,
-      detalle: { resumen, skuNoEncontrado, sinFilaEnLaHoja, skuRepetidoEnHoja, errores },
+      detalle: { resumen, nuevos: nuevos.slice(0, 200), sinNombre, sinFilaEnLaHoja, skuRepetidoEnHoja, errores },
     });
 
-    return json({ ok: true, resumen, detalle, skuNoEncontrado, sinFilaEnLaHoja, skuRepetidoEnHoja, errores });
+    return json({ ok: true, resumen, detalle, nuevos: nuevos.slice(0, 200), sinNombre, sinFilaEnLaHoja, skuRepetidoEnHoja, errores });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
