@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { descargarCatalogo } from "@/lib/exportProducts";
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -86,7 +87,11 @@ export default function AdminPage() {
     toast({ title: "Producto eliminado" });
   };
 
-  const filteredProds = products.filter(p => p.name?.toLowerCase().includes(prodSearch.toLowerCase()));
+  const filteredProds = products.filter(p => {
+    const t = prodSearch.trim().toLowerCase();
+    if (!t) return true;
+    return (p.name || "").toLowerCase().includes(t) || (p.sku || "").toLowerCase().includes(t);
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -357,7 +362,17 @@ export default function AdminPage() {
           <TabsContent value="productos">
             <div className="flex items-center gap-2 mb-4">
               <Search className="w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nombre..." value={prodSearch} onChange={e => setProdSearch(e.target.value)} className="max-w-xs" />
+              <Input placeholder="Buscar por nombre o SKU..." value={prodSearch} onChange={e => setProdSearch(e.target.value)} className="max-w-xs" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => descargarCatalogo(filteredProds, prodSearch.trim() ? "-filtrado" : "")}
+                disabled={loadingProds || filteredProds.length === 0}
+                title="Baja a Excel lo que estas viendo ahora mismo"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                Descargar Excel ({filteredProds.length})
+              </Button>
             </div>
 
             {selectedIds.length > 0 && (
@@ -387,6 +402,7 @@ export default function AdminPage() {
                         />
                       </th>
                       <th className="px-4 py-3 text-left font-semibold">Producto</th>
+                      <th className="px-4 py-3 text-left font-semibold">SKU</th>
                       <th className="px-4 py-3 text-left font-semibold">Precio</th>
                       <th className="px-4 py-3 text-left font-semibold">Estado</th>
                       <th className="px-4 py-3 text-left font-semibold">Acciones</th>
@@ -410,6 +426,7 @@ export default function AdminPage() {
                             <span className="font-medium line-clamp-1 max-w-[200px]">{p.name}</span>
                           </div>
                         </td>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{p.sku || "\u2014"}</td>
                         <td className="px-4 py-3">${(p.sale_price || p.price || 0).toLocaleString("es-CO")}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
