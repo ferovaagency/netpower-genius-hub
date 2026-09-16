@@ -1,11 +1,11 @@
 /**
  * Inventario Central Netpower IT — comparador de listas de actualización.
  *
- * Pinta la pestaña activa cruzando por NOMBRE contra el catálogo real de
- * netpowerit.co:
- *   ROJO      = ese producto NO existe en la web.
- *   AMARILLO  = existe, pero cambió el precio o el stock.
- *   Sin color = existe y está igual.
+ * Pinta la pestaña activa (la lista nueva del proveedor) y la pestaña
+ * Inventario, cruzando por NOMBRE entre las dos:
+ *   ROJO en la lista       = ese producto no está en Inventario.
+ *   AMARILLO en Inventario = sí está, pero la lista trae otro precio o stock.
+ *   Sin color              = está y coincide.
  *
  * El cruce es por similitud de bigramas (coeficiente de Dice), el mismo
  * criterio de All For All. Por debajo de MIN_SIMILITUD se considera que no
@@ -13,7 +13,8 @@
  * una lista de 1000 filas contra 1000 productos no se pase de los 6 minutos
  * que Apps Script le da a una ejecución.
  *
- * Este script NO escribe nada en la web: solo pinta la hoja.
+ * Este script NO escribe nada: solo pinta. La web no participa; la subida de
+ * stock y precio la hace el botón Sincronizar del admin, cruzando por SKU.
  *
  * Primera vez: menú NetPower -> Configurar conexión, y pegar los dos valores
  * del archivo .env del repo (VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY).
@@ -210,62 +211,107 @@ function ponerNotaEn_(nota, ancho, col) {
 
 /* ─────────────────────────────── acciones ───────────────────────────────── */
 
+/** Nombre de la pestaña maestra. */
+var HOJA_INVENTARIO = 'Inventario';
+
+/**
+ * Compara la pestaña activa (la lista nueva del proveedor) contra la pestaña
+ * Inventario, cruzando por nombre.
+ *
+ *   ROJO en la lista  = ese producto no está en Inventario. Hay que crearlo.
+ *   AMARILLO en Inventario = ese producto sí está, pero la lista trae otro
+ *                            precio o stock.
+ *
+ * La web no participa: esto es solo entre las dos pestañas.
+ */
 function compararPestanaActiva() {
   var ui = SpreadsheetApp.getUi();
+  var ss = SpreadsheetApp.getActive();
   var hoja = SpreadsheetApp.getActiveSheet();
-  var valores = hoja.getDataRange().getValues();
 
-  if (valores.length < 2) { ui.alert('Esta pestaña está vacía.'); return; }
-
-  var filaEnc = ubicarEncabezado_(valores);
-  var encabezados = valores[filaEnc];
-  var ancho = encabezados.length;
-
-  var iNombre = buscarColumna_(encabezados, /(descripcion|descripción|nombre|producto)/i);
-  if (iNombre < 0) {
-    ui.alert('No encontré la columna del nombre. Debe llamarse Descripción, Nombre o Producto.');
+  if (hoja.getName() === HOJA_INVENTARIO) {
+    ui.alert('Parate en la pestaña de la lista nueva (por ejemplo "Actualizacion 16"), no en Inventario.');
     return;
   }
 
-  // "Precio de venta" gana sobre "Precio lista": es el que debe quedar en la web.
-  var iPrecio = buscarColumna_(encabezados, /precio\s*de\s*venta/i);
-  if (iPrecio < 0) iPrecio = buscarColumna_(encabezados, /precio/i);
-  var iStock = buscarColumna_(encabezados, /(stock|cantidad|existencia|disponible)/i);
+  var inv = ss.getSheetByName(HOJA_INVENTARIO);
+  if (!inv) { ui.alert('No encontré la pestaña "' + HOJA_INVENTARIO + '".'); return; }
 
-  var catalogo = traerCatalogo_();
-  if (!catalogo.length) { ui.alert('La web no devolvió productos. Revisá la conexión.'); return; }
+  // ── la lista nueva ───────────────────────────────────────────────────────
+  var vLis = hoja.getDataRange().getValues();
+  if (vLis.length < 2) { ui.alert('Esta pestaña está vacía.'); return; }
 
-  // Índice: cada producto con sus bigramas ya calculados, y un invertido por palabra.
+  var encLisFila = ubicarEncabezado_(vLis);
+  var encLis = vLis[encLisFila];
+  var anchoLis = encLis.length;
+
+  var lNombre = buscarColumna_(encLis, /(descripcion|descripción|nombre|producto)/i);
+  if (lNombre < 0) {
+    ui.alert('No encontré la columna del nombre en esta pestaña. Debe llamarse Descripción, Nombre o Producto.');
+    return;
+  }
+  var lPrecio = buscarColumna_(encLis, /precio\s*(de\s*)?venta/i);
+  if (lPrecio < 0) lPrecio = buscarColumna_(encLis, /precio/i);
+  var lStock = buscarColumna_(encLis, /(stock|cantidad|existencia|disponible)/i);
+
+  // ── el inventario ────────────────────────────────────────────────────────
+  var vInv = inv.getDataRange().getValues();
+  var encInvFila = ubicarEncabezado_(vInv);
+  var encInv = vInv[encInvFila];
+  var anchoInv = encInv.length;
+
+  var iNombre = buscarColumna_(encInv, /(nombre|descripcion|descripción|producto)/i);
+  if (iNombre < 0) { ui.alert('No encontré la columna del nombre en la pestaña Inventario.'); return; }
+  var iPrecio = buscarColumna_(encInv, /precio\s*(de\s*)?venta/i);
+  if (iPrecio < 0) iPrecio = buscarColumna_(encInv, /precio/i);
+  var iStock = buscarColumna_(encInv, /(stock|cantidad|existencia|disponible)/i);
+  var iSku = buscarColumna_(encInv, /sku/i);
+
+  // Índice del inventario: bigramas precalculados y un invertido por palabra.
   var indice = [];
   var porToken = {};
-  for (var i = 0; i < catalogo.length; i++) {
-    var norm = normalizar_(catalogo[i].name);
-    indice.push({ p: catalogo[i], norm: norm, bg: bigramas_(norm) });
+  for (var f = encInvFila + 1; f < vInv.length; f++) {
+    var nom = String(vInv[f][iNombre] || '').trim();
+    if (!nom) continue;
+    var norm = normalizar_(nom);
+    var pos = indice.length;
+    indice.push({ fila: f, nombre: nom, norm: norm, bg: bigramas_(norm) });
     var tk = tokens_(norm);
-    for (var t = 0; t < tk.length; t++) {
-      (porToken[tk[t]] = porToken[tk[t]] || []).push(i);
-    }
+    for (var t = 0; t < tk.length; t++) (porToken[tk[t]] = porToken[tk[t]] || []).push(pos);
   }
 
-  var primera = filaEnc + 1;
-  var total = valores.length - primera;
-  var fondos = [], notas = [];
+  if (!indice.length) { ui.alert('La pestaña Inventario no tiene productos.'); return; }
+
+  // ── comparar ─────────────────────────────────────────────────────────────
+  var priLis = encLisFila + 1;
+  var totLis = vLis.length - priLis;
+  var fondosLis = [], notasLis = [];
+
+  var priInv = encInvFila + 1;
+  var totInv = vInv.length - priInv;
+  var fondosInv = [], notasInv = [];
+  for (var k = 0; k < totInv; k++) {
+    fondosInv.push(repetir_(BLANCO, anchoInv));
+    notasInv.push(repetir_('', anchoInv));
+  }
+
   var usados = {};
   var nRojo = 0, nAmarillo = 0, nIgual = 0, nVacio = 0;
 
-  for (var f = primera; f < valores.length; f++) {
-    var nombreHoja = String(valores[f][iNombre] || '').trim();
+  for (var f2 = priLis; f2 < vLis.length; f2++) {
+    var nombreLis = String(vLis[f2][lNombre] || '').trim();
 
-    if (!nombreHoja) {
-      fondos.push(repetir_(BLANCO, ancho));
-      notas.push(repetir_('', ancho));
+    if (!nombreLis) {
+      fondosLis.push(repetir_(BLANCO, anchoLis));
+      notasLis.push(repetir_('', anchoLis));
       nVacio++;
       continue;
     }
 
-    var nm = normalizar_(nombreHoja);
+    var nm = normalizar_(nombreLis);
 
-    // Prefiltro: solo los productos que comparten alguna palabra larga.
+    // Prefiltro por palabras compartidas: sin esto son cientos de miles de
+    // comparaciones y Apps Script corta a los 6 minutos.
     var puntaje = {};
     var tkFila = tokens_(nm);
     for (var a = 0; a < tkFila.length; a++) {
@@ -278,8 +324,6 @@ function compararPestanaActiva() {
       candidatos.sort(function (x, y) { return puntaje[y] - puntaje[x]; });
       candidatos = candidatos.slice(0, MAX_CANDIDATOS);
     }
-    // Sin palabras en común no hay con qué comparar: se revisa todo el catálogo
-    // solo si la lista de candidatos quedó vacía y el nombre es corto.
     if (!candidatos.length && nm.length <= 25) {
       candidatos = [];
       for (var q = 0; q < indice.length; q++) candidatos.push(q);
@@ -288,70 +332,89 @@ function compararPestanaActiva() {
     var mejor = null, punt = 0;
     for (var c2 = 0; c2 < candidatos.length; c2++) {
       var it = indice[candidatos[c2]];
-      if (usados[it.p.slug]) continue;
+      if (usados[it.fila]) continue;
       var s = dice_(it.bg, nm);
-      if (s > punt) { punt = s; mejor = it.p; }
+      if (s > punt) { punt = s; mejor = it; }
     }
-
-    var color = BLANCO, nota = '';
 
     if (!mejor || punt < MIN_SIMILITUD) {
-      color = ROJO;
-      nota = 'No existe en la web.\nSi tiene SKU en la hoja Inventario, lo crea el botón Sincronizar del admin.';
+      fondosLis.push(repetir_(ROJO, anchoLis));
+      notasLis.push(ponerNotaEn_(
+        'No está en la pestaña Inventario. Hay que crearlo y asignarle SKU.',
+        anchoLis, lNombre));
       nRojo++;
-    } else {
-      usados[mejor.slug] = true;
-      var precioHoja = iPrecio >= 0 ? aNumero_(valores[f][iPrecio]) : null;
-      var stockHoja = iStock >= 0 ? aNumero_(valores[f][iStock]) : null;
-      var precioWeb = aNumero_(mejor.sale_price) || aNumero_(mejor.price) || 0;
-      var stockWeb = aNumero_(mejor.stock) || 0;
-
-      var cambios = [];
-      if (precioHoja !== null && Math.round(precioHoja) !== Math.round(precioWeb)) {
-        cambios.push('Precio: web ' + Math.round(precioWeb) + ' -> lista ' + Math.round(precioHoja));
-      }
-      if (stockHoja !== null && Math.round(stockHoja) !== Math.round(stockWeb)) {
-        cambios.push('Stock: web ' + Math.round(stockWeb) + ' -> lista ' + Math.round(stockHoja));
-      }
-
-      if (cambios.length) { color = AMARILLO; nAmarillo++; } else { nIgual++; }
-
-      nota = 'Web: ' + mejor.name + ' (' + Math.round(punt * 100) + '%)' +
-             (mejor.sku ? '\nSKU: ' + mejor.sku : '') +
-             (cambios.length ? '\n' + cambios.join('\n') : '\nSin cambios.');
+      continue;
     }
 
-    fondos.push(repetir_(color, ancho));
-    notas.push(ponerNotaEn_(nota, ancho, iNombre));
+    usados[mejor.fila] = true;
+
+    var precioLis = lPrecio >= 0 ? aNumero_(vLis[f2][lPrecio]) : null;
+    var stockLis = lStock >= 0 ? aNumero_(vLis[f2][lStock]) : null;
+    var precioInv = iPrecio >= 0 ? (aNumero_(vInv[mejor.fila][iPrecio]) || 0) : 0;
+    var stockInv = iStock >= 0 ? (aNumero_(vInv[mejor.fila][iStock]) || 0) : 0;
+
+    var cambios = [];
+    if (precioLis !== null && iPrecio >= 0 && Math.round(precioLis) !== Math.round(precioInv)) {
+      cambios.push('Precio: ' + Math.round(precioInv) + ' -> ' + Math.round(precioLis));
+    }
+    if (stockLis !== null && iStock >= 0 && Math.round(stockLis) !== Math.round(stockInv)) {
+      cambios.push('Stock: ' + Math.round(stockInv) + ' -> ' + Math.round(stockLis));
+    }
+
+    // La lista solo lleva rojo. Lo que cambia se marca en Inventario.
+    fondosLis.push(repetir_(BLANCO, anchoLis));
+    notasLis.push(ponerNotaEn_(
+      'Inventario fila ' + (mejor.fila + 1) + ': ' + mejor.nombre +
+      ' (' + Math.round(punt * 100) + '%)' +
+      (cambios.length ? '\n' + cambios.join('\n') : '\nSin cambios.'),
+      anchoLis, lNombre));
+
+    if (cambios.length) {
+      fondosInv[mejor.fila - priInv] = repetir_(AMARILLO, anchoInv);
+      notasInv[mejor.fila - priInv] = ponerNotaEn_(
+        'Lista "' + hoja.getName() + '", fila ' + (f2 + 1) + ':\n' + nombreLis +
+        '\n' + cambios.join('\n'),
+        anchoInv, iNombre);
+      nAmarillo++;
+    } else {
+      nIgual++;
+    }
   }
 
-  if (total > 0) pintar_(hoja, primera + 1, fondos, notas, ancho);
+  // ── volcar ───────────────────────────────────────────────────────────────
+  if (totLis > 0) pintar_(hoja, priLis + 1, fondosLis, notasLis, anchoLis);
+  if (totInv > 0) pintar_(inv, priInv + 1, fondosInv, notasInv, anchoInv);
 
   ui.alert(
     'Comparación lista\n\n' +
-    'Rojo (no existen en la web): ' + nRojo + '\n' +
-    'Amarillo (cambió precio o stock): ' + nAmarillo + '\n' +
+    'Rojo en "' + hoja.getName() + '" (no están en Inventario): ' + nRojo + '\n' +
+    'Amarillo en Inventario (cambió precio o stock): ' + nAmarillo + '\n' +
     'Sin cambios: ' + nIgual + '\n' +
     (nVacio ? 'Filas sin nombre: ' + nVacio + '\n' : '') +
-    '\nCatálogo leído: ' + catalogo.length + ' productos activos.\n' +
-    (iStock < 0 ? 'Esta pestaña no tiene columna de stock, así que solo se comparó el precio.\n' : '') +
+    '\nInventario leído: ' + indice.length + ' productos.\n' +
+    (lStock < 0 ? 'Esta lista no tiene columna de stock, así que solo se comparó el precio.\n' : '') +
     '\nPasá el cursor sobre el nombre para ver el detalle de cada fila.'
   );
 }
 
+/** Quita colores y notas de la pestaña activa y de Inventario. */
 function limpiarColores() {
+  var ss = SpreadsheetApp.getActive();
   var hoja = SpreadsheetApp.getActiveSheet();
-  var r = hoja.getDataRange();
-  r.setBackground(null);
-  r.clearNote();
-  SpreadsheetApp.getUi().alert('Listo, quité los colores y las notas de "' + hoja.getName() + '".');
-}
+  var nombres = [hoja.getName()];
 
-/**
- * Vuelca colores y notas. Si la pestana tiene columnas inmovilizadas, un solo
- * rango que cruce ese limite hace fallar a Sheets, asi que se escribe en dos
- * bloques: la parte congelada y el resto.
- */
+  hoja.getDataRange().setBackground(null);
+  hoja.getDataRange().clearNote();
+
+  var inv = ss.getSheetByName(HOJA_INVENTARIO);
+  if (inv && inv.getName() !== hoja.getName()) {
+    inv.getDataRange().setBackground(null);
+    inv.getDataRange().clearNote();
+    nombres.push(inv.getName());
+  }
+
+  SpreadsheetApp.getUi().alert('Listo, quité los colores y las notas de: ' + nombres.join(' y ') + '.');
+}
 function pintar_(hoja, filaIni, fondos, notas, ancho) {
   var fc = hoja.getFrozenColumns();
   var n = fondos.length;
