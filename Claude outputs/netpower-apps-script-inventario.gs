@@ -250,7 +250,11 @@ function compararPestanaActiva() {
     ui.alert('No encontré la columna del nombre en esta pestaña. Debe llamarse Descripción, Nombre o Producto.');
     return;
   }
+  // Orden de preferencia para el precio de la lista: el de venta, si no el que
+  // ya trae el margen (+20%), y solo al final cualquier columna 'precio',
+  // porque 'Precio lista' es el de compra y no es lo que va a la web.
   var lPrecio = buscarColumna_(encLis, /precio\s*(de\s*)?venta/i);
+  if (lPrecio < 0) lPrecio = buscarColumna_(encLis, /\+\s*20|mas\s*20/i);
   if (lPrecio < 0) lPrecio = buscarColumna_(encLis, /precio/i);
   var lStock = buscarColumna_(encLis, /(stock|cantidad|existencia|disponible)/i);
 
@@ -391,30 +395,42 @@ function compararPestanaActiva() {
     'Amarillo en Inventario (cambió precio o stock): ' + nAmarillo + '\n' +
     'Sin cambios: ' + nIgual + '\n' +
     (nVacio ? 'Filas sin nombre: ' + nVacio + '\n' : '') +
-    '\nInventario leído: ' + indice.length + ' productos.\n' +
+    '\nColumna de precio usada en la lista: ' +
+    (lPrecio >= 0 ? encLis[lPrecio] : 'ninguna') + '\n' +
+    'Inventario leído: ' + indice.length + ' productos.\n' +
     (lStock < 0 ? 'Esta lista no tiene columna de stock, así que solo se comparó el precio.\n' : '') +
     '\nPasá el cursor sobre el nombre para ver el detalle de cada fila.'
   );
 }
 
-/** Quita colores y notas de la pestaña activa y de Inventario. */
+/**
+ * Quita colores y notas de la pestana activa y de Inventario, sin tocar la
+ * fila de encabezado: su formato es de la hoja, no del comparador.
+ */
 function limpiarColores() {
   var ss = SpreadsheetApp.getActive();
   var hoja = SpreadsheetApp.getActiveSheet();
-  var nombres = [hoja.getName()];
+  var nombres = [];
 
-  hoja.getDataRange().setBackground(null);
-  hoja.getDataRange().clearNote();
-
-  var inv = ss.getSheetByName(HOJA_INVENTARIO);
-  if (inv && inv.getName() !== hoja.getName()) {
-    inv.getDataRange().setBackground(null);
-    inv.getDataRange().clearNote();
-    nombres.push(inv.getName());
+  function limpiar(h) {
+    var r = h.getDataRange();
+    var enc = ubicarEncabezado_(r.getValues());
+    var desde = enc + 2;
+    var filas = h.getLastRow() - desde + 1;
+    if (filas < 1) return;
+    var rr = h.getRange(desde, 1, filas, h.getLastColumn());
+    rr.setBackground(null);
+    rr.clearNote();
+    nombres.push(h.getName());
   }
 
-  SpreadsheetApp.getUi().alert('Listo, quité los colores y las notas de: ' + nombres.join(' y ') + '.');
+  limpiar(hoja);
+  var inv = ss.getSheetByName(HOJA_INVENTARIO);
+  if (inv && inv.getSheetId() !== hoja.getSheetId()) limpiar(inv);
+
+  SpreadsheetApp.getUi().alert('Listo, quite los colores y las notas de: ' + nombres.join(' y ') + '.');
 }
+
 function pintar_(hoja, filaIni, fondos, notas, ancho) {
   var fc = hoja.getFrozenColumns();
   var n = fondos.length;
