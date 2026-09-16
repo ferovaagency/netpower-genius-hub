@@ -34,11 +34,82 @@ var BLANCO = '#ffffff';
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('NetPower')
-    .addItem('Comparar esta pestaña con la web', 'compararPestanaActiva')
-    .addItem('Quitar colores de esta pestaña', 'limpiarColores')
+    .addItem('Comparar esta pestaña ahora', 'compararPestanaActiva')
+    .addItem('Quitar colores', 'limpiarColores')
+    .addSeparator()
+    .addItem('Activar pintado automático', 'activarPintadoAutomatico')
+    .addItem('Desactivar pintado automático', 'desactivarPintadoAutomatico')
     .addSeparator()
     .addItem('Configurar conexión', 'configurarConexion')
     .addToUi();
+}
+
+/* ───────────────────────── pintado automático ───────────────────────────── */
+
+/**
+ * Se dispara con cada edición de la hoja. Es un trigger instalable (no el
+ * onEdit simple) porque el simple corta a los 30 segundos y una lista larga
+ * no alcanza a terminar.
+ */
+function alEditar(e) {
+  if (!e || !e.range) return;
+  var hoja = e.range.getSheet();
+  if (hoja.getName() === HOJA_INVENTARIO) return;
+
+  var valores = hoja.getDataRange().getValues();
+  if (valores.length < 2) return;
+  // Si la pestaña no tiene columna de nombre, no es una lista de actualización.
+  if (buscarColumna_(valores[ubicarEncabezado_(valores)],
+      /(descripcion|descripción|nombre|producto)/i) < 0) return;
+  // Una edición dentro del encabezado no cambia nada que comparar.
+  if (e.range.getLastRow() <= ubicarEncabezado_(valores) + 1) return;
+
+  // Si ya hay una corrida en curso, esta se descarta: la siguiente edición
+  // vuelve a lanzarla y el resultado es el mismo.
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(1000)) return;
+
+  var ss = SpreadsheetApp.getActive();
+  try {
+    ss.toast('Comparando con Inventario...', 'NetPower', 30);
+    var r = comparar_(hoja);
+    if (r.error) { ss.toast(r.error, 'NetPower', 8); return; }
+    ss.toast('Rojo ' + r.rojo + ' · Amarillo ' + r.amarillo + ' · Igual ' + r.igual,
+             'NetPower', 8);
+  } catch (err) {
+    ss.toast('Falló la comparación: ' + err.message, 'NetPower', 10);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function activarPintadoAutomatico() {
+  var ui = SpreadsheetApp.getUi();
+  desactivarTriggers_();
+  ScriptApp.newTrigger('alEditar')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onEdit()
+    .create();
+  ui.alert('Pintado automático activado.\n\n' +
+           'Cada vez que pegues o edites una lista, se compara sola contra ' +
+           'Inventario y se repintan las dos pestañas. Tarda unos segundos; ' +
+           'mientras corre aparece un aviso abajo a la derecha.');
+}
+
+function desactivarPintadoAutomatico() {
+  var n = desactivarTriggers_();
+  SpreadsheetApp.getUi().alert(n
+    ? 'Pintado automático desactivado. Ahora hay que usar "Comparar esta pestaña ahora".'
+    : 'No estaba activado.');
+}
+
+function desactivarTriggers_() {
+  var t = ScriptApp.getProjectTriggers();
+  var n = 0;
+  for (var i = 0; i < t.length; i++) {
+    if (t[i].getHandlerFunction() === 'alEditar') { ScriptApp.deleteTrigger(t[i]); n++; }
+  }
+  return n;
 }
 
 /* ─────────────────────────────── conexión ───────────────────────────────── */
@@ -224,22 +295,19 @@ var HOJA_INVENTARIO = 'Inventario';
  *
  * La web no participa: esto es solo entre las dos pestañas.
  */
-function compararPestanaActiva() {
-  var ui = SpreadsheetApp.getUi();
+function comparar_(hoja) {
   var ss = SpreadsheetApp.getActive();
-  var hoja = SpreadsheetApp.getActiveSheet();
 
   if (hoja.getName() === HOJA_INVENTARIO) {
-    ui.alert('Parate en la pestaña de la lista nueva (por ejemplo "Actualizacion 16"), no en Inventario.');
-    return;
+    return { error: 'Parate en la pestaña de la lista nueva, no en Inventario.' };
   }
 
   var inv = ss.getSheetByName(HOJA_INVENTARIO);
-  if (!inv) { ui.alert('No encontré la pestaña "' + HOJA_INVENTARIO + '".'); return; }
+  if (!inv) return { error: 'No encontré la pestaña "' + HOJA_INVENTARIO + '".' };
 
   // ── la lista nueva ───────────────────────────────────────────────────────
   var vLis = hoja.getDataRange().getValues();
-  if (vLis.length < 2) { ui.alert('Esta pestaña está vacía.'); return; }
+  if (vLis.length < 2) return { error: 'Esta pestaña está vacía.' };
 
   var encLisFila = ubicarEncabezado_(vLis);
   var encLis = vLis[encLisFila];
@@ -247,8 +315,7 @@ function compararPestanaActiva() {
 
   var lNombre = buscarColumna_(encLis, /(descripcion|descripción|nombre|producto)/i);
   if (lNombre < 0) {
-    ui.alert('No encontré la columna del nombre en esta pestaña. Debe llamarse Descripción, Nombre o Producto.');
-    return;
+    return { error: 'No encontré la columna del nombre. Debe llamarse Descripción, Nombre o Producto.' };
   }
   // Orden de preferencia para el precio de la lista: el de venta, si no el que
   // ya trae el margen (+20%), y solo al final cualquier columna 'precio',
@@ -265,7 +332,7 @@ function compararPestanaActiva() {
   var anchoInv = encInv.length;
 
   var iNombre = buscarColumna_(encInv, /(nombre|descripcion|descripción|producto)/i);
-  if (iNombre < 0) { ui.alert('No encontré la columna del nombre en la pestaña Inventario.'); return; }
+  if (iNombre < 0) return { error: 'No encontré la columna del nombre en la pestaña Inventario.' };
   var iPrecio = buscarColumna_(encInv, /precio\s*(de\s*)?venta/i);
   if (iPrecio < 0) iPrecio = buscarColumna_(encInv, /precio/i);
   var iStock = buscarColumna_(encInv, /(stock|cantidad|existencia|disponible)/i);
@@ -284,7 +351,7 @@ function compararPestanaActiva() {
     for (var t = 0; t < tk.length; t++) (porToken[tk[t]] = porToken[tk[t]] || []).push(pos);
   }
 
-  if (!indice.length) { ui.alert('La pestaña Inventario no tiene productos.'); return; }
+  if (!indice.length) return { error: 'La pestaña Inventario no tiene productos.' };
 
   // ── comparar ─────────────────────────────────────────────────────────────
   var priLis = encLisFila + 1;
@@ -389,16 +456,34 @@ function compararPestanaActiva() {
   if (totLis > 0) pintar_(hoja, priLis + 1, fondosLis, notasLis, anchoLis);
   if (totInv > 0) pintar_(inv, priInv + 1, fondosInv, notasInv, anchoInv);
 
+  return {
+    hoja: hoja.getName(),
+    rojo: nRojo,
+    amarillo: nAmarillo,
+    igual: nIgual,
+    vacias: nVacio,
+    columnaPrecio: lPrecio >= 0 ? String(encLis[lPrecio]) : '',
+    hayStock: lStock >= 0,
+    productos: indice.length
+  };
+}
+
+/** Lo que dispara el menú: compara y muestra el resumen. */
+function compararPestanaActiva() {
+  var ui = SpreadsheetApp.getUi();
+  var r = comparar_(SpreadsheetApp.getActiveSheet());
+
+  if (r.error) { ui.alert(r.error); return; }
+
   ui.alert(
     'Comparación lista\n\n' +
-    'Rojo en "' + hoja.getName() + '" (no están en Inventario): ' + nRojo + '\n' +
-    'Amarillo en Inventario (cambió precio o stock): ' + nAmarillo + '\n' +
-    'Sin cambios: ' + nIgual + '\n' +
-    (nVacio ? 'Filas sin nombre: ' + nVacio + '\n' : '') +
-    '\nColumna de precio usada en la lista: ' +
-    (lPrecio >= 0 ? encLis[lPrecio] : 'ninguna') + '\n' +
-    'Inventario leído: ' + indice.length + ' productos.\n' +
-    (lStock < 0 ? 'Esta lista no tiene columna de stock, así que solo se comparó el precio.\n' : '') +
+    'Rojo en "' + r.hoja + '" (no están en Inventario): ' + r.rojo + '\n' +
+    'Amarillo en Inventario (cambió precio o stock): ' + r.amarillo + '\n' +
+    'Sin cambios: ' + r.igual + '\n' +
+    (r.vacias ? 'Filas sin nombre: ' + r.vacias + '\n' : '') +
+    '\nColumna de precio usada en la lista: ' + (r.columnaPrecio || 'ninguna') + '\n' +
+    'Inventario leído: ' + r.productos + ' productos.\n' +
+    (r.hayStock ? '' : 'Esta lista no tiene columna de stock, así que solo se comparó el precio.\n') +
     '\nPasá el cursor sobre el nombre para ver el detalle de cada fila.'
   );
 }
