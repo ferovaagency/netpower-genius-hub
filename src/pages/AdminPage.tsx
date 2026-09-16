@@ -70,6 +70,9 @@ export default function AdminPage() {
   const [editandoSku, setEditandoSku] = useState<string | null>(null);
   const [borradorSku, setBorradorSku] = useState("");
   const [guardandoSku, setGuardandoSku] = useState<string | null>(null);
+  const [editandoNombre, setEditandoNombre] = useState<string | null>(null);
+  const [borradorNombre, setBorradorNombre] = useState("");
+  const [guardandoNombre, setGuardandoNombre] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -142,6 +145,38 @@ export default function AdminPage() {
     setProducts(prev => prev.map(x => x.id === id ? { ...x, sku: valor || null } : x));
     setEditandoSku(avanzarA ?? null);
     setBorradorSku(avanzarA ? (products.find(x => x.id === avanzarA)?.sku || "") : "");
+  };
+
+  // El nombre se edita aqui y no viaja a la hoja de inventario: la sincronizacion
+  // cruza por SKU y solo escribe stock y precio. El slug tampoco se toca, porque
+  // es la URL que ya esta indexada.
+  const guardarNombre = async (id: string, avanzarA?: string) => {
+    const valor = borradorNombre.trim();
+    const actual = products.find(x => x.id === id);
+    if (!actual) return;
+
+    const salir = () => {
+      setEditandoNombre(avanzarA ?? null);
+      setBorradorNombre(avanzarA ? (products.find(x => x.id === avanzarA)?.name || "") : "");
+    };
+
+    if (valor === actual.name) { salir(); return; }
+    if (!valor) {
+      toast({ title: "El nombre no puede quedar vacio", variant: "destructive" });
+      return;
+    }
+
+    setGuardandoNombre(id);
+    const { error } = await supabase.from("products").update({ name: valor }).eq("id", id);
+    setGuardandoNombre(null);
+
+    if (error) {
+      toast({ title: "No se pudo guardar el nombre", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setProducts(prev => prev.map(x => x.id === id ? { ...x, name: valor } : x));
+    salir();
   };
 
   const toggleSelect = (id: string) => {
@@ -484,7 +519,32 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {p.images?.[0] && <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />}
-                            <span className="font-medium line-clamp-1 max-w-[200px]">{p.name}</span>
+                            {editandoNombre === p.id ? (
+                              <input
+                                autoFocus
+                                value={borradorNombre}
+                                onChange={e => setBorradorNombre(e.target.value)}
+                                onBlur={() => guardarNombre(p.id)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    guardarNombre(p.id, filteredProds[idx + 1]?.id);
+                                  } else if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setEditandoNombre(null);
+                                  }
+                                }}
+                                className="w-[260px] px-2 py-1 rounded-lg border border-primary bg-background text-sm outline-none"
+                              />
+                            ) : (
+                              <button
+                                onClick={() => { setEditandoNombre(p.id); setBorradorNombre(p.name); }}
+                                title="Clic para editar el nombre. Enter guarda y pasa al siguiente. La URL no cambia."
+                                className="font-medium text-left line-clamp-1 max-w-[260px] px-2 py-1 rounded-lg border border-dashed border-transparent hover:border-border hover:bg-accent transition"
+                              >
+                                {guardandoNombre === p.id ? "guardando..." : p.name}
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3">

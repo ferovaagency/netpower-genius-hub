@@ -155,7 +155,7 @@ serve(async (req) => {
     // ── catálogo ─────────────────────────────────────────────────
     const { data: productos, error: eProd } = await admin
       .from('products')
-      .select('id, name, sku, stock, price, active')
+      .select('id, name, slug, sku, stock, price, active')
       .range(0, 9999);
     if (eProd) return json({ error: eProd.message }, 500);
 
