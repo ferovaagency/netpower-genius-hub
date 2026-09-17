@@ -108,6 +108,9 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-MWRV7ZNCB9', { send_page_view: false });
+  // Google Ads. Comparte el mismo gtag.js que GA4: un solo script, dos destinos.
+  // Sin esto no se recoge el gclid y las conversiones no se pueden atribuir.
+  gtag('config', 'AW-18420851379');
 </script>
 
 <!-- Clarity y Apollo se cargan DESPUES del evento load.

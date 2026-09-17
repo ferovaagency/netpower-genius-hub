@@ -160,18 +160,65 @@ export function trackPageView(p: Params<"page_view">): void {
   send("page_view", p);
 }
 
+// ─── Google Ads ──────────────────────────────────────────────────────────────
+//
+// La conversion de Ads viaja aparte del evento de GA4: Ads necesita su propio
+// `send_to` con el identificador completo de la accion de conversion, que se
+// ve asi: AW-18420851379/AbCdEfGhIj. Ese sufijo lo genera Google Ads al crear
+// la accion, asi que vive en variables de entorno y no en el codigo.
+//
+// Si la variable esta vacia no se emite nada. Es deliberado: mejor sin
+// conversion que con una etiqueta inventada, que registraria datos falsos.
+//
+// Alternativa sin etiquetas: marcar `cotizacion_enviada` como evento clave en
+// GA4 e importarlo a Ads. En ese caso estas variables se quedan vacias y esta
+// funcion no hace nada.
+
+const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
+
+const ADS_CONVERSIONES = {
+  cotizacion: env.VITE_ADS_CONV_COTIZACION ?? "",
+  whatsapp: env.VITE_ADS_CONV_WHATSAPP ?? "",
+  compra: env.VITE_ADS_CONV_COMPRA ?? "",
+} as const;
+
+function enviarConversionAds(
+  cual: keyof typeof ADS_CONVERSIONES,
+  extra?: Record<string, unknown>,
+): void {
+  try {
+    const sendTo = ADS_CONVERSIONES[cual];
+    if (!sendTo) return;
+    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+    window.gtag("event", "conversion", { send_to: sendTo, ...(extra ?? {}) });
+  } catch (err) {
+    if (isDev()) console.warn("[analytics] fallo la conversion de Ads", cual, err);
+  }
+}
+
 export function trackCotizacionEnviada(p: Params<"cotizacion_enviada">): void {
   send("cotizacion_enviada", p);
+  // La cotizacion es la conversion principal: en UPS de ticket alto nadie paga
+  // con tarjeta, pide cotizacion. La compra llega despues y por otro canal.
+  enviarConversionAds("cotizacion");
 }
 
 export function trackWhatsAppClick(p: Params<"whatsapp_click">): void {
   send("whatsapp_click", p);
+  enviarConversionAds("whatsapp");
 }
 
 /** Idempotente por transaction_id: recargar la confirmacion no duplica la compra. */
 export function trackCompraCompletada(p: Params<"compra_completada">): void {
   if (!p.transaction_id) return;
-  oncePersisted(`purchase:${p.transaction_id}`, () => send("compra_completada", p));
+  oncePersisted(`purchase:${p.transaction_id}`, () => {
+    send("compra_completada", p);
+    enviarConversionAds("compra", {
+      value: p.value,
+      currency: p.currency,
+      transaction_id: p.transaction_id,
+    });
+  });
 }
 
 // ─── Compra pendiente de confirmar (pasarela externa) ────────────────────────
