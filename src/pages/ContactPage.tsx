@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 import { trackCotizacionEnviada } from "@/lib/analytics";
-import { getAttributionForDetails, hasClickId } from "@/lib/attribution";
+import { getAttributionForDetails, hasClickId, getCanal } from "@/lib/attribution";
 
 export default function ContactPage() {
   const { toast } = useToast();
@@ -52,7 +52,7 @@ export default function ContactPage() {
     setLoading(true);
     const atribucion = getAttributionForDetails();
     const { error } = await supabase.from("quote_requests").insert({
-      details: { atribucion, sospecha_bot: sospechaBot },
+      details: { atribucion, canal: getCanal(), sospecha_bot: sospechaBot },
       source: "contact_form",
       customer_name: parsed.data.name,
       customer_email: parsed.data.email,

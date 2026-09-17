@@ -310,6 +310,42 @@ export default function AdminPage() {
     return m[s] || s;
   };
 
+  /**
+   * Canal de la cotizacion: si vino de pauta o no.
+   * Las filas viejas no tienen `canal` guardado, asi que se reconstruye desde la
+   * atribucion. Si tampoco hay atribucion, se dice "Sin dato" — que no es lo
+   * mismo que organico, y mezclarlos falsearia el reporte.
+   */
+  const canalDeCotizacion = (q: any): { texto: string; pago: boolean; dato: boolean } => {
+    const d = q?.details || {};
+    const guardado: string | undefined = d.canal;
+    if (guardado) {
+      const pago = guardado.startsWith("Pauta");
+      return { texto: guardado, pago, dato: guardado !== "Desconocido" };
+    }
+    const a = d.atribucion || {};
+    if (a.gclid || a.wbraid || a.gbraid) return { texto: "Pauta Google Ads", pago: true, dato: true };
+    if (a.utm_medium && /^(cpc|ppc|paid|display|cpm)$/i.test(a.utm_medium)) return { texto: "Pauta", pago: true, dato: true };
+    if (a.utm_source || a.utm_campaign) return { texto: "Referido", pago: false, dato: true };
+    if (a.referrer === "directo") return { texto: "Directo", pago: false, dato: true };
+    if (a.referrer) return { texto: /(google|bing|yahoo|duckduckgo)\./i.test(a.referrer) ? "Organico" : "Referido", pago: false, dato: true };
+    return { texto: "Sin dato", pago: false, dato: false };
+  };
+
+  const canalBadge = (q: any) => {
+    const c = canalDeCotizacion(q);
+    const clase = c.pago
+      ? "bg-primary/10 text-primary border-primary/30"
+      : c.dato
+        ? "bg-muted text-muted-foreground border-border"
+        : "bg-secondary/10 text-secondary border-secondary/30";
+    return (
+      <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold ${clase}`}>
+        {c.texto}
+      </span>
+    );
+  };
+
   // ── CONVERSACIONES NETI ───────────────────────────────────────
   const [convs, setConvs] = useState<any[]>([]);
   const [loadingConvs, setLoadingConvs] = useState(true);
@@ -746,6 +782,7 @@ export default function AdminPage() {
                       <th className="px-4 py-3 text-left font-semibold">Cliente</th>
                       <th className="px-4 py-3 text-left font-semibold">Contacto</th>
                       <th className="px-4 py-3 text-left font-semibold">Origen</th>
+                      <th className="px-4 py-3 text-left font-semibold">Canal</th>
                       <th className="px-4 py-3 text-left font-semibold">Resumen</th>
                       <th className="px-4 py-3 text-left font-semibold">Estado</th>
                       <th className="px-4 py-3 text-left font-semibold">Fecha</th>
@@ -761,6 +798,7 @@ export default function AdminPage() {
                           {q.customer_phone && <div className="flex items-center gap-1 text-muted-foreground"><Phone className="w-3 h-3" />{q.customer_phone}</div>}
                         </td>
                         <td className="px-4 py-3 text-xs">{sourceLabel(q.source)}</td>
+                        <td className="px-4 py-3">{canalBadge(q)}</td>
                         <td className="px-4 py-3 max-w-xs"><p className="text-xs line-clamp-2">{q.message || "—"}</p></td>
                         <td className="px-4 py-3">{quoteStatusBadge(q.status)}</td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString("es-CO")}</td>

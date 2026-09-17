@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { ShoppingCart, Minus, Plus, MessageCircle, FileText, Truck, ShieldCheck, Phone, Wrench, Globe, Loader2 } from "lucide-react";
 import { products as staticProducts, categories, brands, formatCOP, getDiscountPercentage } from "@/data/store-data";
-import { fetchProductBySlug, fetchAllProducts } from "@/hooks/useProducts";
+import { fetchProductBySlug, fetchRelatedProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useChat } from "@/contexts/ChatContext";
 import type { Product } from "@/types/store";
@@ -41,23 +41,34 @@ export default function ProductDetailPage() {
       }
 
       setProduct(found);
-
-      // Load related products
-      if (found) {
-        const allDb = await fetchAllProducts().catch(() => []);
-        const pool = allDb.length > 0 ? allDb : staticProducts;
-        setRelated(
-          pool
-            .filter(p => p.active && p.categoryId === found!.categoryId && p.id !== found!.id)
-            .slice(0, 4)
-        );
-      }
-
+      setRelated([]);
+      // Pintar YA. Los relacionados se cargan aparte: antes esta linea estaba
+      // despues de traerse el catalogo entero, y la ficha se quedaba en el
+      // spinner hasta que esa descarga terminaba.
       setLoading(false);
     };
 
     load();
   }, [slug]);
+
+  // Relacionados, fuera del camino critico del primer pintado.
+  useEffect(() => {
+    if (!product) return;
+    let vigente = true;
+    fetchRelatedProducts(product.categoryId, product.id, 4)
+      .then((lista) => {
+        if (!vigente) return;
+        if (lista.length > 0) { setRelated(lista); return; }
+        // La consulta respondio vacio: caemos al catalogo estatico del bundle.
+        setRelated(
+          staticProducts
+            .filter(p => p.active && p.categoryId === product.categoryId && p.id !== product.id)
+            .slice(0, 4)
+        );
+      })
+      .catch(() => { /* sin relacionados no se rompe la ficha */ });
+    return () => { vigente = false; };
+  }, [product]);
 
   if (loading) {
     return (
@@ -433,6 +444,46 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Preguntas frecuentes. Hasta ahora estas FAQ solo existian dentro del
+            JSON-LD, invisibles para quien entra a la pagina. Google pide que el
+            contenido marcado con FAQPage este visible, y quien llega desde un
+            anuncio necesita resolver la objecion aqui, no escribiendo primero. */}
+        {faqList.length > 0 && (
+          <section className="mt-8" aria-labelledby="faq-titulo">
+            <h2 id="faq-titulo" className="text-xl font-extrabold text-foreground mb-4">
+              Preguntas frecuentes
+            </h2>
+            <div className="divide-y divide-border rounded-lg border border-border bg-card">
+              {faqList.map((f, i) => (
+                <details key={i} className="group p-4" open={i === 0}>
+                  <summary className="cursor-pointer list-none font-semibold text-foreground flex items-start justify-between gap-3">
+                    <span>{f.question}</span>
+                    <Plus className="w-4 h-4 mt-1 shrink-0 text-primary transition-transform group-open:rotate-45" />
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.answer}</p>
+                </details>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                onClick={() => openChat("quote")}
+                className="h-11 px-5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition"
+              >
+                <FileText className="w-4 h-4" /> ¿Otra duda? Cotiza y pregunta
+              </button>
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+                data-wa-origen="ficha_faq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-11 px-5 rounded-lg border border-border text-sm font-medium flex items-center gap-2 hover:bg-accent transition"
+              >
+                <MessageCircle className="w-4 h-4" /> WhatsApp
+              </a>
+            </div>
+          </section>
+        )}
 
         {/* Related */}
         {related.length > 0 && (

@@ -128,3 +128,52 @@ export function hasClickId(): boolean {
   const attr = getAttribution();
   return attr ? CLICK_IDS.some((c) => Boolean(attr[c])) : false;
 }
+
+/** Medios que Google y las plataformas usan para trafico pagado. */
+const MEDIOS_PAGOS = /^(cpc|ppc|paid|paidsearch|paid_search|paidsocial|paid_social|display|cpm|retargeting|remarketing)$/i;
+
+/** Buscadores, para distinguir organico de referido. */
+const BUSCADORES = /(google|bing|yahoo|duckduckgo|ecosia|brave|yandex)\./i;
+
+export type Canal =
+  | "Pauta Google Ads"
+  | "Pauta"
+  | "Organico"
+  | "Directo"
+  | "Referido"
+  | "Desconocido";
+
+/**
+ * Clasifica de donde vino el lead, en una sola palabra que un humano pueda leer
+ * en el panel sin interpretar utms. El orden importa: un clic pago identificado
+ * gana sobre cualquier otra senal, igual que hace la atribucion de Google Ads.
+ *
+ * Limite conocido: si alguien llega por un anuncio, se va, y vuelve tecleando el
+ * dominio dentro de los 90 dias, esto sigue diciendo Pauta. Es el mismo criterio
+ * de ultimo clic pago que usa Google, y es deliberado: si no, la pauta nunca se
+ * lleva el credito de la venta que origino.
+ */
+export function getCanal(): Canal {
+  try {
+    const attr = getAttribution();
+    if (!attr) return "Desconocido";
+
+    if (CLICK_IDS.some((c) => Boolean(attr[c]))) return "Pauta Google Ads";
+    if (attr.utm_medium && MEDIOS_PAGOS.test(attr.utm_medium)) return "Pauta";
+    // utm sin medio pago: campana propia (correo, redes organicas, firma).
+    if (attr.utm_source || attr.utm_medium || attr.utm_campaign) return "Referido";
+
+    const ref = attr.referrer || "";
+    if (!ref || ref === "directo") return "Directo";
+    if (BUSCADORES.test(ref)) return "Organico";
+    return "Referido";
+  } catch {
+    return "Desconocido";
+  }
+}
+
+/** true solo cuando el lead es atribuible a pauta. Atajo para reportes. */
+export function esDePauta(): boolean {
+  const c = getCanal();
+  return c === "Pauta Google Ads" || c === "Pauta";
+}

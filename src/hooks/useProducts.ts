@@ -151,6 +151,29 @@ export async function fetchAllProducts(): Promise<Product[]> {
   return (data ?? []).map(mapRow);
 }
 
+/**
+ * Relacionados de la misma categoria. Existe para NO usar fetchAllProducts en la
+ * ficha: esa trae las ~750 filas completas (descripcion y specs incluidas) solo
+ * para quedarse con cuatro, y hasta que no terminaba la ficha no pintaba nada.
+ */
+export async function fetchRelatedProducts(
+  categoryId: string,
+  excludeId: string,
+  limit = 4,
+): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category_id", categoryId)
+    .eq("active", true)
+    .neq("id", excludeId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapRow);
+}
+
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
   const { data, error } = await supabase
     .from("products")

@@ -10,7 +10,7 @@ import { Product } from "@/types/store";
 import { supabase } from "@/integrations/supabase/client";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 import { trackCotizacionEnviada } from "@/lib/analytics";
-import { getAttributionForDetails, hasClickId } from "@/lib/attribution";
+import { getAttributionForDetails, hasClickId, getCanal } from "@/lib/attribution";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -173,6 +173,11 @@ export default function AIChatWidget() {
       let data: any = {};
       try { data = JSON.parse(m[1]); } catch { continue; }
       const transcript = messages.map(x => `${x.role === "user" ? "Cliente" : "Neti"}: ${x.content.replace(/\[\[QUOTE_DATA:[\s\S]*?\]\]/g, "")}`).join("\n");
+      // La atribucion se calcula ANTES del insert para que quede guardada en la
+      // fila, no solo enviada a GA4: asi el panel puede decir si el lead vino de
+      // pauta sin depender de Analytics.
+      const atribucion = getAttributionForDetails();
+      const canal = getCanal();
       supabase.from("quote_requests").insert({
         source: "neti_chat",
         customer_name: data.name || null,
@@ -182,18 +187,17 @@ export default function AIChatWidget() {
         nit_cedula: data.nit_cedula || data.nit || data.cedula || null,
         subject: "Cotización solicitada vía Neti (AI chat)",
         message: data.project || "",
-        details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript },
+        details: { project: data.project || "", budget: data.budget || "", notes: data.notes || "", transcript, atribucion, canal },
         status: "new",
       }).then(({ error }) => {
         if (error) { console.error("Failed to save quote:", error); return; }
         // Conversion principal. Una vez por fila creada: submittedQuotesRef
         // ya marca la clave ANTES del insert, asi que no se duplica.
-        const atr = getAttributionForDetails();
         trackCotizacionEnviada({
           lead_source: "neti_chat",
-          utm_source: atr.utm_source,
-          utm_medium: atr.utm_medium,
-          utm_campaign: atr.utm_campaign,
+          utm_source: atribucion.utm_source,
+          utm_medium: atribucion.utm_medium,
+          utm_campaign: atribucion.utm_campaign,
           tiene_gclid: hasClickId(),
         });
       });
