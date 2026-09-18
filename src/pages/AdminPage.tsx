@@ -346,6 +346,57 @@ export default function AdminPage() {
     );
   };
 
+  // ── CLICS A WHATSAPP ──────────────────────────────────────────
+  // Cada fila es un clic al boton de WhatsApp, no una conversacion.
+  // `escribio` empieza en NULL: nadie sabe todavia si la persona mando el
+  // mensaje. Se marca a mano cotejando el codigo Ref que viaja en el texto.
+  const [waClicks, setWaClicks] = useState<any[]>([]);
+  const [loadingWa, setLoadingWa] = useState(true);
+  const [waSearch, setWaSearch] = useState("");
+  const [waSoloPauta, setWaSoloPauta] = useState(false);
+
+  const fetchWaClicks = useCallback(async () => {
+    // types.ts lo genera Lovable y todavia no conoce esta tabla.
+    const { data, error } = await (supabase as any)
+      .from("whatsapp_clicks")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) console.error("whatsapp_clicks:", error.message);
+    setWaClicks(data || []);
+    setLoadingWa(false);
+  }, []);
+
+  useEffect(() => {
+    fetchWaClicks();
+    const i = setInterval(fetchWaClicks, 30000);
+    return () => clearInterval(i);
+  }, [fetchWaClicks]);
+
+  const marcarEscribio = async (id: string, valor: boolean | null) => {
+    const { error } = await (supabase as any)
+      .from("whatsapp_clicks")
+      .update({ escribio: valor })
+      .eq("id", id);
+    if (error) { toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" }); return; }
+    setWaClicks(prev => prev.map(c => (c.id === id ? { ...c, escribio: valor } : c)));
+  };
+
+  const filteredWa = waClicks.filter(c => {
+    if (waSoloPauta && !String(c.canal || "").startsWith("Pauta")) return false;
+    const q = waSearch.toLowerCase();
+    if (!q) return true;
+    return [c.ref_code, c.product_name, c.product_sku, c.origen, c.canal, c.page_path]
+      .some(v => String(v || "").toLowerCase().includes(q));
+  });
+
+  const waResumen = {
+    total: waClicks.length,
+    pauta: waClicks.filter(c => String(c.canal || "").startsWith("Pauta")).length,
+    escribieron: waClicks.filter(c => c.escribio === true).length,
+    sinConfirmar: waClicks.filter(c => c.escribio === null || c.escribio === undefined).length,
+  };
+
   // ── CONVERSACIONES NETI ───────────────────────────────────────
   const [convs, setConvs] = useState<any[]>([]);
   const [loadingConvs, setLoadingConvs] = useState(true);
@@ -399,6 +450,7 @@ export default function AdminPage() {
             <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
             <TabsTrigger value="conversaciones"><MessageCircle className="w-4 h-4 mr-1" /> Conversaciones Neti</TabsTrigger>
+            <TabsTrigger value="whatsapp"><Phone className="w-4 h-4 mr-1" /> WhatsApp</TabsTrigger>
           </TabsList>
 
 
@@ -952,6 +1004,103 @@ export default function AdminPage() {
                     </Button>
                   </div>
                 </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* CLICS A WHATSAPP */}
+          <TabsContent value="whatsapp">
+            <div className="rounded-xl border border-border bg-muted/30 p-4 mb-4 text-sm">
+              <p className="font-semibold mb-1">Qué es esta lista y qué no es</p>
+              <p className="text-muted-foreground">
+                Cada fila es un <strong>clic</strong> al botón de WhatsApp, no una conversación.
+                El sitio no puede saber si la persona llegó a escribir: WhatsApp corre fuera de
+                la página y no devuelve nada. Por eso cada clic lleva un código <strong>Ref</strong>
+                {" "}que viaja dentro del mensaje ya escrito. Cuando te llegue un chat con ese
+                código, buscalo acá y marcá si escribió.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {[
+                { label: "Clics totales", valor: waResumen.total },
+                { label: "Desde pauta", valor: waResumen.pauta },
+                { label: "Confirmados que escribieron", valor: waResumen.escribieron },
+                { label: "Sin confirmar", valor: waResumen.sinConfirmar },
+              ].map(k => (
+                <div key={k.label} className="rounded-xl border border-border bg-card p-3">
+                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <p className="text-2xl font-extrabold">{k.valor}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por código Ref, producto, origen o canal..."
+                value={waSearch}
+                onChange={e => setWaSearch(e.target.value)}
+                className="max-w-md"
+              />
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input type="checkbox" checked={waSoloPauta} onChange={e => setWaSoloPauta(e.target.checked)} />
+                Solo los que vienen de pauta
+              </label>
+            </div>
+
+            {loadingWa ? (
+              <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            ) : filteredWa.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">
+                {waClicks.length === 0
+                  ? "Todavía no se ha registrado ningún clic a WhatsApp."
+                  : "Ningún clic coincide con el filtro."}
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">Ref</th>
+                      <th className="px-4 py-3 text-left font-semibold">Canal</th>
+                      <th className="px-4 py-3 text-left font-semibold">Producto</th>
+                      <th className="px-4 py-3 text-left font-semibold">Dónde hizo clic</th>
+                      <th className="px-4 py-3 text-left font-semibold">Fecha</th>
+                      <th className="px-4 py-3 text-left font-semibold">¿Escribió?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredWa.map(c => (
+                      <tr key={c.id} className="border-t border-border hover:bg-muted/30">
+                        <td className="px-4 py-3 font-mono text-xs font-semibold">{c.ref_code}</td>
+                        <td className="px-4 py-3">{canalBadge({ details: { canal: c.canal, atribucion: c.atribucion } })}</td>
+                        <td className="px-4 py-3 max-w-xs">
+                          <p className="text-xs line-clamp-2">{c.product_name || "—"}</p>
+                          {c.product_sku && <p className="text-[11px] text-muted-foreground">{c.product_sku}</p>}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {c.origen || "—"}
+                          <p className="text-[11px]">{c.page_path}</p>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleString("es-CO")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={c.escribio === true ? "si" : c.escribio === false ? "no" : ""}
+                            onChange={e => marcarEscribio(c.id, e.target.value === "si" ? true : e.target.value === "no" ? false : null)}
+                            className="text-xs border border-border rounded-lg px-2 py-1 bg-background"
+                          >
+                            <option value="">Sin confirmar</option>
+                            <option value="si">Sí escribió</option>
+                            <option value="no">No escribió</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </TabsContent>
