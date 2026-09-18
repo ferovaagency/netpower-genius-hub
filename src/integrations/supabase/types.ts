@@ -837,6 +837,8 @@ export type Database = {
           product_sku: string | null
           ref_code: string
           updated_at: string
+          valor_venta: number | null
+          vendio: boolean | null
         }
         Insert: {
           atribucion?: Json
@@ -851,6 +853,8 @@ export type Database = {
           product_sku?: string | null
           ref_code: string
           updated_at?: string
+          valor_venta?: number | null
+          vendio?: boolean | null
         }
         Update: {
           atribucion?: Json
@@ -865,6 +869,8 @@ export type Database = {
           product_sku?: string | null
           ref_code?: string
           updated_at?: string
+          valor_venta?: number | null
+          vendio?: boolean | null
         }
         Relationships: []
       }
