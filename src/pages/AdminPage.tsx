@@ -390,11 +390,58 @@ export default function AdminPage() {
       .some(v => String(v || "").toLowerCase().includes(q));
   });
 
+  // Una fila cargada a mano no es un clic medido: no se sabe de donde vino esa
+  // persona. Se marca para poder excluirla de los numeros de canal, porque
+  // mezclarla ahi falsearia justo la cifra que sirve para decidir la pauta.
+  const esManual = (c: any) => c?.origen === "carga_manual";
+  const clicsDelSitio = waClicks.filter(c => !esManual(c));
+
   const waResumen = {
-    total: waClicks.length,
-    pauta: waClicks.filter(c => String(c.canal || "").startsWith("Pauta")).length,
+    delSitio: clicsDelSitio.length,
+    pauta: clicsDelSitio.filter(c => String(c.canal || "").startsWith("Pauta")).length,
     escribieron: waClicks.filter(c => c.escribio === true).length,
-    sinConfirmar: waClicks.filter(c => c.escribio === null || c.escribio === undefined).length,
+    manuales: waClicks.filter(esManual).length,
+  };
+
+  // ── ALTA MANUAL DE CONTACTOS VIEJOS ───────────────────────────
+  // Para los que escribieron antes de que existiera el seguimiento. No tienen
+  // codigo Ref porque nunca pasaron por el sitio con el tracker puesto.
+  const [waForm, setWaForm] = useState<{ abierto: boolean; fecha: string; producto: string; contacto: string; notas: string }>(
+    { abierto: false, fecha: new Date().toISOString().slice(0, 10), producto: "", contacto: "", notas: "" }
+  );
+  const [guardandoWa, setGuardandoWa] = useState(false);
+
+  const codigoManual = () => {
+    const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    let x = "";
+    for (let i = 0; i < 4; i++) x += A[Math.floor(Math.random() * A.length)];
+    return `MAN-${x}`;
+  };
+
+  const guardarContactoManual = async () => {
+    if (!waForm.contacto.trim()) {
+      toast({ title: "Falta el contacto", description: "Escribí al menos el nombre o el teléfono.", variant: "destructive" });
+      return;
+    }
+    setGuardandoWa(true);
+    const { error } = await (supabase as any).from("whatsapp_clicks").insert({
+      ref_code: codigoManual(),
+      origen: "carga_manual",
+      // "Sin dato" a proposito: no se sabe de donde vino y no se va a inventar.
+      canal: "Sin dato",
+      page_path: null,
+      product_name: waForm.producto.trim() || null,
+      atribucion: {},
+      // Se carga porque escribio: por eso queda confirmado de entrada.
+      escribio: true,
+      notas: [waForm.contacto.trim(), waForm.notas.trim()].filter(Boolean).join(" — "),
+      created_at: new Date(`${waForm.fecha}T12:00:00`).toISOString(),
+    });
+    setGuardandoWa(false);
+    if (error) { toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Contacto agregado" });
+    setWaForm({ abierto: false, fecha: new Date().toISOString().slice(0, 10), producto: "", contacto: "", notas: "" });
+    fetchWaClicks();
   };
 
   // ── CONVERSACIONES NETI ───────────────────────────────────────
@@ -1023,10 +1070,10 @@ export default function AdminPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {[
-                { label: "Clics totales", valor: waResumen.total },
-                { label: "Desde pauta", valor: waResumen.pauta },
+                { label: "Clics medidos en el sitio", valor: waResumen.delSitio },
+                { label: "De pauta (solo medidos)", valor: waResumen.pauta },
                 { label: "Confirmados que escribieron", valor: waResumen.escribieron },
-                { label: "Sin confirmar", valor: waResumen.sinConfirmar },
+                { label: "Cargados a mano", valor: waResumen.manuales },
               ].map(k => (
                 <div key={k.label} className="rounded-xl border border-border bg-card p-3">
                   <p className="text-xs text-muted-foreground">{k.label}</p>
@@ -1047,7 +1094,43 @@ export default function AdminPage() {
                 <input type="checkbox" checked={waSoloPauta} onChange={e => setWaSoloPauta(e.target.checked)} />
                 Solo los que vienen de pauta
               </label>
+              <Button size="sm" variant="outline" onClick={() => setWaForm(f => ({ ...f, abierto: !f.abierto }))}>
+                {waForm.abierto ? "Cancelar" : "+ Cargar contacto viejo"}
+              </Button>
             </div>
+
+            {waForm.abierto && (
+              <div className="rounded-xl border border-border bg-card p-4 mb-4">
+                <p className="font-semibold mb-1 text-sm">Cargar un contacto que escribió antes del seguimiento</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Queda con canal <strong>Sin dato</strong> y no entra en el conteo de pauta: de estos no se
+                  sabe de dónde vinieron, y contarlos como orgánicos o como pauta te falsearía el número.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground">Fecha en que escribió</label>
+                    <Input type="date" value={waForm.fecha} onChange={e => setWaForm(f => ({ ...f, fecha: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Nombre o teléfono <span className="text-destructive">*</span></label>
+                    <Input placeholder="Andrés Montoya / 300 123 4567" value={waForm.contacto} onChange={e => setWaForm(f => ({ ...f, contacto: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Producto por el que preguntó (opcional)</label>
+                    <Input placeholder="UPS Online SAT UOL3000" value={waForm.producto} onChange={e => setWaForm(f => ({ ...f, producto: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Notas (opcional)</label>
+                    <Input placeholder="Pidió cotización para 2 equipos" value={waForm.notas} onChange={e => setWaForm(f => ({ ...f, notas: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="flex justify-end mt-3">
+                  <Button size="sm" onClick={guardarContactoManual} disabled={guardandoWa}>
+                    {guardandoWa ? "Guardando..." : "Guardar contacto"}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {loadingWa ? (
               <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div>
@@ -1066,6 +1149,7 @@ export default function AdminPage() {
                       <th className="px-4 py-3 text-left font-semibold">Canal</th>
                       <th className="px-4 py-3 text-left font-semibold">Producto</th>
                       <th className="px-4 py-3 text-left font-semibold">Dónde hizo clic</th>
+                      <th className="px-4 py-3 text-left font-semibold">Contacto / notas</th>
                       <th className="px-4 py-3 text-left font-semibold">Fecha</th>
                       <th className="px-4 py-3 text-left font-semibold">¿Escribió?</th>
                     </tr>
@@ -1073,15 +1157,21 @@ export default function AdminPage() {
                   <tbody>
                     {filteredWa.map(c => (
                       <tr key={c.id} className="border-t border-border hover:bg-muted/30">
-                        <td className="px-4 py-3 font-mono text-xs font-semibold">{c.ref_code}</td>
+                        <td className="px-4 py-3 font-mono text-xs font-semibold">
+                          {c.ref_code}
+                          {esManual(c) && <p className="font-sans text-[10px] font-normal text-muted-foreground">manual</p>}
+                        </td>
                         <td className="px-4 py-3">{canalBadge({ details: { canal: c.canal, atribucion: c.atribucion } })}</td>
                         <td className="px-4 py-3 max-w-xs">
                           <p className="text-xs line-clamp-2">{c.product_name || "—"}</p>
                           {c.product_sku && <p className="text-[11px] text-muted-foreground">{c.product_sku}</p>}
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {c.origen || "—"}
+                          {esManual(c) ? <span className="italic">cargado a mano</span> : (c.origen || "—")}
                           <p className="text-[11px]">{c.page_path}</p>
+                        </td>
+                        <td className="px-4 py-3 max-w-xs">
+                          <p className="text-xs line-clamp-2">{c.notas || "—"}</p>
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
                           {new Date(c.created_at).toLocaleString("es-CO")}

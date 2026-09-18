@@ -6,7 +6,6 @@
 // Regla de oro, igual que en attribution.ts: esto NUNCA puede tumbar el clic.
 // Si falla el registro, la persona igual se va a WhatsApp.
 
-import { supabase } from "@/integrations/supabase/client";
 import { getAttributionForDetails, getCanal } from "@/lib/attribution";
 
 /** Codigo corto, legible en un chat y dificil de confundir.
@@ -34,17 +33,35 @@ export type DatosClicWhatsApp = {
 };
 
 /**
- * Inserta la fila del clic. No se espera el resultado: el navegador esta por
- * abrir WhatsApp y bloquear ese salto por una escritura seria peor que perder
- * el dato. Por eso tampoco hay reintento.
+ * Inserta la fila del clic.
+ *
+ * POR QUE NO USA EL CLIENTE DE SUPABASE, leer antes de "simplificar" esto:
+ * justo despues de este clic el navegador se va a WhatsApp. Una peticion normal
+ * lanzada desde una pagina que se esta descargando se CANCELA, y el clic se
+ * pierde sin dejar rastro: ni error en consola, ni fila. Por eso va un fetch
+ * crudo con `keepalive: true`, que es la unica forma de que el navegador se
+ * comprometa a terminar el envio aunque la pagina ya no exista. supabase-js no
+ * expone esa opcion por peticion.
+ *
+ * Tampoco se espera la respuesta: bloquear el salto a WhatsApp por una
+ * escritura seria peor que perder el dato.
  */
 export function registrarClicWhatsApp(d: DatosClicWhatsApp): void {
   try {
-    // types.ts lo genera Lovable y todavia no conoce esta tabla; el cast se quita
-    // cuando se regeneren los tipos despues de aplicar la migracion.
-    void (supabase as any)
-      .from("whatsapp_clicks")
-      .insert({
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) return;
+
+    void fetch(`${url}/rest/v1/whatsapp_clicks`, {
+      method: "POST",
+      keepalive: true,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
         ref_code: d.refCode,
         origen: d.origen,
         page_path: d.pagePath,
@@ -52,10 +69,12 @@ export function registrarClicWhatsApp(d: DatosClicWhatsApp): void {
         product_name: d.productName ?? null,
         canal: getCanal(),
         atribucion: getAttributionForDetails(),
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) console.error("No se pudo registrar el clic de WhatsApp: HTTP", r.status);
       })
-      .then(({ error }: { error: { message: string } | null }) => {
-        if (error) console.error("No se pudo registrar el clic de WhatsApp:", error.message);
-      });
+      .catch((e) => console.error("No se pudo registrar el clic de WhatsApp:", e));
   } catch (e) {
     console.error("No se pudo registrar el clic de WhatsApp:", e);
   }
