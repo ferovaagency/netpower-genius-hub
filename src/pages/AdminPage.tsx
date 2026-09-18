@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCOP } from "@/data/store-data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -396,11 +397,48 @@ export default function AdminPage() {
   const esManual = (c: any) => c?.origen === "carga_manual";
   const clicsDelSitio = waClicks.filter(c => !esManual(c));
 
-  const waResumen = {
-    delSitio: clicsDelSitio.length,
-    pauta: clicsDelSitio.filter(c => String(c.canal || "").startsWith("Pauta")).length,
-    escribieron: waClicks.filter(c => c.escribio === true).length,
-    manuales: waClicks.filter(esManual).length,
+  // Embudo. Cada paso se cuenta solo con lo CONFIRMADO: un NULL es "nadie lo
+  // reviso todavia", no un no. Si se contaran como no, la tasa de cierre saldria
+  // peor de lo que es y se tomarian decisiones de pauta sobre un numero falso.
+  const waResumen = (() => {
+    const entran = waClicks.length;
+    const escriben = waClicks.filter(c => c.escribio === true).length;
+    const cierran = waClicks.filter(c => c.vendio === true).length;
+    const sinRevisar = waClicks.filter(c => c.escribio === null || c.escribio === undefined).length;
+    const vendidoSinRevisar = waClicks.filter(c => c.escribio === true && (c.vendio === null || c.vendio === undefined)).length;
+    const ingresos = waClicks
+      .filter(c => c.vendio === true)
+      .reduce((a, c) => a + (Number(c.valor_venta) || 0), 0);
+    const pct = (parte: number, total: number) => (total > 0 ? Math.round((parte / total) * 100) : null);
+    return {
+      entran,
+      escriben,
+      cierran,
+      sinRevisar,
+      vendidoSinRevisar,
+      ingresos,
+      delSitio: clicsDelSitio.length,
+      pauta: clicsDelSitio.filter(c => String(c.canal || "").startsWith("Pauta")).length,
+      manuales: waClicks.filter(esManual).length,
+      pctEscriben: pct(escriben, entran),
+      pctCierran: pct(cierran, escriben),
+    };
+  })();
+
+  const marcarVendio = async (id: string, valor: boolean | null) => {
+    const patch: any = { vendio: valor };
+    if (valor !== true) patch.valor_venta = null; // sin venta no hay monto que guardar
+    const { error } = await (supabase as any).from("whatsapp_clicks").update(patch).eq("id", id);
+    if (error) { toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" }); return; }
+    setWaClicks(prev => prev.map(c => (c.id === id ? { ...c, ...patch } : c)));
+  };
+
+  const guardarValorVenta = async (id: string, texto: string) => {
+    const limpio = texto.replace(/[^\d]/g, "");
+    const valor = limpio ? Number(limpio) : null;
+    const { error } = await (supabase as any).from("whatsapp_clicks").update({ valor_venta: valor }).eq("id", id);
+    if (error) { toast({ title: "No se pudo guardar", description: error.message, variant: "destructive" }); return; }
+    setWaClicks(prev => prev.map(c => (c.id === id ? { ...c, valor_venta: valor } : c)));
   };
 
   // ── ALTA MANUAL DE CONTACTOS VIEJOS ───────────────────────────
@@ -1068,16 +1106,39 @@ export default function AdminPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-3 gap-3 mb-3">
               {[
-                { label: "Clics medidos en el sitio", valor: waResumen.delSitio },
-                { label: "De pauta (solo medidos)", valor: waResumen.pauta },
-                { label: "Confirmados que escribieron", valor: waResumen.escribieron },
-                { label: "Cargados a mano", valor: waResumen.manuales },
+                { label: "Entran", valor: waResumen.entran, pie: "clics al botón" },
+                { label: "Escriben", valor: waResumen.escriben, pie: waResumen.pctEscriben !== null ? `${waResumen.pctEscriben}% de los que entran` : "—" },
+                { label: "Cierran", valor: waResumen.cierran, pie: waResumen.pctCierran !== null ? `${waResumen.pctCierran}% de los que escriben` : "—" },
               ].map(k => (
                 <div key={k.label} className="rounded-xl border border-border bg-card p-3">
                   <p className="text-xs text-muted-foreground">{k.label}</p>
-                  <p className="text-2xl font-extrabold">{k.valor}</p>
+                  <p className="text-3xl font-extrabold">{k.valor}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{k.pie}</p>
+                </div>
+              ))}
+            </div>
+
+            {(waResumen.sinRevisar > 0 || waResumen.vendidoSinRevisar > 0) && (
+              <div className="rounded-xl border border-secondary/30 bg-secondary/5 p-3 mb-3 text-xs">
+                Los porcentajes solo cuentan lo confirmado.{" "}
+                {waResumen.sinRevisar > 0 && <>Hay <strong>{waResumen.sinRevisar}</strong> sin marcar si escribieron. </>}
+                {waResumen.vendidoSinRevisar > 0 && <>Hay <strong>{waResumen.vendidoSinRevisar}</strong> que escribieron y están sin marcar si se vendió. </>}
+                Hasta que se marquen, las tasas de arriba son un piso, no el número real.
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {[
+                { label: "Clics medidos en el sitio", valor: String(waResumen.delSitio) },
+                { label: "De pauta (solo medidos)", valor: String(waResumen.pauta) },
+                { label: "Cargados a mano", valor: String(waResumen.manuales) },
+                { label: "Vendido (confirmado)", valor: formatCOP(waResumen.ingresos) },
+              ].map(k => (
+                <div key={k.label} className="rounded-xl border border-border bg-card p-3">
+                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <p className="text-xl font-extrabold">{k.valor}</p>
                 </div>
               ))}
             </div>
@@ -1152,6 +1213,7 @@ export default function AdminPage() {
                       <th className="px-4 py-3 text-left font-semibold">Contacto / notas</th>
                       <th className="px-4 py-3 text-left font-semibold">Fecha</th>
                       <th className="px-4 py-3 text-left font-semibold">¿Escribió?</th>
+                      <th className="px-4 py-3 text-left font-semibold">¿Se vendió?</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1186,6 +1248,25 @@ export default function AdminPage() {
                             <option value="si">Sí escribió</option>
                             <option value="no">No escribió</option>
                           </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={c.vendio === true ? "si" : c.vendio === false ? "no" : ""}
+                            onChange={e => marcarVendio(c.id, e.target.value === "si" ? true : e.target.value === "no" ? false : null)}
+                            className="text-xs border border-border rounded-lg px-2 py-1 bg-background"
+                          >
+                            <option value="">Sin confirmar</option>
+                            <option value="si">Sí se vendió</option>
+                            <option value="no">No se vendió</option>
+                          </select>
+                          {c.vendio === true && (
+                            <Input
+                              defaultValue={c.valor_venta ?? ""}
+                              onBlur={e => guardarValorVenta(c.id, e.target.value)}
+                              placeholder="Valor en COP"
+                              className="mt-1 h-7 text-xs w-32"
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}
