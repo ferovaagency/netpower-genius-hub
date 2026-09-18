@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789749607233,
+      "tag": "0000_20260918024908_whatsapp_clicks",
+      "breakpoints": true
+    }
+  ]
+}

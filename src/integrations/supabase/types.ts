@@ -823,6 +823,51 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_clicks: {
+        Row: {
+          atribucion: Json
+          canal: string | null
+          created_at: string
+          escribio: boolean | null
+          id: string
+          notas: string | null
+          origen: string | null
+          page_path: string | null
+          product_name: string | null
+          product_sku: string | null
+          ref_code: string
+          updated_at: string
+        }
+        Insert: {
+          atribucion?: Json
+          canal?: string | null
+          created_at?: string
+          escribio?: boolean | null
+          id?: string
+          notas?: string | null
+          origen?: string | null
+          page_path?: string | null
+          product_name?: string | null
+          product_sku?: string | null
+          ref_code: string
+          updated_at?: string
+        }
+        Update: {
+          atribucion?: Json
+          canal?: string | null
+          created_at?: string
+          escribio?: boolean | null
+          id?: string
+          notas?: string | null
+          origen?: string | null
+          page_path?: string | null
+          product_name?: string | null
+          product_sku?: string | null
+          ref_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
