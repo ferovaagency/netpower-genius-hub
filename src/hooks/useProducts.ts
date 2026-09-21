@@ -164,7 +164,7 @@ export async function fetchRelatedProducts(
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("category_id", categoryId)
+    .eq("category", categoryId)
     .eq("active", true)
     .neq("id", excludeId)
     .order("created_at", { ascending: false })
