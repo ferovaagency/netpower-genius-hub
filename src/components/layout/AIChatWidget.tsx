@@ -239,17 +239,33 @@ export default function AIChatWidget() {
       content: x.content.replace(/\[\[QUOTE_DATA:[\s\S]*?\]\]/g, "").trim(),
     }));
     const t = setTimeout(() => {
-      supabase.from("neti_conversations").upsert({
-        session_id: sid,
+      // No se usa upsert: el visitante es anonimo y no tiene permiso de lectura,
+      // asi que INSERT ... ON CONFLICT lo rechaza RLS. Se intenta actualizar y,
+      // si la conversacion aun no existe, se inserta.
+      const payload = {
         customer_name: name,
         customer_email: email,
         customer_phone: phone,
         messages: cleanMsgs,
         message_count: cleanMsgs.length,
         updated_at: new Date().toISOString(),
-      }, { onConflict: "session_id" }).then(({ error }) => {
-        if (error) console.error("Failed to save conversation:", error);
-      });
+      };
+      (async () => {
+        const { error: insErr } = await supabase
+          .from("neti_conversations")
+          .insert({ session_id: sid, ...payload });
+        if (!insErr) return;
+        // 23505 = ya existe esa sesion; se actualiza
+        if ((insErr as { code?: string }).code !== "23505") {
+          console.error("Failed to save conversation:", insErr);
+          return;
+        }
+        const { error: updErr } = await supabase
+          .from("neti_conversations")
+          .update(payload)
+          .eq("session_id", sid);
+        if (updErr) console.error("Failed to save conversation:", updErr);
+      })();
     }, 800);
     return () => clearTimeout(t);
   }, [messages]);
