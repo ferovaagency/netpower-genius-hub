@@ -15,16 +15,27 @@ export type Currency = "COP" | "USD";
 
 type EventMap = {
   page_view: { page_path: string; page_location: string };
-  cotizacion_enviada: {
+  /** Nombre recomendado de GA4 para un lead. Se llamaba `cotizacion_enviada`;
+   *  se renombro el 22 sep 2026, cuando aun no habia llegado ni un solo evento
+   *  y por tanto no habia historico que partir en dos. */
+  generate_lead: {
     lead_source: LeadSource;
     utm_source?: string;
     utm_medium?: string;
     utm_campaign?: string;
     /** true si hay gclid/wbraid/gbraid. NUNCA se envia el id en si. */
     tiene_gclid?: boolean;
+    /** GA4 los acepta en `generate_lead` para valorar el lead. Hoy no se
+     *  envian: no hay un valor por cotizacion definido. */
+    value?: number;
+    currency?: Currency;
   };
   whatsapp_click: { origen: string; page_path: string };
-  compra_completada: {
+  /** Nombre estandar de GA4: la propiedad ya lo trae marcado como evento clave
+   *  y alimenta los informes de Monetizacion con transaction_id + value +
+   *  currency. Los informes por producto necesitan ademas un arreglo `items[]`
+   *  que hoy no se envia, e `item_count` no es parametro estandar. */
+  purchase: {
     transaction_id: string;
     /** Opcional a proposito: en el retorno de Wompi desde otro dispositivo no
      *  hay forma de saber el monto sin exponerlo en la respuesta publica de la
@@ -41,9 +52,9 @@ type Params<K extends AnalyticsEventName> = EventMap[K];
 
 const PARAM_ALLOWLIST: Record<AnalyticsEventName, readonly string[]> = {
   page_view: ["page_path", "page_location"],
-  cotizacion_enviada: ["lead_source", "utm_source", "utm_medium", "utm_campaign", "tiene_gclid"],
+  generate_lead: ["lead_source", "utm_source", "utm_medium", "utm_campaign", "tiene_gclid", "value", "currency"],
   whatsapp_click: ["origen", "page_path"],
-  compra_completada: ["transaction_id", "value", "currency", "payment_method", "item_count"],
+  purchase: ["transaction_id", "value", "currency", "payment_method", "item_count"],
 };
 
 // Un valor que huela a dato personal se descarta, aunque su clave este permitida.
@@ -170,9 +181,13 @@ export function trackPageView(p: Params<"page_view">): void {
 // Si la variable esta vacia no se emite nada. Es deliberado: mejor sin
 // conversion que con una etiqueta inventada, que registraria datos falsos.
 //
-// Alternativa sin etiquetas: marcar `cotizacion_enviada` como evento clave en
-// GA4 e importarlo a Ads. En ese caso estas variables se quedan vacias y esta
+// Alternativa sin etiquetas: marcar `generate_lead` como evento clave en GA4
+// e importarlo a Ads. En ese caso estas variables se quedan vacias y esta
 // funcion no hace nada.
+//
+// CUIDADO con el doble conteo: si algun dia se importa `purchase` de GA4 a Ads
+// y ademas queda puesta VITE_ADS_CONV_COMPRA, la misma venta se cuenta dos
+// veces. Hoy esa variable no esta definida, asi que no hay conflicto.
 
 const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
 
@@ -196,10 +211,12 @@ function enviarConversionAds(
   }
 }
 
-export function trackCotizacionEnviada(p: Params<"cotizacion_enviada">): void {
-  send("cotizacion_enviada", p);
+export function trackCotizacionEnviada(p: Params<"generate_lead">): void {
+  send("generate_lead", p);
   // La cotizacion es la conversion principal: en UPS de ticket alto nadie paga
   // con tarjeta, pide cotizacion. La compra llega despues y por otro canal.
+  // Nota: `generate_lead` es un evento *recomendado*, no uno que GA4 marque
+  // como clave por si solo. Hay que marcarlo a mano cuando llegue el primero.
   enviarConversionAds("cotizacion");
 }
 
@@ -209,10 +226,10 @@ export function trackWhatsAppClick(p: Params<"whatsapp_click">): void {
 }
 
 /** Idempotente por transaction_id: recargar la confirmacion no duplica la compra. */
-export function trackCompraCompletada(p: Params<"compra_completada">): void {
+export function trackCompraCompletada(p: Params<"purchase">): void {
   if (!p.transaction_id) return;
   oncePersisted(`purchase:${p.transaction_id}`, () => {
-    send("compra_completada", p);
+    send("purchase", p);
     enviarConversionAds("compra", {
       value: p.value,
       currency: p.currency,
@@ -225,7 +242,7 @@ export function trackCompraCompletada(p: Params<"compra_completada">): void {
 //
 // Wompi se lleva al comprador fuera del sitio. Al volver a /resultado-pago ya
 // no existe el carrito ni el total: quedan la referencia y el id de la
-// transaccion. Aqui se guarda lo minimo para poder emitir `compra_completada`
+// transaccion. Aqui se guarda lo minimo para poder emitir `purchase`
 // con su valor cuando la verificacion diga APPROVED.
 //
 // No se guarda ningun dato personal: solo referencia, monto, moneda, metodo y
