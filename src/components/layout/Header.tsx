@@ -51,12 +51,13 @@ const categoryMenu: ParentCat[] = [
 
 // Los dos primeros van ANTES del desplegable de categorias (slice(0,2)) y el
 // resto despues (slice(2)). Si se reordena, revisar esos dos cortes.
-const navLinks = [
+type NavLink = { label: string; path: string; external?: boolean; destacado?: boolean };
+
+const navLinks: NavLink[] = [
 { label: "Inicio", path: "/" },
 { label: "Tienda", path: "/tienda" },
-{ label: "Forza", path: "/marcas/forza" },
+{ label: "Forza", path: "/marcas/forza", destacado: true },
 { label: "Quiénes Somos", path: "/nosotros" },
-{ label: "Servicios IT", path: "https://avaconit.com/", external: true },
 { label: "Contacto", path: "/contacto" }];
 
 
@@ -225,7 +226,11 @@ export default function Header() {
                 <Link
                   key={l.label}
                   to={l.path}
-                  className={`rounded-sm py-2 text-sm font-semibold transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${location.pathname === l.path ? "text-primary" : "text-foreground"}`}>
+                  className={
+                    l.destacado
+                      ? `rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${location.pathname === l.path ? "bg-primary text-primary-foreground" : "text-primary"}`
+                      : `rounded-sm py-2 text-sm font-semibold transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${location.pathname === l.path ? "text-primary" : "text-foreground"}`
+                  }>
                   {l.label}
                 </Link>
               )
@@ -342,7 +347,11 @@ export default function Header() {
                   <Link
                     key={l.label}
                     to={l.path}
-                    className={`py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.path ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`}>
+                    className={
+                      l.destacado
+                        ? `py-3 px-4 rounded-lg text-sm font-bold border border-primary/40 bg-primary/10 text-primary transition hover:bg-primary hover:text-primary-foreground ${location.pathname === l.path ? "bg-primary text-primary-foreground" : ""}`
+                        : `py-3 px-4 rounded-lg text-sm font-medium transition ${location.pathname === l.path ? "text-primary bg-accent" : "text-foreground hover:bg-muted"}`
+                    }>
                     {l.label}
                   </Link>
                 )
