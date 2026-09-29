@@ -49,12 +49,13 @@ const categoryMenu: ParentCat[] = [
   ]},
 ];
 
+// Los dos primeros van ANTES del desplegable de categorias (slice(0,2)) y el
+// resto despues (slice(2)). Si se reordena, revisar esos dos cortes.
 const navLinks = [
 { label: "Inicio", path: "/" },
 { label: "Tienda", path: "/tienda" },
-{ label: "Blog", path: "/blog" },
+{ label: "Forza", path: "/marcas/forza" },
 { label: "Quiénes Somos", path: "/nosotros" },
-{ label: "Ferova", path: "/ferova" },
 { label: "Servicios IT", path: "https://avaconit.com/", external: true },
 { label: "Contacto", path: "/contacto" }];
 

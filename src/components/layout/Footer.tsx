@@ -63,6 +63,7 @@ export default function Footer() {
               <li><Link to="/cotizacion" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Cotizaciones</Link></li>
               <li><Link to="/tienda" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Tienda</Link></li>
               <li><Link to="/marcas" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Marcas</Link></li>
+              <li><Link to="/blog" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Blog</Link></li>
               <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Términos y Condiciones</Link></li>
               <li><Link to="/legal" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Política de Cookies</Link></li>
               <li><Link to="/politica-datos" className="text-sm text-surface-dark-foreground/60 hover:text-primary transition">Política de Tratamiento de Datos Personales</Link></li>
