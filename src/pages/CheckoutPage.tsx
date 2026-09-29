@@ -11,12 +11,76 @@ import { guardarCompraPendiente } from "@/lib/analytics";
 
 const WHATSAPP = "573504609431";
 
+/**
+ * Comprobantes de pago.
+ *
+ * El cuello de botella no era el bucket ni los permisos: `receipts` no
+ * restringe tipos ni tamano y la politica permite subir a anonimos. Eran el
+ * selector de archivos y el tope de 5 MB, que ademas solo avisaba al enviar el
+ * formulario, ya con todos los campos llenos.
+ *
+ * Dos cosas que hay que tener presentes con iPhone:
+ *  - Las fotos en "Alta eficiencia" son HEIC. Al elegirlas desde Fotos, iOS las
+ *    convierte a JPEG; al elegirlas desde Archivos, llegan como .heic.
+ *  - Varios navegadores reportan `file.type` VACIO para HEIC. Por eso la
+ *    validacion acepta tambien por extension: exigir el MIME romperia justo el
+ *    caso que se quiere arreglar.
+ */
+const COMPROBANTE_MAX_MB = 15;
+const COMPROBANTE_MAX = COMPROBANTE_MAX_MB * 1024 * 1024;
+
+const COMPROBANTE_ACCEPT = [
+  "image/*",
+  "image/jpeg", "image/png", "image/heic", "image/heif",
+  "application/pdf",
+  ".jpg", ".jpeg", ".png", ".heic", ".heif", ".pdf",
+].join(",");
+
+const EXT_VALIDAS = ["jpg", "jpeg", "png", "heic", "heif", "pdf", "webp"];
+
+const extensionDe = (nombre: string) => {
+  const partes = nombre.toLowerCase().split(".");
+  return partes.length > 1 ? partes.pop()! : "";
+};
+
+/** Devuelve null si el archivo sirve, o el motivo en palabras del cliente. */
+function revisarComprobante(f: File): string | null {
+  if (f.size === 0) return "El archivo llegó vacío. Vuelve a seleccionarlo.";
+  if (f.size > COMPROBANTE_MAX) {
+    const mb = (f.size / 1024 / 1024).toFixed(1);
+    return `Pesa ${mb} MB y el máximo son ${COMPROBANTE_MAX_MB} MB. Si es una foto, mándala por WhatsApp.`;
+  }
+  const ext = extensionDe(f.name);
+  const tipo = (f.type || "").toLowerCase();
+  const sirve =
+    tipo.startsWith("image/") ||
+    tipo === "application/pdf" ||
+    EXT_VALIDAS.includes(ext) ||
+    // HEIC sin extension ni MIME: no se puede descartar sin equivocarse.
+    (tipo === "" && ext === "");
+  if (!sirve) return "Formato no admitido. Sube una imagen (JPG, PNG, HEIC) o un PDF.";
+  return null;
+}
+
+/** El navegador deja `type` vacio en HEIC; el bucket lo guarda mejor con uno. */
+function tipoParaGuardar(f: File): string {
+  if (f.type) return f.type;
+  const ext = extensionDe(f.name);
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "heic") return "image/heic";
+  if (ext === "heif") return "image/heif";
+  if (ext === "png") return "image/png";
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  return "application/octet-stream";
+}
+
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"" | "wompi" | "bancolombia" | "nequi" | "daviplata" | "breb">("");
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
 
   const [form, setForm] = useState({
@@ -64,8 +128,9 @@ export default function CheckoutPage() {
     if (!paymentMethod) { toast.error("Selecciona un método de pago"); return; }
     if (!consent) { toast.error("Debes aceptar la Política de Tratamiento de Datos Personales"); return; }
     if (requiresReceipt && !receipt) { toast.error("Sube tu comprobante de pago"); return; }
-    if (requiresReceipt && receipt && receipt.size > 5 * 1024 * 1024) {
-      toast.error("El comprobante no puede superar 5MB"); return;
+    if (requiresReceipt && receipt) {
+      const problema = revisarComprobante(receipt);
+      if (problema) { setReceiptError(problema); toast.error(problema); return; }
     }
 
     const stockIssue = validateStock();
@@ -131,11 +196,11 @@ export default function CheckoutPage() {
       // ─── Manual transfer methods: upload receipt + create order pending_verification ───
       let receiptUrl: string | null = null;
       if (requiresReceipt && receipt) {
-        const ext = receipt.name.split(".").pop() || "bin";
+        const ext = extensionDe(receipt.name) || "bin";
         const filePath = `${orderRef}/comprobante.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("receipts")
-          .upload(filePath, receipt, { upsert: true });
+          .upload(filePath, receipt, { upsert: true, contentType: tipoParaGuardar(receipt) });
         if (uploadErr) throw uploadErr;
         // Bucket is private; store the path. Admin viewer generates a signed URL on demand.
         receiptUrl = filePath;
@@ -355,11 +420,30 @@ export default function CheckoutPage() {
                     <label className="text-sm font-semibold block text-foreground">📎 Subir comprobante de pago *</label>
                     <input
                       type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+                      accept={COMPROBANTE_ACCEPT}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] || null;
+                        if (!f) { setReceipt(null); setReceiptError(null); return; }
+                        const problema = revisarComprobante(f);
+                        // Avisar aqui y no al enviar: antes el error aparecia
+                        // con el formulario entero ya lleno.
+                        setReceiptError(problema);
+                        setReceipt(problema ? null : f);
+                        if (problema) e.target.value = "";
+                      }}
                       className="w-full border border-border rounded-lg p-2 text-sm bg-background"
                     />
-                    <p className="text-xs text-muted-foreground">Formatos: JPG, PNG o PDF — máximo 5MB</p>
+                    {receiptError ? (
+                      <p className="text-xs font-medium text-destructive">{receiptError}</p>
+                    ) : receipt ? (
+                      <p className="text-xs font-medium text-success">
+                        ✓ {receipt.name} ({(receipt.size / 1024 / 1024).toFixed(1)} MB)
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Foto o PDF: JPG, PNG, HEIC (fotos de iPhone) o PDF — hasta {COMPROBANTE_MAX_MB} MB
+                      </p>
+                    )}
                   </div>
 
                   <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-3 text-xs text-foreground">
