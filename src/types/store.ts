@@ -7,6 +7,9 @@ export interface Product {
   price: number;
   salePrice: number | null;
   sku: string;
+  /** Modelo del fabricante. Lo exige el contenido sindicado de Accvent, que
+   *  busca por coincidencia exacta. Vacio = sin ficha sindicada; no se adivina. */
+  mpn: string;
   stock: number | null;
   images: string[];
   categoryId: string;

@@ -46,6 +46,7 @@ const AuthPage = lazy(() => import("./pages/AuthPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const PoliticaDatosPage = lazy(() => import("./pages/PoliticaDatosPage"));
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
+import BrandPage from "./pages/BrandPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -108,6 +109,7 @@ function AppContent() {
                       <Route path="/cotizacion" element={<QuotePage />} />
                       <Route path="/contacto" element={<ContactPage />} />
                       <Route path="/marcas" element={<BrandsPage />} />
+                      <Route path="/marcas/:slug" element={<BrandPage />} />
                       <Route path="/nosotros" element={<AboutPage />} />
                       <Route path="/ferova" element={<FerovaPage />} />
                       <Route path="/auth" element={<AuthPage />} />

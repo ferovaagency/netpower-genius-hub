@@ -365,8 +365,29 @@ async function main() {
   }
   const template = normalizeTemplate(await readFile(path.join(DIST, "index.html"), "utf8"));
   const { categories, brands } = await readStoreData();
-  const catById = new Map(categories.map((c) => [c.id, c]));
-  const brandById = new Map(brands.map((b) => [b.id, b]));
+
+  // La base guarda la marca y la categoria unas veces por id ("27") y otras por
+  // nombre ("Forza", "UPS y Accesorios"). Medido el 29 sep 2026: 612 de 613
+  // productos activos traen la categoria por nombre y 471 de 613 la marca por
+  // nombre. Buscar solo por id fallaba en casi todos, y el efecto no se veia en
+  // pantalla sino aqui: el HTML estatico salia sin la linea de marca, sin el
+  // nivel de categoria en el breadcrumb y con `brand: "Netpower IT"` en el
+  // Product de schema.org. La app de React ya resolvia por los dos caminos
+  // (ProductDetailPage); este script era el unico que no.
+  const clave = (v) => String(v ?? "").trim().toLocaleLowerCase("es");
+  const indexar = (lista) => {
+    const m = new Map();
+    for (const x of lista) {
+      m.set(clave(x.id), x);
+      m.set(clave(x.name), x);
+      m.set(clave(x.slug), x);
+    }
+    return m;
+  };
+  const catIndex = indexar(categories);
+  const brandIndex = indexar(brands);
+  const catById = { get: (v) => catIndex.get(clave(v)) };
+  const brandById = { get: (v) => brandIndex.get(clave(v)) };
 
   let written = 0;
 
@@ -452,7 +473,7 @@ async function main() {
   written++;
 
   for (const c of categories) {
-    const inCat = products.filter((p) => String(p.category) === c.id);
+    const inCat = products.filter((p) => catById.get(p.category)?.id === c.id);
     const url = `${DOMAIN}/categoria/${c.slug}`;
     const title = `${c.name} | Netpower IT`;
     const description = `${c.description}. Compra ${c.name} para empresas en Colombia con Netpower IT.`;
@@ -476,6 +497,44 @@ async function main() {
         },
       }],
     }), listBody(c.name, description, inCat)));
+    written++;
+  }
+
+  // 2.b Paginas de marca. Solo se emiten las marcas que tienen producto activo:
+  //     una pagina de marca vacia no aporta y si consume rastreo. Y como NO se
+  //     agrega una regla catch-all de /marcas/* en vercel.json, cualquier otra
+  //     marca cae en el 404 real en vez de servir la home con 200, que es el
+  //     fallo que ya arrastra /producto/*.
+  for (const b of brands) {
+    const deLaMarca = products.filter((p) => brandById.get(p.brand)?.id === b.id);
+    if (deLaMarca.length === 0) continue;
+    const url = `${DOMAIN}/marcas/${b.slug}`;
+    const title = `${b.name} en Colombia — Distribuidor autorizado | Netpower IT`;
+    const description = `Catalogo ${b.name} con precio en pesos, disponibilidad real y garantia en Colombia. ${deLaMarca.length} referencias y asesoria para elegir la capacidad correcta.`;
+    await emit(`/marcas/${b.slug}`, applyBody(applyHead(template, {
+      title, description, canonical: url,
+      schemas: [
+        {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "@id": `${url}#page`,
+          name: title,
+          description,
+          url,
+          isPartOf: { "@id": `${DOMAIN}/#website` },
+          about: { "@type": "Brand", name: b.name },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Inicio", item: DOMAIN },
+            { "@type": "ListItem", position: 2, name: "Marcas", item: `${DOMAIN}/marcas` },
+            { "@type": "ListItem", position: 3, name: b.name, item: url },
+          ],
+        },
+      ],
+    }), listBody(`${b.name} en Colombia`, description, deLaMarca)));
     written++;
   }
 

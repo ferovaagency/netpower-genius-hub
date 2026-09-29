@@ -7,6 +7,10 @@
     { "src": "/categoria/ups-accesorios", "status": 301, "headers": { "Location": "/categoria/ups" } },
     { "src": "/producto/300mbps-2", "status": 301, "headers": { "Location": "/producto/router-mercusys-mw302r-300mbps" } },
 
+    { "src": "/producto/ups-online-forza-atlas-3k-fdc$", "status": 301, "headers": { "Location": "/producto/ups-forza-atlas-3k-online" } },
+    { "src": "/producto/ups-online-forza-atlas-6k-fdc$", "status": 301, "headers": { "Location": "/producto/ups-forza-atlas-6k-online" } },
+    { "src": "/producto/ups-online-forza-atlas-10k-fdc$", "status": 301, "headers": { "Location": "/producto/ups-forza-atlas-10k-online" } },
+
     { "src": "/producto/deco-e4-tp-link-1-pack-ac1200-2$", "status": 301, "headers": { "Location": "/producto/deco-e4-tp-link-1-pack-ac1200" } },
     { "src": "/producto/diadema-logitech-h111-3-5mm-pl$", "status": 301, "headers": { "Location": "/producto/diadema-logitech-h111-3-5mm-pl-2" } },
     { "src": "/producto/disco-estado-solido-kingston-n$", "status": 301, "headers": { "Location": "/producto/disco-estado-solido-kingston-n-3" } },

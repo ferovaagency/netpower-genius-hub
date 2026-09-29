@@ -31,7 +31,7 @@ export default function BrandsPage() {
           {brands.map(b => (
             <Link
               key={b.id}
-              to={`/tienda?marca=${b.slug}`}
+              to={`/marcas/${b.slug}`}
               className="group flex flex-col items-center justify-center p-6 rounded-xl bg-card border border-border shadow-card hover:shadow-card-hover hover:border-primary/40 transition-all min-h-[120px]"
             >
               <span className="text-lg font-bold text-muted-foreground group-hover:text-primary transition">{b.name}</span>

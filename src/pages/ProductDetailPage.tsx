@@ -11,6 +11,7 @@ import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
+import AccventSyndicatedContent from "@/components/product/AccventSyndicatedContent";
 
 const WHATSAPP_NUMBER = "573504609431";
 
@@ -484,6 +485,12 @@ export default function ProductDetailPage() {
             </div>
           </section>
         )}
+
+        {/* Contenido sindicado del fabricante. Va aqui a proposito: despues de
+            la ficha propia, las FAQ y las especificaciones, y antes de los
+            relacionados. Es material de apoyo dentro de un iframe del
+            fabricante, no contenido de esta pagina. */}
+        <AccventSyndicatedContent mpn={product.mpn} marca={brandName} />
 
         {/* Related */}
         {related.length > 0 && (

@@ -314,6 +314,10 @@ export default function ProductSheetGeneratorPage() {
       }
 
       const newProduct: Omit<Product, "id"> = {
+        // El MPN lo pone quien carga la ficha, no el generador: el contenido
+        // sindicado busca por coincidencia exacta y un modelo inventado no
+        // devuelve nada. Vacio es la respuesta correcta mientras no se sepa.
+        mpn: "",
         slug,
         name: productName,
         description: finalDescription,
