@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/store";
@@ -9,7 +10,16 @@ const WHATSAPP_NUMBER = "573504609431";
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const discount = getDiscountPercentage(product.price, product.salePrice);
-  const category = categories.find(c => c.id === product.categoryId);
+  // La base guarda la categoria unas veces por id ("8") y otras por nombre
+  // ("Accesorios"). Buscar solo por id fallaba en 612 de 613 productos activos:
+  // el icono de respaldo salia siempre generico y `isServer` nunca era cierto.
+  const clave = (v?: string | null) => (v ?? "").trim().toLocaleLowerCase("es");
+  const category = categories.find(
+    c => c.id === product.categoryId || clave(c.name) === clave(product.categoryId),
+  );
+  // Imagenes que apuntan a archivos que ya no existen en el storage: sin esto
+  // el navegador pinta el recuadro roto en medio de la grilla.
+  const [imagenFallo, setImagenFallo] = useState(false);
   const isServer = category?.slug === "servidores";
   // Producto sin stock asignado (null) o sin precio → "Consultar precio"
   // stock === 0 también se trata como "consultar" para mostrar CTA WhatsApp
@@ -30,16 +40,22 @@ export default function ProductCard({ product }: { product: Product }) {
         aria-label={`Ver ${product.name}`}
         className="relative flex aspect-square items-center justify-center overflow-hidden bg-white outline outline-1 -outline-offset-1 outline-black/10 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary"
       >
-        {product.images && product.images.length > 0 && product.images[0] ? (
+        {product.images && product.images.length > 0 && product.images[0] && !imagenFallo ? (
           <img
             src={product.images[0]}
             alt={product.name}
             loading="lazy"
             decoding="async"
+            onError={() => setImagenFallo(true)}
             className="h-full w-full object-contain p-5 transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="text-4xl">{category?.icon || "📦"}</div>
+          <div className="flex flex-col items-center gap-1.5 p-4 text-center">
+            <span className="text-4xl" aria-hidden="true">{category?.icon || "📦"}</span>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {category?.name || "Ver producto"}
+            </span>
+          </div>
         )}
 
         {!showQuote && discount && (
