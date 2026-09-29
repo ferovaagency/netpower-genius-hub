@@ -315,6 +315,7 @@ export type Database = {
           images: string[]
           meta_description: string | null
           meta_title: string | null
+          mpn: string | null
           name: string
           price: number
           reviews: Json
@@ -340,6 +341,7 @@ export type Database = {
           images?: string[]
           meta_description?: string | null
           meta_title?: string | null
+          mpn?: string | null
           name: string
           price?: number
           reviews?: Json
@@ -365,6 +367,7 @@ export type Database = {
           images?: string[]
           meta_description?: string | null
           meta_title?: string | null
+          mpn?: string | null
           name?: string
           price?: number
           reviews?: Json
@@ -467,6 +470,84 @@ export type Database = {
         Relationships: []
       }
       products_eliminados_20260916: {
+        Row: {
+          active: boolean | null
+          brand: string | null
+          category: string | null
+          condition: string | null
+          created_at: string | null
+          description: string | null
+          discount_percent: number | null
+          featured: boolean | null
+          id: string | null
+          images: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          price: number | null
+          reviews: Json | null
+          sale_price: number | null
+          short_description: string | null
+          sku: string | null
+          slug: string | null
+          specs: Json | null
+          stock: number | null
+          updated_at: string | null
+          warranty: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percent?: number | null
+          featured?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          price?: number | null
+          reviews?: Json | null
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string | null
+          specs?: Json | null
+          stock?: number | null
+          updated_at?: string | null
+          warranty?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percent?: number | null
+          featured?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          price?: number | null
+          reviews?: Json | null
+          sale_price?: number | null
+          short_description?: string | null
+          sku?: string | null
+          slug?: string | null
+          specs?: Json | null
+          stock?: number | null
+          updated_at?: string | null
+          warranty?: string | null
+        }
+        Relationships: []
+      }
+      products_forza_backup_20260929: {
         Row: {
           active: boolean | null
           brand: string | null
