@@ -193,54 +193,66 @@ export default function HomePage() {
         ))}
 
 
-        <div className="container mx-auto px-6 py-20 md:py-24 relative z-10">
+        <div className={`container mx-auto px-6 py-20 md:py-24 relative z-10 self-stretch flex ${isForzaSlide ? "items-end" : "items-center"}`}>
           <div>
             <motion.div
               key={currentSlide}
               initial="hidden"
               animate="visible"
               variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-              className="max-w-xl"
+              className={isForzaSlide ? "max-w-lg" : "max-w-xl"}
             >
-              {slides[currentSlide].badge && (
+              {currentSlideData.badge && (
                 <motion.span
                   variants={fadeUp}
                   className="inline-block bg-secondary text-secondary-foreground font-black text-2xl md:text-3xl px-5 py-1.5 rounded-full mb-5 animate-pulse shadow-lg"
                 >
-                  {slides[currentSlide].badge}
+                  {currentSlideData.badge}
                 </motion.span>
               )}
-              {!slides[currentSlide].badge && (
+              {!currentSlideData.badge && !isForzaSlide && (
                 <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/25 text-primary text-xs font-semibold mb-5">
                   <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
                 </motion.div>
               )}
-              <motion.h1 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-card leading-tight mb-4">
-                {slides[currentSlide].titleParts[0]}
-                <span className="text-primary">{slides[currentSlide].titleParts[1]}</span>
-                {slides[currentSlide].titleParts[2]}
+              <motion.h1 variants={fadeUp} className={`font-extrabold text-card leading-tight mb-4 ${isForzaSlide ? "text-2xl md:text-3xl lg:text-4xl" : "text-3xl md:text-4xl lg:text-5xl"}`}>
+                {currentSlideData.titleParts[0]}
+                <span className="text-primary">{currentSlideData.titleParts[1]}</span>
+                {currentSlideData.titleParts[2]}
               </motion.h1>
-              <motion.p variants={fadeUp} className="text-base text-card/80 mb-7 max-w-md leading-relaxed">
-                {slides[currentSlide].subtitle}
-              </motion.p>
+              {isForzaSlide ? (
+                <motion.div variants={fadeUp} className="flex flex-wrap gap-2.5 mb-7">
+                  {forzaChips.map((chip) => (
+                    <span key={chip.label} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-card/10 backdrop-blur-sm border border-card/20 text-card text-xs md:text-sm font-semibold">
+                      <chip.icon className="w-4 h-4 text-primary shrink-0" /> {chip.label}
+                    </span>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.p variants={fadeUp} className="text-base text-card/80 mb-7 max-w-md leading-relaxed">
+                  {currentSlideData.subtitle}
+                </motion.p>
+              )}
               <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-                {slides[currentSlide].cta.type === "link" ? (
-                  <Link to={(slides[currentSlide].cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                    {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                {currentSlideData.cta.type === "link" ? (
+                  <Link to={(currentSlideData.cta as { to: string }).to} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                    {currentSlideData.cta.label} <ArrowRight className="w-4 h-4" />
                   </Link>
-                ) : slides[currentSlide].cta.type === "external" ? (
-                  <a href={(slides[currentSlide].cta as { href: string }).href} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                    {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                ) : currentSlideData.cta.type === "external" ? (
+                  <a href={(currentSlideData.cta as { href: string }).href} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                    {currentSlideData.cta.label} <ArrowRight className="w-4 h-4" />
                   </a>
                 ) : (
-                  <button onClick={() => openChat((slides[currentSlide].cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
-                    {slides[currentSlide].cta.label} <ArrowRight className="w-4 h-4" />
+                  <button onClick={() => openChat((currentSlideData.cta as { mode: "general" | "quote" }).mode)} className="inline-flex h-11 px-7 items-center gap-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-button hover:opacity-90 transition-all text-sm">
+                    {currentSlideData.cta.label} <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </motion.div>
-              <motion.div variants={fadeUp} className="mt-5">
-                <TrustBadges />
-              </motion.div>
+              {!isForzaSlide && (
+                <motion.div variants={fadeUp} className="mt-5">
+                  <TrustBadges />
+                </motion.div>
+              )}
             </motion.div>
 
           </div>
