@@ -157,6 +157,10 @@ export default function HomePage() {
     productCount: categoryCounts[category.name] ?? 0,
   }));
 
+  const currentSlideData = slides[currentSlide];
+  const isForzaSlide = currentSlideData.layout === "forza";
+
+
   return (
     <>
       <SeoHead
