@@ -124,8 +124,8 @@ export default function BrandPage() {
           <img
             src={bannerForzaAtlasSecundario}
             alt="Forza Serie Atlas UPS Online — Encuentra la solución Atlas para tu proyecto. Te ayudamos a elegir la UPS adecuada para tu infraestructura."
-            width={1920}
-            height={390}
+            width={1918}
+            height={482}
             fetchPriority="high"
             loading="eager"
             decoding="sync"
