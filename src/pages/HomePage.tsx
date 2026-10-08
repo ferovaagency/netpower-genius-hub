@@ -186,14 +186,14 @@ export default function HomePage() {
               {...({ fetchpriority: idx === 0 ? "high" : "low" } as any)}
               loading={idx === 0 ? "eager" : "lazy"}
               decoding={idx === 0 ? "sync" : "async"}
-              className={`absolute inset-0 w-full h-full object-cover ${idx === 2 ? "object-[78%_center] md:object-center" : "object-center"}`}
+              className={`absolute inset-0 w-full h-full object-cover ${idx === 2 ? "object-[78%_center] md:object-center" : slides[idx].layout === "forza" ? "object-[30%_center] md:object-center" : "object-center"}`}
             />
             <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-r from-surface-dark/80 via-surface-dark/20 to-transparent" : slides[idx].layout === "forza" ? "bg-gradient-to-t from-surface-dark/95 via-surface-dark/25 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
           </div>
         ))}
 
 
-        <div className={`container mx-auto px-6 py-20 md:py-24 relative z-10 self-stretch flex ${isForzaSlide ? "items-end" : "items-center"}`}>
+        <div className={`container mx-auto px-6 relative z-10 self-stretch flex ${isForzaSlide ? "items-end pt-16 pb-8 md:pb-10" : "items-center py-20 md:py-24"}`}>
           <div>
             <motion.div
               key={currentSlide}
@@ -215,7 +215,7 @@ export default function HomePage() {
                   <CheckCircle className="w-3 h-3" /> Distribuidores autorizados
                 </motion.div>
               )}
-              <motion.h1 variants={fadeUp} className={`font-extrabold text-card leading-tight mb-4 ${isForzaSlide ? "text-2xl md:text-3xl lg:text-4xl" : "text-3xl md:text-4xl lg:text-5xl"}`}>
+              <motion.h1 variants={fadeUp} className={`font-extrabold text-card leading-tight mb-4 ${isForzaSlide ? "text-2xl md:text-3xl" : "text-3xl md:text-4xl lg:text-5xl"}`}>
                 {currentSlideData.titleParts[0]}
                 <span className="text-primary">{currentSlideData.titleParts[1]}</span>
                 {currentSlideData.titleParts[2]}
