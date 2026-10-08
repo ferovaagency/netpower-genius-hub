@@ -275,14 +275,14 @@ export default function HomePage() {
         <button
           onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
           aria-label="Slide anterior"
-          className={`absolute z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl ${isForzaSlide ? "bottom-6 right-16" : "left-4 top-1/2 -translate-y-1/2"}`}
+          className={`absolute z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl ${isForzaSlide ? "top-4 right-16" : "left-4 top-1/2 -translate-y-1/2"}`}
         >
           ‹
         </button>
         <button
           onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
           aria-label="Slide siguiente"
-          className={`absolute z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl ${isForzaSlide ? "bottom-6 right-4" : "right-4 top-1/2 -translate-y-1/2"}`}
+          className={`absolute z-20 bg-card/20 hover:bg-card/30 text-card w-10 h-10 rounded-full flex items-center justify-center transition-colors text-2xl ${isForzaSlide ? "top-4 right-4" : "right-4 top-1/2 -translate-y-1/2"}`}
         >
           ›
         </button>
