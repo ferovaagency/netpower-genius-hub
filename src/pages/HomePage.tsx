@@ -66,9 +66,10 @@ const slides: Slide[] = [
   },
   {
     image: bannerForzaAtlas,
-    badge: "FORZA · SERIE ATLAS",
-    titleParts: ["No compares solo los kVA, ", "compara la potencia", " que realmente puedes utilizar"],
-    subtitle: "UPS Online Forza Serie Atlas: 3 kVA = 3 kW · 6 kVA = 6 kW · 10 kVA = 10 kW. Potencia real PF 1 desde 3 kVA, flexibilidad eléctrica de 110 a 300 V de entrada y escalabilidad hasta 30 kVA.",
+    layout: "forza",
+    badge: null,
+    titleParts: ["UPS Online ", "Forza Serie Atlas", ""],
+    subtitle: "Potencia real PF 1 en toda la serie, entrada de 110 a 300 V y escalabilidad hasta 30 kVA.",
     cta: {
       type: "external",
       label: "Consulta con un especialista",
