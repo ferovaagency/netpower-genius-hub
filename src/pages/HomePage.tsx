@@ -28,7 +28,7 @@ type Slide = {
   titleParts: [string, string, string]; // before, highlight (text-primary), after
   subtitle: string;
   cta: SlideCTA;
-  layout?: "default" | "forza";
+  layout?: "default" | "forza" | "office";
 };
 
 // Slide Forza: pastillas con iconos, texto despejado para no tapar el logo del banner.
@@ -39,6 +39,18 @@ const forzaChips = [
 ];
 
 const slides: Slide[] = [
+  {
+    image: bannerForzaAtlas,
+    layout: "forza",
+    badge: null,
+    titleParts: ["UPS Online ", "Forza Serie Atlas", ""],
+    subtitle: "Potencia real PF 1 en toda la serie, entrada de 110 a 300 V y escalabilidad hasta 30 kVA.",
+    cta: {
+      type: "external",
+      label: "Consulta con un especialista",
+      href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
+    },
+  },
   {
     image: bannerTienda,
     badge: null,
@@ -55,6 +67,7 @@ const slides: Slide[] = [
   },
   {
     image: bannerNuevaOficina,
+    layout: "office",
     badge: "NUEVA OFICINA",
     titleParts: ["¡Estrenamos oficina en ", "NorthPoint", "!"],
     subtitle: "AK 7 #156-80 · Torre 2 · Oficina 1004 · Bogotá",
@@ -62,18 +75,6 @@ const slides: Slide[] = [
       type: "external",
       label: "Cómo llegar",
       href: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Bogota",
-    },
-  },
-  {
-    image: bannerForzaAtlas,
-    layout: "forza",
-    badge: null,
-    titleParts: ["UPS Online ", "Forza Serie Atlas", ""],
-    subtitle: "Potencia real PF 1 en toda la serie, entrada de 110 a 300 V y escalabilidad hasta 30 kVA.",
-    cta: {
-      type: "external",
-      label: "Consulta con un especialista",
-      href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
     },
   },
 ];
@@ -186,9 +187,9 @@ export default function HomePage() {
               {...({ fetchpriority: idx === 0 ? "high" : "low" } as any)}
               loading={idx === 0 ? "eager" : "lazy"}
               decoding={idx === 0 ? "sync" : "async"}
-              className={`absolute inset-0 w-full h-full object-cover ${idx === 2 ? "object-[78%_center] md:object-center" : slides[idx].layout === "forza" ? "object-[30%_center] md:object-center" : "object-center"}`}
+              className={`absolute inset-0 w-full h-full object-cover ${slide.layout === "office" ? "object-[78%_center] md:object-center" : slide.layout === "forza" ? "object-[30%_center] md:object-center" : "object-center"}`}
             />
-            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-r from-surface-dark/80 via-surface-dark/20 to-transparent" : slides[idx].layout === "forza" ? "bg-gradient-to-t from-surface-dark/95 via-surface-dark/25 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
+            <div className={`absolute inset-0 ${slide.layout === "office" ? "bg-gradient-to-r from-surface-dark/80 via-surface-dark/20 to-transparent" : slide.layout === "forza" ? "bg-gradient-to-t from-surface-dark/95 via-surface-dark/25 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
           </div>
         ))}
 
