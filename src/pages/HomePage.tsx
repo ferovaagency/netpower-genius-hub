@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle, Zap, PlugZap, TrendingUp } from "lucide-react";
 import { categories, products } from "@/data/store-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
@@ -28,7 +28,15 @@ type Slide = {
   titleParts: [string, string, string]; // before, highlight (text-primary), after
   subtitle: string;
   cta: SlideCTA;
+  layout?: "default" | "forza";
 };
+
+// Slide Forza: pastillas con iconos, texto despejado para no tapar el logo del banner.
+const forzaChips = [
+  { icon: Zap, label: "3 kVA = 3 kW de potencia real" },
+  { icon: PlugZap, label: "Entrada de 110 a 300 V" },
+  { icon: TrendingUp, label: "Escalable hasta 30 kVA" },
+];
 
 const slides: Slide[] = [
   {
