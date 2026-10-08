@@ -188,7 +188,7 @@ export default function HomePage() {
               decoding={idx === 0 ? "sync" : "async"}
               className={`absolute inset-0 w-full h-full object-cover ${idx === 2 ? "object-[78%_center] md:object-center" : "object-center"}`}
             />
-            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-r from-surface-dark/80 via-surface-dark/20 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
+            <div className={`absolute inset-0 ${idx === 2 ? "bg-gradient-to-r from-surface-dark/80 via-surface-dark/20 to-transparent" : slides[idx].layout === "forza" ? "bg-gradient-to-t from-surface-dark/95 via-surface-dark/25 to-transparent" : "bg-gradient-to-r from-surface-dark/95 via-surface-dark/70 to-transparent"}`} />
           </div>
         ))}
 
