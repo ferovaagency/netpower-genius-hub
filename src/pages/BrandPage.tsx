@@ -7,6 +7,7 @@ import { brands } from "@/data/store-data";
 import { fetchAllProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/store";
 import NotFound from "./NotFound";
+import bannerForzaAtlasSecundario from "@/assets/banner-forza-atlas-secundario.jpg";
 
 const norm = (v?: string | null) => (v ?? "").trim().toLocaleLowerCase("es");
 
@@ -117,6 +118,21 @@ export default function BrandPage() {
         <meta property="og:url" content={url} />
         <meta property="og:type" content="website" />
       </Helmet>
+
+      {slug === "forza" && (
+        <section className="relative overflow-hidden bg-surface-dark">
+          <img
+            src={bannerForzaAtlasSecundario}
+            alt="Forza Serie Atlas UPS Online — Encuentra la solución Atlas para tu proyecto. Te ayudamos a elegir la UPS adecuada para tu infraestructura."
+            width={1920}
+            height={390}
+            fetchPriority="high"
+            loading="eager"
+            decoding="sync"
+            className="w-full h-auto object-cover"
+          />
+        </section>
+      )}
 
       <div className="container mx-auto px-4 py-10">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
