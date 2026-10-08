@@ -13,6 +13,7 @@ import ctaBanner from "@/assets/cta-banner.jpg";
 import bannerTienda from "@/assets/banner-tienda.jpg";
 import bannerCotizacion from "@/assets/banner-cotizacion.jpg";
 import bannerNuevaOficina from "@/assets/banner-nueva-oficina.jpg";
+import bannerForzaAtlas from "@/assets/banner-forza-atlas.jpg";
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
@@ -53,6 +54,17 @@ const slides: Slide[] = [
       type: "external",
       label: "Cómo llegar",
       href: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Bogota",
+    },
+  },
+  {
+    image: bannerForzaAtlas,
+    badge: "FORZA · SERIE ATLAS",
+    titleParts: ["No compares solo los kVA, ", "compara la potencia", " que realmente puedes utilizar"],
+    subtitle: "UPS Online Forza Serie Atlas: 3 kVA = 3 kW · 6 kVA = 6 kW · 10 kVA = 10 kW. Potencia real PF 1 desde 3 kVA, flexibilidad eléctrica de 110 a 300 V de entrada y escalabilidad hasta 30 kVA.",
+    cta: {
+      type: "external",
+      label: "Consulta con un especialista",
+      href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
     },
   },
 ];
