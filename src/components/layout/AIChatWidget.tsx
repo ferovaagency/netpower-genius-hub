@@ -251,20 +251,14 @@ export default function AIChatWidget() {
         updated_at: new Date().toISOString(),
       };
       (async () => {
-        const { error: insErr } = await supabase
-          .from("neti_conversations")
-          .insert({ session_id: sid, ...payload });
-        if (!insErr) return;
-        // 23505 = ya existe esa sesion; se actualiza
-        if ((insErr as { code?: string }).code !== "23505") {
-          console.error("Failed to save conversation:", insErr);
-          return;
-        }
-        const { error: updErr } = await supabase
-          .from("neti_conversations")
-          .update(payload)
-          .eq("session_id", sid);
-        if (updErr) console.error("Failed to save conversation:", updErr);
+        const { error } = await (supabase as any).rpc("save_neti_conversation", {
+          _session_id: sid,
+          _customer_name: payload.customer_name || null,
+          _customer_email: payload.customer_email || null,
+          _customer_phone: payload.customer_phone || null,
+          _messages: payload.messages,
+        });
+        if (error) console.error("Failed to save conversation:", error);
       })();
     }, 800);
     return () => clearTimeout(t);
