@@ -534,7 +534,7 @@ export default function AIChatWidget() {
             return (
               <a
                 key={idx}
-                href="https://wa.me/573504609431?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
+                href="https://wa.me/573020105169?text=Hola,%20vengo%20del%20chat%20de%20Neti%20y%20necesito%20asesor%C3%ADa"
                 data-wa-origen="neti_chat"
                 target="_blank"
                 rel="noopener noreferrer"

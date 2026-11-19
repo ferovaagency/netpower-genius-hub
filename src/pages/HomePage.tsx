@@ -48,7 +48,7 @@ const slides: Slide[] = [
     cta: {
       type: "external",
       label: "Consulta con un especialista",
-      href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
+      href: "https://wa.me/573020105169?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
     },
   },
   {
@@ -420,7 +420,7 @@ export default function HomePage() {
               Obtener Cotización <ArrowRight className="w-4 h-4" />
             </button>
             <a
-              href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
+              href="https://wa.me/573020105169?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
               data-wa-origen="home_cta"
               target="_blank"
               rel="noopener noreferrer"

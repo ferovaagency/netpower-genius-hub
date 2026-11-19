@@ -13,7 +13,7 @@ import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
 import AccventSyndicatedContent from "@/components/product/AccventSyndicatedContent";
 
-const WHATSAPP_NUMBER = "573504609431";
+const WHATSAPP_NUMBER = "573020105169";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -91,7 +91,7 @@ export default function ProductDetailPage() {
         <p className="text-sm text-muted-foreground mb-6">¿Buscas un producto que no aparece? Pregúntanos si está disponible.</p>
         <div className="flex flex-col gap-3">
           <a
-            href={`https://wa.me/573504609431?text=${waMessage}`}
+            href={`https://wa.me/573020105169?text=${waMessage}`}
             data-wa-origen="ficha_barra_movil"
             target="_blank"
             rel="noopener noreferrer"
@@ -278,7 +278,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <a
-                  href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
+                  href={`https://wa.me/573020105169?text=${encodeURIComponent(`Hola, quisiera cotizar: ${product.name} (SKU: ${product.sku || "N/A"})`)}`}
                   data-wa-origen="ficha_sin_precio"
                   target="_blank"
                   rel="noopener noreferrer"

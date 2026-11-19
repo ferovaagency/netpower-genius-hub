@@ -137,10 +137,10 @@ export default function Header() {
         <div className="container mx-auto flex min-h-9 items-center justify-between px-4 py-1.5 text-[11px] font-medium text-surface-dark-foreground/85 md:px-6 md:text-xs">
           <span className="truncate pr-3">Envío gratis en Bogotá · Cobertura nacional · Garantía oficial</span>
           <a
-            href="tel:+573504609431"
+            href="tel:+573020105169"
             className="hidden min-h-8 items-center gap-1.5 rounded-sm font-bold text-white transition-colors duration-150 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary sm:flex"
           >
-            <Phone className="w-4 h-4" /> +57 350 460 9431
+            <Phone className="w-4 h-4" /> +57 302 010 5169
           </a>
         </div>
       </div>
@@ -381,8 +381,8 @@ export default function Header() {
                   </div>
                 ))}
               </div>
-              <a href="tel:+573504609431" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
-                <Phone className="w-4 h-4" /> +57 350 460 9431
+              <a href="tel:+573020105169" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
+                <Phone className="w-4 h-4" /> +57 302 010 5169
               </a>
               <button
               onClick={() => openChat("quote")}

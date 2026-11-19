@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import DataConsentCheckbox from "@/components/DataConsentCheckbox";
 import { guardarCompraPendiente } from "@/lib/analytics";
 
-const WHATSAPP = "573504609431";
+const WHATSAPP = "573020105169";
 
 /**
  * Comprobantes de pago.
