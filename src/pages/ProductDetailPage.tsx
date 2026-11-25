@@ -71,6 +71,41 @@ export default function ProductDetailPage() {
     return () => { vigente = false; };
   }, [product]);
 
+  // El HTML prerenderizado trae su propio JSON-LD de Product, con el precio del
+  // ultimo build. El <Helmet> de abajo publica el mismo Product con datos
+  // frescos y el mismo @id, asi que Google veia dos: marca duplicada en
+  // Merchant y, si el precio cambio desde el build, dos precios distintos.
+  // Se quita el del prerender y queda solo el de Helmet (que lleva data-rh).
+  //
+  // Helmet escribe el <head> dentro de un requestAnimationFrame, que no corre
+  // en pestanas ocultas. Por eso el del prerender solo se borra cuando el de
+  // Helmet ya esta en la pagina: si Helmet no llega a escribir, la ficha se
+  // queda con el del prerender en vez de quedarse sin ninguno.
+  useEffect(() => {
+    if (!product) return;
+    const esProduct = (script: HTMLScriptElement) => {
+      try {
+        return JSON.parse(script.textContent || "")["@type"] === "Product";
+      } catch {
+        return false; // JSON-LD que no se puede leer: no es asunto de esta ficha.
+      }
+    };
+    const ldJson = (selector: string) =>
+      Array.from(document.querySelectorAll<HTMLScriptElement>(`script[type="application/ld+json"]${selector}`));
+
+    let intentos = 0;
+    let frame = 0;
+    const limpiar = () => {
+      if (!ldJson("[data-rh]").some(esProduct)) {
+        if (++intentos < 20) frame = requestAnimationFrame(limpiar);
+        return;
+      }
+      ldJson(":not([data-rh])").filter(esProduct).forEach((script) => script.remove());
+    };
+    frame = requestAnimationFrame(limpiar);
+    return () => cancelAnimationFrame(frame);
+  }, [product]);
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-20 flex justify-center">
@@ -123,6 +158,10 @@ export default function ProductDetailPage() {
 
   const waMessage = encodeURIComponent(`Hola Netpower IT, consulto disponibilidad y precio: ${product.name} (${product.sku})`);
 
+  // Precio 0 = bajo cotizacion. Igual que en el prerender, no se declara Offer:
+  // price 0 se lee como producto gratis y Merchant lo rechaza.
+  const schemaPrice = toRawPrice(product.salePrice ?? product.price);
+
   // Extraer FAQs del campo specs.__faqs para JSON-LD FAQPage.
   const faqList: { question: string; answer: string }[] = (() => {
     const raw = (product.specs as any)?.__faqs;
@@ -162,14 +201,18 @@ export default function ProductDetailPage() {
           "sku": product.sku,
           "brand": { "@type": "Brand", "name": brandName || "Netpower IT" },
           "image": product.images?.[0] || "https://netpowerit.co/favicon.ico",
-          "offers": {
-            "@type": "Offer",
-            "url": `https://netpowerit.co/producto/${product.slug}`,
-            "priceCurrency": "COP",
-            "price": toRawPrice(product.salePrice ?? product.price),
-            "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-            "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
-          }
+          ...(schemaPrice > 0
+            ? {
+                "offers": {
+                  "@type": "Offer",
+                  "url": `https://netpowerit.co/producto/${product.slug}`,
+                  "priceCurrency": "COP",
+                  "price": schemaPrice,
+                  "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                  "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
+                }
+              }
+            : {}),
         })}</script>
         {faqList.length > 0 && (
           <script type="application/ld+json">{JSON.stringify({

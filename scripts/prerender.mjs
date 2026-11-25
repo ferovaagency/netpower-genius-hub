@@ -287,9 +287,15 @@ function preloadHero() {
   try {
     const dir = path.join(DIST, "assets");
     if (!existsSync(dir)) return "";
-    const hero = readdirSync(dir).find((f) => /^banner-tienda-.*\.jpg$/.test(f));
+    // Debe ser la imagen del PRIMER slide del carrusel de HomePage.tsx. Si se
+    // cambia el orden de los slides, cambiar tambien este nombre: precargar
+    // otro banner gasta la prioridad alta en una imagen que no se ve.
+    // El hash de Vite no lleva "secundario", asi que no toma ese otro banner.
+    const hero = readdirSync(dir).find(
+      (f) => /^banner-forza-atlas-[^.]+\.jpg$/.test(f) && !f.includes("secundario"),
+    );
     if (!hero) {
-      console.warn("[prerender] no se encontro banner-tienda-*.jpg en dist/assets; sin preload de LCP");
+      console.warn("[prerender] no se encontro banner-forza-atlas-*.jpg en dist/assets; sin preload de LCP");
       return "";
     }
     return `<link rel="preload" as="image" href="/assets/${hero}" fetchpriority="high">`;
