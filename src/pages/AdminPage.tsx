@@ -2,14 +2,53 @@ import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCOP } from "@/data/store-data";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download, LayoutDashboard, Sparkles, Newspaper, Tags, Store, LogOut, Menu, X } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { descargarCatalogo } from "@/lib/exportProducts";
+import { AdminResumen } from "@/components/admin/AdminResumen";
+
+// ── NAVEGACION ──────────────────────────────────────────────────
+// Misma organizacion que el admin de Ferova (barra lateral con grupos).
+// Cada id es el value de un TabsContent; los enlaces abren otras paginas
+// del admin que ya existian.
+type Seccion =
+  | "resumen" | "pedidos" | "cotizaciones" | "aprobaciones"
+  | "productos" | "usuarios" | "conversaciones" | "whatsapp";
+
+const SECCIONES: { grupo: string; items: { id: Seccion; label: string; icon: typeof Package }[] }[] = [
+  { grupo: "Inicio", items: [{ id: "resumen", label: "Resumen", icon: LayoutDashboard }] },
+  {
+    grupo: "Ventas",
+    items: [
+      { id: "pedidos", label: "Pedidos", icon: ShoppingBag },
+      { id: "cotizaciones", label: "Cotizaciones", icon: FileText },
+      { id: "aprobaciones", label: "Disponibilidad", icon: Bell },
+    ],
+  },
+  { grupo: "Catálogo", items: [{ id: "productos", label: "Productos", icon: Package }] },
+  {
+    grupo: "Clientes",
+    items: [
+      { id: "usuarios", label: "Usuarios", icon: Users },
+      { id: "conversaciones", label: "Conversaciones Neti", icon: MessageCircle },
+      { id: "whatsapp", label: "WhatsApp", icon: Phone },
+    ],
+  },
+];
+const ENLACES_CATALOGO = [
+  { to: "/admin/generador-fichas", label: "Generador de fichas", icon: Sparkles },
+  { to: "/admin/generador-blogs", label: "Generador de blogs", icon: Newspaper },
+  { to: "/admin/marcas", label: "Marcas", icon: Tags },
+];
+const TITULOS: Record<Seccion, string> = Object.fromEntries(
+  SECCIONES.flatMap((g) => g.items.map((i) => [i.id, i.label])),
+) as Record<Seccion, string>;
+const esSeccion = (v: string | null): v is Seccion => !!v && v in TITULOS;
 
 type CampoPrecio = "price" | "sale_price";
 
@@ -24,6 +63,24 @@ function aPesos(texto: string): number | null | undefined {
 export default function AdminPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Seccion activa en la URL (?seccion=pedidos) para poder recargar o
+  // compartir el enlace sin volver al Resumen.
+  const [params, setParams] = useSearchParams();
+  const seccion: Seccion = esSeccion(params.get("seccion")) ? (params.get("seccion") as Seccion) : "resumen";
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [correo, setCorreo] = useState("");
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCorreo(data.user?.email ?? ""));
+  }, []);
+  const irA = (id: Seccion) => {
+    setParams(id === "resumen" ? {} : { seccion: id }, { replace: true });
+    setMenuAbierto(false);
+  };
+  const cerrarSesion = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   // ── APROBACIONES ──────────────────────────────────────────────
   const [requests, setRequests] = useState<any[]>([]);
@@ -624,26 +681,82 @@ export default function AdminPage() {
 
   return (
     <>
-      <Helmet><title>Panel Admin | Netpower IT</title></Helmet>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-extrabold mb-6">Panel de Administración</h1>
+      <Helmet><title>{`${TITULOS[seccion]} · Admin | Netpower IT`}</title></Helmet>
+      <div className="admin-world p-5">
+        {menuAbierto && <div className="admin-scrim lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden="true" />}
+        <aside id="admin-menu" className="admin-side" data-open={menuAbierto ? "" : undefined}>
+          <div className="flex items-center justify-between gap-2 px-6 pt-6">
+            <Link to="/" title="Ir a la tienda">
+              <img src="/lovable-uploads/netpower-by-natan.jpeg" alt="Netpower IT" className="h-11 w-auto" />
+            </Link>
+            <button type="button" className="rounded-full p-2 hover:bg-muted lg:hidden" aria-label="Cerrar menú" onClick={() => setMenuAbierto(false)}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <nav aria-label="Administración">
+            {SECCIONES.map((g) => (
+              <div key={g.grupo}>
+                <p className="admin-side__group">{g.grupo}</p>
+                {g.items.map((item) => {
+                  const badge = item.id === "cotizaciones" ? newQuotesCount : item.id === "aprobaciones" ? pendingCount : 0;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="admin-nav"
+                      aria-current={seccion === item.id ? "page" : undefined}
+                      onClick={() => irA(item.id)}
+                    >
+                      <item.icon aria-hidden="true" />
+                      {item.label}
+                      {badge > 0 && <span className="admin-nav__badge">{badge}</span>}
+                    </button>
+                  );
+                })}
+                {g.grupo === "Catálogo" && ENLACES_CATALOGO.map((e) => (
+                  <Link key={e.to} to={e.to} className="admin-nav">
+                    <e.icon aria-hidden="true" />
+                    {e.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <div className="admin-user">
+            <span className="admin-avatar" aria-hidden="true">{correo.slice(0, 1) || "N"}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold" title={correo}>{correo || "Administrador"}</p>
+              <p className="text-sm text-muted-foreground">Administrador</p>
+            </div>
+            <button type="button" className="rounded-full p-2 hover:bg-white/60" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={cerrarSesion}>
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </aside>
 
-        <Tabs defaultValue="aprobaciones">
-          <TabsList className="mb-6 flex-wrap h-auto gap-1">
-            <TabsTrigger value="aprobaciones" className="relative">
-              <Bell className="w-4 h-4 mr-1" /> Aprobaciones
-              {pendingCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{pendingCount}</span>}
-            </TabsTrigger>
-            <TabsTrigger value="cotizaciones" className="relative">
-              <FileText className="w-4 h-4 mr-1" /> Cotizaciones
-              {newQuotesCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{newQuotesCount}</span>}
-            </TabsTrigger>
-            <TabsTrigger value="productos"><Package className="w-4 h-4 mr-1" /> Productos</TabsTrigger>
-            <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
-            <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
-            <TabsTrigger value="conversaciones"><MessageCircle className="w-4 h-4 mr-1" /> Conversaciones Neti</TabsTrigger>
-            <TabsTrigger value="whatsapp"><Phone className="w-4 h-4 mr-1" /> WhatsApp</TabsTrigger>
-          </TabsList>
+        <div className="admin-main">
+          <header className="admin-top">
+            <button
+              type="button"
+              className="rounded-full p-2 hover:bg-muted lg:hidden"
+              aria-label="Abrir menú"
+              aria-expanded={menuAbierto}
+              aria-controls="admin-menu"
+              onClick={() => setMenuAbierto(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="min-w-0 flex-1 truncate text-xl">{TITULOS[seccion]}</h1>
+            <Button variant="outline" className="rounded-full" asChild>
+              <Link to="/"><Store className="mr-1 h-4 w-4" /> Ver tienda</Link>
+            </Button>
+          </header>
+
+        <section className="pt-6">
+        <Tabs value={seccion} onValueChange={(v) => esSeccion(v) && irA(v)} className={seccion === "resumen" ? "" : "admin-panel"}>
+          <TabsContent value="resumen" className="mt-0">
+            <AdminResumen onOpen={irA} />
+          </TabsContent>
 
 
           {/* APROBACIONES */}
@@ -1398,7 +1511,8 @@ export default function AdminPage() {
             )}
           </TabsContent>
         </Tabs>
-
+        </section>
+        </div>
       </div>
     </>
   );
