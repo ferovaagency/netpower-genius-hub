@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import ProductCard from "@/components/store/ProductCard";
 import { brands } from "@/data/store-data";
-import { fetchAllProducts } from "@/hooks/useProducts";
+import { fetchAllProducts, puntajeVitrina } from "@/hooks/useProducts";
 import type { Product } from "@/types/store";
 import NotFound from "./NotFound";
 import bannerForzaAtlasSecundario from "@/assets/banner-forza-atlas-secundario.jpg";
@@ -89,9 +89,9 @@ export default function BrandPage() {
 
   const deLaMarca = useMemo(() => {
     if (!marca) return [];
-    return productos.filter(
-      (p) => p.active !== false && (p.brandId === marca.id || norm(p.brandId) === norm(marca.name)),
-    );
+    return productos
+      .filter((p) => p.active !== false && (p.brandId === marca.id || norm(p.brandId) === norm(marca.name)))
+      .sort((a, b) => puntajeVitrina(b) - puntajeVitrina(a));
   }, [productos, marca]);
 
   const visibles = useMemo(() => {

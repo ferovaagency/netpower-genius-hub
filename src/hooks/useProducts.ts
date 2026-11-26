@@ -158,11 +158,24 @@ export async function fetchAllProducts(): Promise<Product[]> {
  * ficha: esa trae las ~750 filas completas (descripcion y specs incluidas) solo
  * para quedarse con cuatro, y hasta que no terminaba la ficha no pintaba nada.
  */
+/** Cuanto "vale" mostrar un producto en un listado: con foto y precio primero.
+ *  Lo usan los relacionados y el orden por relevancia de la tienda, para que
+ *  los enlaces internos apunten a fichas que se pueden vender. */
+export function puntajeVitrina(p: Product): number {
+  const precio = (p.salePrice ?? p.price) > 0;
+  const foto = typeof p.images?.[0] === "string" && p.images[0].trim() !== "";
+  return (p.featured ? 4 : 0) + (precio ? 2 : 0) + (foto ? 1 : 0);
+}
+
 export async function fetchRelatedProducts(
   categoryId: string,
   excludeId: string,
   limit = 4,
+  precioReferencia = 0,
 ): Promise<Product[]> {
+  // Se trae una muestra mas grande y se elige aqui: primero las fichas con foto
+  // y precio, y entre ellas las de precio parecido (una UPS de 10 kVA no es
+  // "relacionada" de una de 650 VA aunque compartan categoria).
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -170,10 +183,18 @@ export async function fetchRelatedProducts(
     .eq("active", true)
     .neq("id", excludeId)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(Math.max(limit * 10, 40));
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapRow);
+  const distancia = (p: Product) => {
+    const precio = p.salePrice ?? p.price;
+    if (!precioReferencia || !precio) return Number.MAX_SAFE_INTEGER;
+    return Math.abs(Math.log(precio / precioReferencia));
+  };
+  return (data ?? [])
+    .map(mapRow)
+    .sort((a, b) => puntajeVitrina(b) - puntajeVitrina(a) || distancia(a) - distancia(b))
+    .slice(0, limit);
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {

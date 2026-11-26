@@ -212,7 +212,8 @@ function disponibilidad(stock) {
   return Number(stock) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
 }
 
-function productBody(p, cat, brandName) {
+function productBody(p, cat, brand, relacionados = []) {
+  const brandName = brand?.name;
   const price = Number(p.sale_price ?? p.price ?? 0);
   const desc = stripTags(p.description || p.short_description || "");
   return [
@@ -220,7 +221,11 @@ function productBody(p, cat, brandName) {
     cat ? ` / <a href="/categoria/${esc(cat.slug)}">${esc(cat.name)}</a>` : "",
     ` / <span>${esc(p.name)}</span></nav>`,
     `<main><h1>${esc(p.name)}</h1>`,
-    brandName ? `<p>Marca: ${esc(brandName)}</p>` : "",
+    brandName
+      ? brand.slug
+        ? `<p>Marca: <a href="/marcas/${esc(brand.slug)}">${esc(brandName)}</a></p>`
+        : `<p>Marca: ${esc(brandName)}</p>`
+      : "",
     p.sku ? `<p>SKU: ${esc(p.sku)}</p>` : "",
     price > 0 ? `<p>Precio: $${price.toLocaleString("es-CO")} COP</p>` : `<p>Precio bajo cotización</p>`,
     price > 0
@@ -234,8 +239,60 @@ function productBody(p, cat, brandName) {
       : `<p>Disponibilidad: bajo pedido, escríbenos para cotizar</p>`,
     desc ? `<div>${esc(desc)}</div>` : "",
     p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" width="600" height="600">` : "",
+    relacionados.length
+      ? `<h2>Productos relacionados</h2><ul>` +
+        relacionados.map((r) => {
+          const pr = Number(r.sale_price ?? r.price ?? 0);
+          return `<li><a href="/producto/${esc(r.slug)}">${esc(r.name)}</a>${pr > 0 ? ` — $${pr.toLocaleString("es-CO")}` : ""}</li>`;
+        }).join("") +
+        `</ul>`
+      : "",
+    enlacesDeSalida(cat, brand),
     `<p><a href="/cotizacion">Solicitar cotización</a></p></main>`,
   ].join("");
+}
+
+// ─── enlazado interno ────────────────────────────────────────────────────────
+//
+// Medido el 26 nov 2026: en el HTML servido, cada ficha solo enlazaba a Inicio,
+// Tienda, su categoria y Cotizacion; nada a su marca ni a otros productos, y
+// los listados de categoria cortaban en 60 productos en el orden de la base,
+// asi que buena parte del catalogo no recibia ningun enlace interno estatico.
+// Los bots que no ejecutan JS (GPTBot, PerplexityBot, CCBot) solo ven esto.
+
+/** Categorias que un comprador visita juntas: UPS -> baterias, servidor -> licencias. */
+const CATEGORIAS_VECINAS = {
+  ups: ["baterias-ups", "energia-solar"],
+  "baterias-ups": ["ups", "energia-solar"],
+  "energia-solar": ["baterias-ups", "ups"],
+  servidores: ["licencias", "ups", "infraestructura-tic"],
+  licencias: ["servidores", "accesorios"],
+  "infraestructura-tic": ["servidores", "ups", "accesorios"],
+  monitores: ["accesorios"],
+  accesorios: ["monitores", "infraestructura-tic"],
+};
+
+/** Mismo criterio que puntajeVitrina en src/hooks/useProducts.ts. */
+function vitrina(p) {
+  const precio = Number(p.sale_price ?? p.price ?? 0) > 0;
+  const foto = typeof p.images?.[0] === "string" && p.images[0].trim() !== "";
+  return (p.featured ? 4 : 0) + (precio ? 2 : 0) + (foto ? 1 : 0);
+}
+
+const porVitrina = (lista) => [...lista].sort((a, b) => vitrina(b) - vitrina(a));
+
+let categoriasPorSlug = new Map();
+
+function enlacesDeSalida(cat, brand) {
+  const vecinas = (cat ? CATEGORIAS_VECINAS[cat.slug] || [] : [])
+    .map((s) => categoriasPorSlug.get(s))
+    .filter(Boolean);
+  const items = [
+    cat ? `<li><a href="/categoria/${esc(cat.slug)}">Más ${esc(cat.name)}</a></li>` : "",
+    brand?.slug ? `<li><a href="/marcas/${esc(brand.slug)}">Todo ${esc(brand.name)} en Colombia</a></li>` : "",
+    ...vecinas.map((v) => `<li><a href="/categoria/${esc(v.slug)}">${esc(v.name)}</a></li>`),
+  ].filter(Boolean);
+  return items.length ? `<h2>Seguir explorando</h2><ul>${items.join("")}</ul>` : "";
 }
 
 function blogBody(post) {
@@ -250,12 +307,18 @@ function blogBody(post) {
   ].join("");
 }
 
-function listBody(heading, description, products) {
-  const items = products
-    .slice(0, 60)
-    .map((p) => `<li><a href="/producto/${esc(p.slug)}">${esc(p.name)}</a></li>`)
+function listBody(heading, description, products, extra = "") {
+  // Todos los productos, no los primeros 60: el corte dejaba sin enlace interno
+  // a la mayor parte de las categorias grandes. Ordenados para que los que se
+  // pueden vender (foto y precio) queden arriba.
+  const items = porVitrina(products)
+    .slice(0, 400)
+    .map((p) => {
+      const pr = Number(p.sale_price ?? p.price ?? 0);
+      return `<li><a href="/producto/${esc(p.slug)}">${esc(p.name)}</a>${pr > 0 ? ` — $${pr.toLocaleString("es-CO")}` : ""}</li>`;
+    })
     .join("");
-  return `<main><h1>${esc(heading)}</h1><p>${esc(description)}</p><ul>${items}</ul></main>`;
+  return `<main><h1>${esc(heading)}</h1><p>${esc(description)}</p><ul>${items}</ul>${extra}</main>`;
 }
 
 // ─── escritura ───────────────────────────────────────────────────────────────
@@ -502,6 +565,74 @@ async function main() {
     return;
   }
 
+  // Indices para el enlazado interno (ver "enlazado interno" arriba).
+  categoriasPorSlug = new Map(categories.map((c) => [c.slug, c]));
+  const porCategoria = new Map();
+  for (const p of products) {
+    const c = catById.get(p.category);
+    if (!c) continue;
+    if (!porCategoria.has(c.id)) porCategoria.set(c.id, []);
+    porCategoria.get(c.id).push(p);
+  }
+  const catsConProductos = categories.filter((c) => porCategoria.has(c.id));
+  const marcasTop = (() => {
+    const n = new Map();
+    for (const p of products) {
+      const b = brandById.get(p.brand);
+      if (b?.slug) n.set(b.slug, { b, k: (n.get(b.slug)?.k || 0) + 1 });
+    }
+    return [...n.values()].sort((a, b) => b.k - a.k).slice(0, 12).map((x) => x.b);
+  })();
+
+  /** Palabras que distinguen un producto ("ups", "online", "1000va", "forza"),
+   *  sin conectores ni medidas genericas. */
+  const VACIAS = new Set(["con", "para", "de", "del", "la", "el", "los", "las", "y", "en", "por", "ref", "x", "und", "negro", "negra", "blanco", "usb", "hdmi"]);
+  const palabras = (s) => new Set(
+    String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !VACIAS.has(w)),
+  );
+  const palabrasDe = new Map(products.map((p) => [p.slug, palabras(p.name)]));
+
+  /** 6 fichas de la misma categoria. Manda el parecido (palabras del nombre
+   *  y misma marca); a igual parecido, las vendibles y de precio cercano. */
+  const relacionadosDe = (p, cat) => {
+    if (!cat) return [];
+    const mias = palabrasDe.get(p.slug) || new Set();
+    const marca = brandById.get(p.brand)?.slug;
+    const ref = Number(p.sale_price ?? p.price ?? 0);
+    const parecido = (x) => {
+      let n = 0;
+      for (const w of palabrasDe.get(x.slug) || []) if (mias.has(w)) n++;
+      return n * 2 + (marca && brandById.get(x.brand)?.slug === marca ? 2 : 0);
+    };
+    const dist = (x) => {
+      const v = Number(x.sale_price ?? x.price ?? 0);
+      return ref > 0 && v > 0 ? Math.abs(Math.log(v / ref)) : Number.MAX_SAFE_INTEGER;
+    };
+    return (porCategoria.get(cat.id) || [])
+      .filter((x) => x.slug && x.slug !== p.slug)
+      .map((x) => ({ x, s: parecido(x) + vitrina(x) }))
+      .sort((a, b) => b.s - a.s || dist(a.x) - dist(b.x))
+      .slice(0, 6)
+      .map(({ x }) => x);
+  };
+
+  /** Pie de categorias y marcas: vecinas primero, luego el resto. */
+  const enlacesDeListado = (slugActual) => {
+    const vecinas = CATEGORIAS_VECINAS[slugActual] || [];
+    const cats = [
+      ...vecinas.map((s) => categoriasPorSlug.get(s)).filter((c) => c && porCategoria.has(c.id)),
+      ...catsConProductos.filter((c) => c.slug !== slugActual && !vecinas.includes(c.slug)),
+    ];
+    return (
+      `<h2>Otras categorías</h2><ul>` +
+      cats.map((c) => `<li><a href="/categoria/${esc(c.slug)}">${esc(c.name)}</a></li>`).join("") +
+      `</ul><h2>Marcas</h2><ul>` +
+      marcasTop.map((b) => `<li><a href="/marcas/${esc(b.slug)}">${esc(b.name)}</a></li>`).join("") +
+      `</ul>`
+    );
+  };
+
   const tiendaTitle = "Tienda TIC | Computadores, Servidores, Redes — Netpower IT";
   const tiendaDesc =
     "Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá.";
@@ -547,7 +678,7 @@ async function main() {
           ],
         },
       }],
-    }), listBody(c.name, description, inCat)));
+    }), listBody(c.name, description, inCat, enlacesDeListado(c.slug))));
     if (inCat.length > 0) anunciar(`/categoria/${c.slug}`);
     written++;
   }
@@ -586,7 +717,7 @@ async function main() {
           ],
         },
       ],
-    }), listBody(`${b.name} en Colombia`, description, deLaMarca)));
+    }), listBody(`${b.name} en Colombia`, description, deLaMarca, enlacesDeListado(null))));
     anunciar(`/marcas/${b.slug}`);
     written++;
   }
@@ -694,7 +825,7 @@ async function main() {
     await emit(`/producto/${p.slug}`, applyBody(applyHead(template, {
       title, description, canonical: url, ogType: "product", ogImage: image,
       schemas: [productSchema, breadcrumb],
-    }), productBody(p, cat, brand?.name)));
+    }), productBody(p, cat, brand, relacionadosDe(p, cat))));
     if (valeAnunciar(p)) anunciar(`/producto/${p.slug}`, p.updated_at);
     written++;
   }

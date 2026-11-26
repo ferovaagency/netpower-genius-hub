@@ -56,7 +56,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
     let vigente = true;
-    fetchRelatedProducts(product.categoryId, product.id, 4)
+    fetchRelatedProducts(product.categoryId, product.id, 4, product.salePrice ?? product.price)
       .then((lista) => {
         if (!vigente) return;
         if (lista.length > 0) { setRelated(lista); return; }
@@ -273,8 +273,14 @@ export default function ProductDetailPage() {
           {/* Info */}
           <div className="flex flex-col">
             <div className="flex flex-wrap gap-2 mb-3">
-              {brandName && <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold">{brandName}</span>}
-              {categoryName && <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs">{categoryName}</span>}
+              {/* Marca y categoria enlazan a su pagina: son los dos enlaces
+                  internos mas naturales desde una ficha. */}
+              {brandName && (brand?.slug
+                ? <Link to={`/marcas/${brand.slug}`} className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:underline">{brandName}</Link>
+                : <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold">{brandName}</span>)}
+              {categoryName && (category?.slug
+                ? <Link to={`/categoria/${category.slug}`} className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs hover:underline">{categoryName}</Link>
+                : <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs">{categoryName}</span>)}
               {product.sku && <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-mono">SKU: {product.sku}</span>}
             </div>
 

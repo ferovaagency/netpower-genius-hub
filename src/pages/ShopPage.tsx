@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ChevronDown, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "@/components/store/ProductCard";
 import { brands, categories } from "@/data/store-data";
-import { fetchAllProducts } from "@/hooks/useProducts";
+import { fetchAllProducts, puntajeVitrina } from "@/hooks/useProducts";
 import type { Product } from "@/types/store";
 
 type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
@@ -127,7 +127,9 @@ export default function ShopPage() {
     if (sort === "price-asc") return [...list].sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
     if (sort === "price-desc") return [...list].sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
     if (sort === "newest") return [...list].reverse();
-    return list;
+    // Relevancia: destacados y fichas con foto y precio arriba. Son las que
+    // Google ve primero en el listado y a las que conviene pasar autoridad.
+    return [...list].sort((a, b) => puntajeVitrina(b) - puntajeVitrina(a));
   }, [allProducts, selectedCategory, selectedBrand, sort, searchQuery]);
 
   const activeCategory = categories.find((category) => category.slug === selectedCategory);
