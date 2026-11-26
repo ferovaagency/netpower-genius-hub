@@ -1,0 +1,31 @@
+# Reconstruye el sitio en Vercel todos los dias.
+#
+# El HTML que leen Google y Merchant Center (titulos, precios, schema, sitemap)
+# se genera en el build con scripts/prerender.mjs, leyendo Supabase en ese
+# momento. Un cambio hecho en el admin (precio, oferta, visibilidad, titulo)
+# no llega a ese HTML hasta el siguiente build. Esto garantiza uno al dia.
+#
+# Necesita el secreto VERCEL_DEPLOY_HOOK en GitHub (Settings > Secrets and
+# variables > Actions) con la URL de un Deploy Hook de Vercel para la rama main
+# (Vercel > Project > Settings > Git > Deploy Hooks).
+name: Redeploy diario
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # 3:00 a. m. en Bogota (UTC-5)
+  workflow_dispatch: {} # boton "Run workflow" para lanzarlo a mano
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar al deploy hook de Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK. Ver el comentario al inicio de este archivo."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK"
