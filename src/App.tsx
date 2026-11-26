@@ -90,13 +90,17 @@ const PageFallback = () => (
 function AppContent() {
   const { pathname } = useLocation();
   const isDigitalContact = pathname === "/contacto-digital";
+  // El panel /admin tiene su propia barra lateral y cabecera (como el admin de
+  // Ferova), asi que no lleva el header, el footer ni los botones de la tienda.
+  const esAdmin = pathname === "/admin";
+  const sinMarcoTienda = isDigitalContact || esAdmin;
 
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
       <RouteAnalytics />
       <WhatsAppClickTracker />
-      {!isDigitalContact && <Header />}
+      {!sinMarcoTienda && <Header />}
       <main className={isDigitalContact ? "min-h-dvh" : "flex-1"}>
         <Suspense fallback={<PageFallback />}>
           <Routes>
@@ -129,7 +133,7 @@ function AppContent() {
           </Routes>
         </Suspense>
       </main>
-      {!isDigitalContact && (
+      {!sinMarcoTienda && (
         <>
           <Footer />
           <WhatsAppButton />

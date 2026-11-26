@@ -134,3 +134,301 @@
     box-shadow: var(--shadow-button);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Administración (/admin)                                             */
+/* Mismo esquema que el admin de ferova-core-platform (src/styles.css, */
+/* bloque "Administración"): barra lateral flotante, cabecera fija y   */
+/* tarjetas blancas sobre fondo gris azulado. Los colores salen de los */
+/* tokens de Netpower en lugar del morado de Ferova.                   */
+/* ------------------------------------------------------------------ */
+
+.admin-world {
+  min-height: 100vh;
+  background: #f0f2f5;
+  color: hsl(var(--foreground));
+}
+.admin-world :is(h1, h2, h3) {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.admin-card {
+  border-radius: 1.1rem;
+  padding: 1.6rem;
+  background: #ffffff;
+  box-shadow: 0 2px 8px hsl(0 0% 20% / 0.08);
+}
+.admin-card h2 {
+  font-size: 1.15rem;
+}
+.admin-sub {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+}
+
+.admin-side {
+  position: fixed;
+  z-index: 40;
+  inset: 1.25rem auto 1.25rem 1.25rem;
+  display: flex;
+  width: 17rem;
+  flex-direction: column;
+  border-radius: 1.1rem;
+  background: #ffffff;
+  box-shadow: 0 2px 8px hsl(0 0% 20% / 0.08);
+}
+.admin-side nav {
+  scrollbar-width: thin;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 1.25rem;
+}
+.admin-side__group {
+  padding: 1.35rem 0 0.5rem 1.6rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.admin-nav {
+  display: flex;
+  width: 100%;
+  min-height: 2.9rem;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 0 999px 999px 0;
+  padding: 0.5rem 1rem 0.5rem 1.6rem;
+  color: hsl(var(--foreground));
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background-color 160ms ease;
+}
+.admin-nav svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+.admin-nav:hover {
+  background: hsl(var(--muted));
+}
+.admin-nav[aria-current="page"] {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  font-weight: 700;
+}
+.admin-nav:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+.admin-nav__badge {
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  background: hsl(var(--destructive));
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.admin-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 1.25rem 1.25rem;
+  border-radius: 1rem;
+  padding: 0.9rem;
+  background: hsl(var(--accent));
+}
+.admin-avatar {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: hsl(var(--accent-foreground));
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.admin-scrim {
+  position: fixed;
+  z-index: 35;
+  inset: 0;
+  background: hsl(0 0% 10% / 0.45);
+}
+.admin-top {
+  position: sticky;
+  z-index: 20;
+  top: 1.25rem;
+  display: flex;
+  min-height: 4.4rem;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 1.1rem;
+  padding: 0.8rem 1.4rem;
+  background: #ffffff;
+  box-shadow: 0 2px 8px hsl(0 0% 20% / 0.1);
+}
+@media (min-width: 1024px) {
+  .admin-main {
+    margin-left: 18.25rem;
+  }
+}
+@media (max-width: 1023px) {
+  .admin-side:not([data-open]) {
+    display: none;
+  }
+}
+
+/* Las pestañas existentes se pintan dentro de una tarjeta blanca. */
+.admin-panel {
+  border-radius: 1.1rem;
+  padding: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 2px 8px hsl(0 0% 20% / 0.08);
+}
+
+.admin-table {
+  width: 100%;
+  font-size: 0.9rem;
+}
+.admin-table thead th {
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  text-align: left;
+}
+.admin-table :is(th, td) {
+  padding: 0.8rem 0.75rem;
+  vertical-align: middle;
+}
+.admin-table tbody tr + tr td {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.chip {
+  display: inline-flex;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip--ok {
+  border-color: #a5dcc0;
+  background: #e5f7ed;
+  color: #0d6038;
+}
+.chip--wait {
+  border-color: #ecd08f;
+  background: #fdf4dd;
+  color: #73520a;
+}
+.chip--info {
+  border-color: #a9dcd8;
+  background: #e6f6f5;
+  color: #0b5d57;
+}
+.chip--bad {
+  border-color: #eab8b8;
+  background: #fcebeb;
+  color: #8b1d22;
+}
+.chip--idle {
+  border-color: #d4d8e0;
+  background: #f1f3f6;
+  color: #4b5262;
+}
+.stat-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 1.1rem;
+  text-align: left;
+  transition: box-shadow 160ms ease;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.stat-icon {
+  display: grid;
+  width: 3.4rem;
+  height: 3.4rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+}
+.meter {
+  height: 0.35rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: #eceff3;
+}
+.meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: hsl(var(--primary));
+}
+.day-chart {
+  position: relative;
+  display: flex;
+  height: 15rem;
+  gap: 2px;
+  margin-top: 2rem;
+  border-top: 1px solid hsl(var(--border));
+}
+.day-chart__max {
+  position: absolute;
+  top: -1.4rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.78rem;
+}
+.day-chart__col {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  cursor: default;
+}
+.day-chart__track {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid hsl(var(--input));
+}
+.day-chart__track i {
+  width: min(1.25rem, 70%);
+  border-radius: 4px 4px 0 0;
+  background: hsl(var(--primary));
+}
+.day-chart__col:is(:hover, :focus-visible) i {
+  background: hsl(var(--accent-foreground));
+}
+.day-chart__label {
+  padding-top: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.78rem;
+}
+.day-chart__tip {
+  position: absolute;
+  z-index: 2;
+  top: 0.4rem;
+  left: 0;
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.7rem;
+  background: hsl(0 0% 15%);
+  color: #ffffff;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.day-chart__tip[data-edge="end"] {
+  right: 0;
+  left: auto;
+}
