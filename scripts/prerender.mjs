@@ -159,6 +159,7 @@ async function readStoreData() {
 const PRODUCT_COLUMNS = [
   "slug", "name", "description", "short_description", "price", "sale_price",
   "sku", "stock", "images", "category", "brand", "meta_title", "meta_description",
+  "updated_at", "featured",
 ].join(",");
 
 const BLOG_COLUMNS = [
@@ -263,6 +264,48 @@ async function emit(route, html) {
   const dir = route === "/" ? DIST : path.join(DIST, route.replace(/^\//, ""));
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, "index.html"), html, "utf8");
+}
+
+// ─── sitemap ─────────────────────────────────────────────────────────────────
+//
+// El sitemap sale de aqui y no de la Edge Function generate-sitemap, por dos
+// razones medidas el 26 nov 2026:
+//  - La funcion desplegada estaba desfasada del repo (seguia anunciando
+//    /categoria/ups-accesorios, que es un 301) porque los cambios en
+//    supabase/functions no se publican solos al hacer push.
+//  - La funcion no puede ver marcas ni articulos del blog: las marcas viven en
+//    src/data/store-data.ts. Este script si, y ademas sabe exactamente que
+//    rutas acaba de escribir, asi que el sitemap no puede anunciar una URL que
+//    no exista.
+// Si falla la lectura de productos no se escribe nada y queda el
+// public/sitemap.xml, que es un indice hacia la funcion: peor, pero no vacio.
+
+const sitemap = [];
+
+/** Anota una ruta para el sitemap. lastmod solo si es una fecha real. */
+function anunciar(route, lastmod) {
+  const fecha = lastmod ? new Date(lastmod) : null;
+  sitemap.push({
+    loc: route === "/" ? DOMAIN : `${DOMAIN}${route}`,
+    lastmod: fecha && !Number.isNaN(fecha.getTime()) ? fecha.toISOString().slice(0, 10) : null,
+  });
+}
+
+/** Una ficha se anuncia si tiene algo que mostrar: imagen o precio. Las
+ *  demas se siguen sirviendo, solo no se ofrecen a Google. */
+function valeAnunciar(p) {
+  const tienePrecio = Number(p.sale_price ?? p.price ?? 0) > 0;
+  const tieneImagen = Array.isArray(p.images) && typeof p.images[0] === "string" && p.images[0].trim() !== "";
+  return tienePrecio || tieneImagen;
+}
+
+async function escribirSitemap() {
+  const xmlEsc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const urls = sitemap
+    .map((u) => `  <url><loc>${xmlEsc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}</url>`)
+    .join("\n");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Generado por scripts/prerender.mjs en cada build. ${sitemap.length} URLs. -->\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  await writeFile(path.join(DIST, "sitemap.xml"), xml, "utf8");
 }
 
 // ─── main ────────────────────────────────────────────────────────────────────
@@ -437,6 +480,7 @@ async function main() {
       head = head.replace("</head>", `${MARK_START}${heroPreload}${MARK_END}\n</head>`);
     }
     await emit(s.route, applyBody(head, body));
+    anunciar(s.route);
     written++;
   }
 
@@ -476,6 +520,7 @@ async function main() {
       isPartOf: { "@id": `${DOMAIN}/#website` },
     }],
   }), listBody("Tienda", tiendaDesc, products)));
+  anunciar("/tienda");
   written++;
 
   for (const c of categories) {
@@ -503,6 +548,7 @@ async function main() {
         },
       }],
     }), listBody(c.name, description, inCat)));
+    if (inCat.length > 0) anunciar(`/categoria/${c.slug}`);
     written++;
   }
 
@@ -541,7 +587,58 @@ async function main() {
         },
       ],
     }), listBody(`${b.name} en Colombia`, description, deLaMarca)));
+    anunciar(`/marcas/${b.slug}`);
     written++;
+  }
+
+  // 2.c Home con contenido. La version del paso 1 solo tiene un H1 y la
+  //     descripcion: 33 palabras y ningun enlace en el HTML servido, que es lo
+  //     que lee un rastreador antes de ejecutar el bundle. Aqui ya se conocen
+  //     categorias, marcas y productos, asi que se reescribe con enlaces a todo
+  //     lo que importa. React reemplaza este <main> al montar.
+  {
+    const home = STATIC_ROUTES.find((s) => s.route === "/");
+    const conProductos = (c) => products.some((p) => catById.get(p.category)?.id === c.id);
+    const cats = categories.filter(conProductos);
+    const conteoMarca = new Map();
+    for (const p of products) {
+      const b = brandById.get(p.brand);
+      if (b) conteoMarca.set(b.slug, { b, n: (conteoMarca.get(b.slug)?.n || 0) + 1 });
+    }
+    const marcas = [...conteoMarca.values()].sort((a, b) => b.n - a.n).slice(0, 12).map((x) => x.b);
+    const vendibles = products.filter((p) => Number(p.sale_price ?? p.price ?? 0) > 0 && p.images?.[0]);
+    const destacados = [...vendibles.filter((p) => p.featured), ...vendibles.filter((p) => !p.featured)].slice(0, 12);
+    const cop = (n) => "$" + Math.round(n).toLocaleString("es-CO");
+
+    const body =
+      `<main>` +
+      `<h1>UPS, servidores y soluciones TIC para empresas en Colombia</h1>` +
+      `<p>Netpower IT vende y asesora en respaldo de energía (UPS online e interactivas, baterías y estaciones portátiles), ` +
+      `servidores, infraestructura de red, monitores, licencias de software y energía solar. Somos distribuidores de marcas como ` +
+      `${marcas.slice(0, 5).map((b) => esc(b.name)).join(", ")}, con envío a toda Colombia, garantía de fabricante y pago con Wompi, PSE o tarjeta.</p>` +
+      `<h2>Categorías</h2><ul>` +
+      cats.map((c) => `<li><a href="/categoria/${esc(c.slug)}">${esc(c.name)}</a>${c.description ? `: ${esc(c.description)}` : ""}</li>`).join("") +
+      `</ul>` +
+      (destacados.length
+        ? `<h2>Productos destacados</h2><ul>` +
+          destacados.map((p) => `<li><a href="/producto/${esc(p.slug)}">${esc(p.name)}</a> — ${cop(Number(p.sale_price ?? p.price))}</li>`).join("") +
+          `</ul>`
+        : "") +
+      `<h2>Marcas</h2><ul>` +
+      marcas.map((b) => `<li><a href="/marcas/${esc(b.slug)}">${esc(b.name)}</a></li>`).join("") +
+      `</ul>` +
+      `<p><a href="/tienda">Ver toda la tienda</a> · <a href="/cotizacion">Cotizar un proyecto</a> · <a href="/contacto">Contacto</a></p>` +
+      `</main>`;
+
+    const banner = heroPreload.match(/href="([^"]+)"/)?.[1];
+    let head = applyHead(template, {
+      title: home.title,
+      description: home.description,
+      canonical: DOMAIN,
+      ogImage: banner ? `${DOMAIN}${banner}` : undefined,
+    });
+    if (heroPreload) head = head.replace("</head>", `${MARK_START}${heroPreload}${MARK_END}\n</head>`);
+    await emit("/", applyBody(head, body));
   }
 
   for (const p of products) {
@@ -598,6 +695,7 @@ async function main() {
       title, description, canonical: url, ogType: "product", ogImage: image,
       schemas: [productSchema, breadcrumb],
     }), productBody(p, cat, brand?.name)));
+    if (valeAnunciar(p)) anunciar(`/producto/${p.slug}`, p.updated_at);
     written++;
   }
 
@@ -635,9 +733,12 @@ async function main() {
         },
       ],
     }), blogBody(post)));
+    anunciar(`/blog/${post.slug}`, post.fecha_publicacion);
     written++;
   }
 
+  await escribirSitemap();
+  console.log(`[prerender] sitemap.xml con ${sitemap.length} URLs.`);
   console.log(
     `[prerender] ${written} rutas escritas (${products.length} productos, ${categories.length} categorías, ${posts.length} artículos).`,
   );
