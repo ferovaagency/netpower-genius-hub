@@ -165,6 +165,7 @@ const PRODUCT_COLUMNS = [
 const BLOG_COLUMNS = [
   "slug", "h1", "meta_title", "meta_description", "resumen_intro",
   "imagen_portada", "imagen_alt", "autor", "fecha_publicacion",
+  "frase_inicial", "contenido_html", "cierre_html", "industria", "updated_at",
 ].join(",");
 
 /** Lee una tabla completa por páginas de 1000 filas. */
@@ -295,14 +296,41 @@ function enlacesDeSalida(cat, brand) {
   return items.length ? `<h2>Seguir explorando</h2><ul>${items.join("")}</ul>` : "";
 }
 
+/** HTML del articulo tal como esta en la base, sin scripts, estilos ni
+ *  manejadores de eventos (lo escriben admins, pero el HTML estatico no pasa
+ *  por DOMPurify como en React). */
+function limpiarHtml(html) {
+  return String(html || "")
+    .replace(/<(script|style|iframe|object|embed|form)[\s\S]*?<\/\1>/gi, "")
+    .replace(/<(script|style|iframe|object|embed|form)[^>]*\/?>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/(href|src)\s*=\s*"javascript:[^"]*"/gi, '$1="#"');
+}
+
+/** Preguntas frecuentes del articulo (mismo criterio que src/lib/blog.ts). */
+function faqDeArticulo(html) {
+  const plano = (v) => v.replace(/<\/(p|li|h\d|div|ul|ol)>|<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+  const seccion = html.split(/<h2[^>]*>/i).find((s) => /preguntas frecuentes/i.test(plano(s.split(/<\/h2>/i)[0] ?? "")));
+  if (!seccion) return [];
+  return seccion.split(/<\/h2>/i).slice(1).join("").split(/<h3[^>]*>/i).slice(1)
+    .map((t) => { const [q = "", ...r] = t.split(/<\/h3>/i); return { question: plano(q), answer: plano(r.join(" ")) }; })
+    .filter((f) => f.question && f.answer);
+}
+
 function blogBody(post) {
   return [
     `<nav aria-label="Ruta"><a href="/">Inicio</a> / <a href="/blog">Blog</a> / <span>${esc(post.h1)}</span></nav>`,
     `<main><article><h1>${esc(post.h1)}</h1>`,
-    post.autor ? `<p>Por ${esc(post.autor)}</p>` : "",
-    post.fecha_publicacion ? `<p><time datetime="${esc(post.fecha_publicacion)}">${esc(String(post.fecha_publicacion).slice(0, 10))}</time></p>` : "",
-    post.imagen_portada ? `<img src="${esc(post.imagen_portada)}" alt="${esc(post.imagen_alt || post.h1)}" width="1200" height="630">` : "",
     post.resumen_intro ? `<p>${esc(stripTags(post.resumen_intro))}</p>` : "",
+    `<p>${esc(post.autor || "Equipo Netpower IT")}`,
+    post.fecha_publicacion ? ` · <time datetime="${esc(post.fecha_publicacion)}">${esc(String(post.fecha_publicacion).slice(0, 10))}</time>` : "",
+    `</p>`,
+    post.imagen_portada ? `<img src="${esc(post.imagen_portada)}" alt="${esc(post.imagen_alt || post.h1)}" width="1200" height="630">` : "",
+    post.frase_inicial ? `<p><strong>${esc(stripTags(post.frase_inicial))}</strong></p>` : "",
+    limpiarHtml(post.contenido_html),
+    limpiarHtml(post.cierre_html),
+    `<p><a href="https://wa.me/573020105169">Hablar con un asesor por WhatsApp</a> · <a href="/cotizacion">Pedir cotización</a></p>`,
     `</article></main>`,
   ].join("");
 }
@@ -869,10 +897,17 @@ async function main() {
     const title = post.meta_title || `${post.h1} | Netpower IT`;
     const description = clamp(post.meta_description || post.resumen_intro || post.h1, 160);
     const image = post.imagen_portada || OG_IMAGE_DEFAULT;
+    const faqs = faqDeArticulo(`${post.contenido_html || ""}${post.cierre_html || ""}`);
 
     await emit(`/blog/${post.slug}`, applyBody(applyHead(template, {
       title, description, canonical: url, ogType: "article", ogImage: image,
       schemas: [
+        ...(faqs.length ? [{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "@id": `${url}#faq`,
+          mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
+        }] : []),
         {
           "@context": "https://schema.org",
           "@type": "BlogPosting",
@@ -882,7 +917,9 @@ async function main() {
           image,
           url,
           datePublished: post.fecha_publicacion || undefined,
-          author: { "@type": post.autor ? "Person" : "Organization", name: post.autor || "Netpower IT" },
+          dateModified: post.updated_at || undefined,
+          // "Equipo Netpower IT" es la empresa, no una persona.
+          author: { "@type": "Organization", name: post.autor || "Netpower IT" },
           publisher: { "@id": `${DOMAIN}/#organization` },
           mainEntityOfPage: { "@type": "WebPage", "@id": url },
         },
@@ -899,6 +936,18 @@ async function main() {
     }), blogBody(post)));
     anunciar(`/blog/${post.slug}`, post.fecha_publicacion);
     written++;
+  }
+
+  // /blog con enlaces a todos los articulos (la version del paso 1 solo tiene
+  // el H1 y la descripcion).
+  if (posts.length) {
+    const s = STATIC_ROUTES.find((r) => r.route === "/blog");
+    const lista = posts.filter((p) => p.slug && p.h1)
+      .map((p) => `<li><a href="/blog/${esc(p.slug)}">${esc(p.h1)}</a>${p.resumen_intro ? ` — ${esc(clamp(stripTags(p.resumen_intro), 160))}` : ""}</li>`)
+      .join("");
+    await emit("/blog", applyBody(applyHead(template, {
+      title: s.title, description: s.description, canonical: `${DOMAIN}/blog`,
+    }), `<main><h1>${esc(s.h1)}</h1><p>${esc(s.description)}</p><ul>${lista}</ul></main>`));
   }
 
   await escribirSitemap();
