@@ -7,10 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Search, Loader2, Eye, Trash2, Package, Users, ShoppingBag, Bell, Pencil, FileText, Mail, Phone, MessageCircle, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { descargarCatalogo } from "@/lib/exportProducts";
-import { InventarioPanel } from "@/components/admin/InventarioPanel";
+
+type CampoPrecio = "price" | "sale_price";
+
+/** "1.250.000", "$ 1250000" o "1250000" -> 1250000. Vacio -> null. Undefined si no es un numero. */
+function aPesos(texto: string): number | null | undefined {
+  const limpio = texto.replace(/[$\s.,]/g, "");
+  if (!limpio) return null;
+  if (!/^\d+$/.test(limpio)) return undefined;
+  return parseInt(limpio, 10);
+}
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -74,6 +83,10 @@ export default function AdminPage() {
   const [editandoNombre, setEditandoNombre] = useState<string | null>(null);
   const [borradorNombre, setBorradorNombre] = useState("");
   const [guardandoNombre, setGuardandoNombre] = useState<string | null>(null);
+  const [editandoPrecio, setEditandoPrecio] = useState<{ id: string; campo: CampoPrecio } | null>(null);
+  const [borradorPrecio, setBorradorPrecio] = useState("");
+  const [guardandoPrecio, setGuardandoPrecio] = useState<string | null>(null);
+  const [filtroEstado, setFiltroEstado] = useState<"todos" | "activos" | "inactivos">("todos");
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -84,8 +97,13 @@ export default function AdminPage() {
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   const toggleProduct = async (id: string, active: boolean) => {
-    await supabase.from("products").update({ active: !active }).eq("id", id);
+    // Se cambia en pantalla de una y se devuelve si la base lo rechaza.
     setProducts(prev => prev.map(p => p.id === id ? { ...p, active: !active } : p));
+    const { error } = await supabase.from("products").update({ active: !active }).eq("id", id);
+    if (error) {
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, active } : p));
+      toast({ title: "No se pudo cambiar la visibilidad", description: error.message, variant: "destructive" });
+    }
   };
 
   const deleteProduct = async (id: string, name: string) => {
@@ -98,6 +116,8 @@ export default function AdminPage() {
 
   const filteredProds = products.filter(p => {
     if (soloSinSku && (p.sku || "").trim()) return false;
+    if (filtroEstado === "activos" && !p.active) return false;
+    if (filtroEstado === "inactivos" && p.active) return false;
     const t = prodSearch.trim().toLowerCase();
     if (!t) return true;
     return (p.name || "").toLowerCase().includes(t) || (p.sku || "").toLowerCase().includes(t);
@@ -178,6 +198,94 @@ export default function AdminPage() {
 
     setProducts(prev => prev.map(x => x.id === id ? { ...x, name: valor } : x));
     salir();
+  };
+
+  // ── EDICION RAPIDA DE PRECIO Y OFERTA ─────────────────────────
+  // price es el precio normal; sale_price, si existe, es el que se cobra y el
+  // que va al schema de Google. Oferta vacia = sin oferta.
+  const abrirEdicionPrecio = (p: any, campo: CampoPrecio) => {
+    setEditandoPrecio({ id: p.id, campo });
+    setBorradorPrecio(p[campo] ? String(Math.round(p[campo])) : "");
+  };
+
+  const guardarPrecio = async (id: string, campo: CampoPrecio, avanzarA?: string) => {
+    const actual = products.find(x => x.id === id);
+    if (!actual) return;
+
+    const salir = () => {
+      const siguiente = avanzarA ? products.find(x => x.id === avanzarA) : null;
+      setEditandoPrecio(siguiente ? { id: siguiente.id, campo } : null);
+      setBorradorPrecio(siguiente?.[campo] ? String(Math.round(siguiente[campo])) : "");
+    };
+
+    const valor = aPesos(borradorPrecio);
+    if (valor === undefined) {
+      toast({ title: "Escribe solo el número", description: "Ejemplo: 1250000", variant: "destructive" });
+      return;
+    }
+    const anterior = actual[campo] ? Math.round(actual[campo]) : null;
+    if (valor === anterior || (campo === "price" && valor === null && !anterior)) { salir(); return; }
+
+    if (campo === "price" && !valor) {
+      toast({ title: "El precio no puede quedar en 0", description: "Si no se vende, desactiva el producto.", variant: "destructive" });
+      return;
+    }
+    const precio = campo === "price" ? valor! : Number(actual.price || 0);
+    const oferta = campo === "sale_price" ? valor : (actual.sale_price ? Number(actual.sale_price) : null);
+    if (oferta !== null && precio && oferta >= precio) {
+      toast({ title: "La oferta debe ser menor que el precio", description: `Precio actual: $${precio.toLocaleString("es-CO")}`, variant: "destructive" });
+      return;
+    }
+
+    setGuardandoPrecio(id);
+    const cambio = campo === "price" ? { price: valor! } : { sale_price: valor };
+    const { error } = await supabase.from("products").update(cambio).eq("id", id);
+    setGuardandoPrecio(null);
+
+    if (error) {
+      toast({ title: "No se pudo guardar el precio", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setProducts(prev => prev.map(x => x.id === id ? { ...x, [campo]: valor } : x));
+    salir();
+  };
+
+  const celdaPrecio = (p: any, idx: number, campo: CampoPrecio) => {
+    if (editandoPrecio?.id === p.id && editandoPrecio.campo === campo) {
+      return (
+        <input
+          autoFocus
+          inputMode="numeric"
+          value={borradorPrecio}
+          onChange={e => setBorradorPrecio(e.target.value)}
+          onBlur={() => guardarPrecio(p.id, campo)}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              guardarPrecio(p.id, campo, filteredProds[idx + 1]?.id);
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              setEditandoPrecio(null);
+            }
+          }}
+          placeholder={campo === "sale_price" ? "Sin oferta" : "Precio"}
+          className="w-28 px-2 py-1 rounded-lg border border-primary bg-background text-sm outline-none"
+        />
+      );
+    }
+    const monto = p[campo] ? Number(p[campo]) : 0;
+    return (
+      <button
+        onClick={() => abrirEdicionPrecio(p, campo)}
+        title={campo === "sale_price"
+          ? "Clic para poner o quitar la oferta (vacío = sin oferta). Enter guarda y pasa al siguiente."
+          : "Clic para cambiar el precio. Enter guarda y pasa al siguiente."}
+        className={`w-28 text-left px-2 py-1 rounded-lg border border-dashed border-transparent hover:border-border hover:bg-accent transition ${monto ? "" : "text-muted-foreground"} ${campo === "price" && p.sale_price ? "line-through text-muted-foreground" : ""}`}
+      >
+        {guardandoPrecio === p.id ? "guardando..." : monto ? `$${monto.toLocaleString("es-CO")}` : campo === "sale_price" ? "+ oferta" : "$0"}
+      </button>
+    );
   };
 
   const toggleSelect = (id: string) => {
@@ -531,7 +639,6 @@ export default function AdminPage() {
               {newQuotesCount > 0 && <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{newQuotesCount}</span>}
             </TabsTrigger>
             <TabsTrigger value="productos"><Package className="w-4 h-4 mr-1" /> Productos</TabsTrigger>
-            <TabsTrigger value="inventario"><RefreshCw className="w-4 h-4 mr-1" /> Inventario</TabsTrigger>
             <TabsTrigger value="pedidos"><ShoppingBag className="w-4 h-4 mr-1" /> Pedidos</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
             <TabsTrigger value="conversaciones"><MessageCircle className="w-4 h-4 mr-1" /> Conversaciones Neti</TabsTrigger>
@@ -642,6 +749,16 @@ export default function AdminPage() {
                 />
                 Solo sin SKU
               </label>
+              <select
+                value={filtroEstado}
+                onChange={e => setFiltroEstado(e.target.value as typeof filtroEstado)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                aria-label="Filtrar por visibilidad"
+              >
+                <option value="todos">Todos</option>
+                <option value="activos">Solo visibles</option>
+                <option value="inactivos">Solo ocultos</option>
+              </select>
             </div>
 
             {selectedIds.length > 0 && (
@@ -673,7 +790,8 @@ export default function AdminPage() {
                       <th className="px-4 py-3 text-left font-semibold">Producto</th>
                       <th className="px-4 py-3 text-left font-semibold">SKU</th>
                       <th className="px-4 py-3 text-left font-semibold">Precio</th>
-                      <th className="px-4 py-3 text-left font-semibold">Estado</th>
+                      <th className="px-4 py-3 text-left font-semibold">Oferta</th>
+                      <th className="px-4 py-3 text-left font-semibold">Visible</th>
                       <th className="px-4 py-3 text-left font-semibold">Acciones</th>
                     </tr>
                   </thead>
@@ -749,17 +867,25 @@ export default function AdminPage() {
                             </button>
                           )}
                         </td>
-                        <td className="px-4 py-3">${(p.sale_price || p.price || 0).toLocaleString("es-CO")}</td>
+                        <td className="px-4 py-3">{celdaPrecio(p, idx, "price")}</td>
+                        <td className="px-4 py-3">{celdaPrecio(p, idx, "sale_price")}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
-                            {p.active ? "Activo" : "Inactivo"}
-                          </span>
+                          <button
+                            role="switch"
+                            aria-checked={!!p.active}
+                            aria-label={`${p.active ? "Ocultar" : "Publicar"} ${p.name}`}
+                            onClick={() => toggleProduct(p.id, p.active)}
+                            title={p.active ? "Visible en la tienda. Clic para ocultarlo." : "Oculto. Clic para publicarlo."}
+                            className="flex items-center gap-2 text-xs font-semibold"
+                          >
+                            <span className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${p.active ? "bg-green-600" : "bg-gray-300"}`}>
+                              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${p.active ? "translate-x-4" : "translate-x-0.5"}`} />
+                            </span>
+                            <span className={p.active ? "text-green-800" : "text-muted-foreground"}>{p.active ? "Visible" : "Oculto"}</span>
+                          </button>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => toggleProduct(p.id, p.active)} className="text-xs px-2 py-1 rounded-lg border border-border hover:bg-accent transition">
-                              {p.active ? "Desactivar" : "Activar"}
-                            </button>
                             <button onClick={() => navigate(`/admin/generador-fichas?edit=${p.slug}`)} className="p-1.5 rounded-lg hover:bg-accent transition text-primary" title="Editar">
                               <Pencil className="w-4 h-4" />
                             </button>
@@ -778,10 +904,6 @@ export default function AdminPage() {
                 {filteredProds.length === 0 && <p className="text-center text-muted-foreground py-8">No hay productos</p>}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="inventario">
-            <InventarioPanel onSincronizado={fetchProducts} />
           </TabsContent>
 
           {/* PEDIDOS */}

@@ -88,6 +88,13 @@ function aSlug(nombre: string): string {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // Desconectada desde el 2026-11-26: precio y visibilidad se editan a mano en
+  // el admin, y una sincronizacion pisaria esos cambios con lo que diga la hoja.
+  // Para volver a usarla, poner el secreto INVENTORY_SYNC_ENABLED=true.
+  if (Deno.env.get('INVENTORY_SYNC_ENABLED') !== 'true') {
+    return json({ error: 'La sincronización con la hoja de inventario está desconectada. Los precios se editan en el admin.' }, 410);
+  }
+
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
