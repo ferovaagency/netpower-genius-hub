@@ -5,6 +5,7 @@ import { ChevronDown, MessageCircle, Search, SlidersHorizontal, X } from "lucide
 import ProductCard from "@/components/store/ProductCard";
 import { brands, categories } from "@/data/store-data";
 import { fetchAllProducts, puntajeVitrina } from "@/hooks/useProducts";
+import { CATEGORIAS_SEO } from "@/data/categorias-seo";
 import type { Product } from "@/types/store";
 
 type SortOption = "relevance" | "price-asc" | "price-desc" | "newest";
@@ -205,8 +206,9 @@ export default function ShopPage() {
 
   const canonicalPath = activeCategory ? `/categoria/${activeCategory.slug}` : "/tienda";
   const canonicalUrl = `https://netpowerit.co${canonicalPath}`;
-  const pageTitle = activeCategory ? `${activeCategory.name} | Netpower IT` : "Tienda TIC | Computadores, Servidores, Redes — Netpower IT";
-  const pageDesc = activeCategory ? `${activeCategory.description}. Compra ${activeCategory.name} para empresas en Colombia con Netpower IT.` : "Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá.";
+  const seo = activeCategory ? CATEGORIAS_SEO[activeCategory.slug] : undefined;
+  const pageTitle = seo?.metaTitle ?? (activeCategory ? `${activeCategory.name} | Netpower IT` : "Tienda TIC | Computadores, Servidores, Redes — Netpower IT");
+  const pageDesc = seo?.metaDescription ?? (activeCategory ? `${activeCategory.description}. Compra ${activeCategory.name} para empresas en Colombia con Netpower IT.` : "Compra computadores, servidores, equipos de red e impresoras para empresas en Colombia. Netpower IT, tu proveedor TIC en Bogotá.");
 
   return <>
     <Helmet>
@@ -218,6 +220,7 @@ export default function ShopPage() {
       <meta property="og:type" content="website" />
       <link rel="canonical" href={canonicalUrl} />
       <script type="application/ld+json">{JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", "@id": `${canonicalUrl}#page`, name: pageTitle, description: pageDesc, url: canonicalUrl })}</script>
+      {seo && seo.faqs.length > 0 && <script type="application/ld+json">{JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", "@id": `${canonicalUrl}#faq`, mainEntity: seo.faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) })}</script>}
     </Helmet>
 
     <div className="container mx-auto px-4 py-6 md:px-6 md:py-8">
@@ -287,6 +290,23 @@ export default function ShopPage() {
             <Search className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" /><h2 className="mt-4 text-lg font-bold">No encontramos productos</h2><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">Prueba con otra búsqueda o elimina alguno de los filtros activos.</p>
             <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={clearFilters} className="inline-flex h-11 items-center rounded-lg border border-input bg-card px-5 text-sm font-bold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Limpiar filtros</button><a href={`https://wa.me/573020105169?text=${encodeURIComponent(`Hola, busco: ${searchQuery || activeCategory?.name || activeBrand?.name || "un producto"}`)}`} data-wa-origen="tienda_sin_resultados" target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-lg bg-success px-5 text-sm font-bold text-success-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2"><MessageCircle className="h-4 w-4" />Preguntar por WhatsApp</a></div>
           </div>}
+          {/* Texto de la categoria: va debajo del catalogo para no empujar los
+              productos hacia abajo. Contenido fijo de src/data/categorias-seo.ts. */}
+          {seo && <article className="mt-12 border-t border-border pt-8">
+            <div
+              className="max-w-3xl text-sm leading-relaxed text-muted-foreground [&_a]:font-semibold [&_a]:text-primary [&_a:hover]:underline [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:text-foreground [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-foreground [&_li]:mb-1 [&_p]:mb-3 [&_strong]:text-foreground [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+              dangerouslySetInnerHTML={{ __html: seo.html }}
+            />
+            {seo.faqs.length > 0 && <div className="mt-8 max-w-3xl">
+              <h2 className="mb-3 text-xl font-extrabold">Preguntas frecuentes</h2>
+              <div className="divide-y divide-border rounded-xl border border-border bg-card">
+                {seo.faqs.map((f) => <details key={f.question} className="group px-4 py-3">
+                  <summary className="cursor-pointer list-none font-semibold marker:hidden">{f.question}</summary>
+                  <p className="mt-2 text-sm text-muted-foreground">{f.answer}</p>
+                </details>)}
+              </div>
+            </div>}
+          </article>}
         </section>
       </div>
     </div>

@@ -354,12 +354,31 @@ function anunciar(route, lastmod) {
   });
 }
 
-/** Una ficha se anuncia si tiene algo que mostrar: imagen o precio. Las
- *  demas se siguen sirviendo, solo no se ofrecen a Google. */
-function valeAnunciar(p) {
-  const tienePrecio = Number(p.sale_price ?? p.price ?? 0) > 0;
-  const tieneImagen = Array.isArray(p.images) && typeof p.images[0] === "string" && p.images[0].trim() !== "";
-  return tienePrecio || tieneImagen;
+// Todas las fichas activas van al sitemap, tambien las que aun no tienen foto
+// ni precio: se estan completando y deben descubrirse en cuanto se actualicen
+// (decision de Mafe, 26 nov 2026). Para sacar una ficha, se desactiva.
+
+/** Textos de categoria de src/data/categorias-seo.ts. El objeto es JSON
+ *  valido a proposito, asi que basta con recortar el literal y parsearlo. */
+async function readCategoriasSeo() {
+  try {
+    const src = await readFile(path.join(ROOT, "src/data/categorias-seo.ts"), "utf8");
+    const inicio = src.indexOf("{", src.indexOf("CATEGORIAS_SEO"));
+    const fin = src.lastIndexOf("}");
+    return JSON.parse(src.slice(inicio, fin + 1));
+  } catch (err) {
+    console.warn(`[prerender] no se pudieron leer los textos de categoria (${err.message}); se omiten.`);
+    return {};
+  }
+}
+
+function categoriaSeoBody(seo) {
+  if (!seo) return "";
+  const faqs = seo.faqs?.length
+    ? `<h2>Preguntas frecuentes</h2>` +
+      seo.faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join("")
+    : "";
+  return `<article>${seo.html}${faqs}</article>`;
 }
 
 async function escribirSitemap() {
@@ -654,14 +673,28 @@ async function main() {
   anunciar("/tienda");
   written++;
 
+  const categoriasSeo = await readCategoriasSeo();
   for (const c of categories) {
     const inCat = products.filter((p) => catById.get(p.category)?.id === c.id);
     const url = `${DOMAIN}/categoria/${c.slug}`;
-    const title = `${c.name} | Netpower IT`;
-    const description = `${c.description}. Compra ${c.name} para empresas en Colombia con Netpower IT.`;
+    const seo = categoriasSeo[c.slug];
+    const title = seo?.metaTitle || `${c.name} | Netpower IT`;
+    const description = seo?.metaDescription || `${c.description}. Compra ${c.name} para empresas en Colombia con Netpower IT.`;
+    const faqSchema = seo?.faqs?.length
+      ? [{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "@id": `${url}#faq`,
+          mainEntity: seo.faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }]
+      : [];
     await emit(`/categoria/${c.slug}`, applyBody(applyHead(template, {
       title, description, canonical: url,
-      schemas: [{
+      schemas: [...faqSchema, {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
         "@id": `${url}#page`,
@@ -678,7 +711,7 @@ async function main() {
           ],
         },
       }],
-    }), listBody(c.name, description, inCat, enlacesDeListado(c.slug))));
+    }), listBody(c.name, description, inCat, categoriaSeoBody(seo) + enlacesDeListado(c.slug))));
     if (inCat.length > 0) anunciar(`/categoria/${c.slug}`);
     written++;
   }
@@ -826,7 +859,7 @@ async function main() {
       title, description, canonical: url, ogType: "product", ogImage: image,
       schemas: [productSchema, breadcrumb],
     }), productBody(p, cat, brand, relacionadosDe(p, cat))));
-    if (valeAnunciar(p)) anunciar(`/producto/${p.slug}`, p.updated_at);
+    anunciar(`/producto/${p.slug}`, p.updated_at);
     written++;
   }
 
