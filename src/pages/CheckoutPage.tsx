@@ -62,18 +62,6 @@ function revisarComprobante(f: File): string | null {
   return null;
 }
 
-/** El navegador deja `type` vacio en HEIC; el bucket lo guarda mejor con uno. */
-function tipoParaGuardar(f: File): string {
-  if (f.type) return f.type;
-  const ext = extensionDe(f.name);
-  if (ext === "pdf") return "application/pdf";
-  if (ext === "heic") return "image/heic";
-  if (ext === "heif") return "image/heif";
-  if (ext === "png") return "image/png";
-  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
-  return "application/octet-stream";
-}
-
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
@@ -196,14 +184,16 @@ export default function CheckoutPage() {
       // ─── Manual transfer methods: upload receipt + create order pending_verification ───
       let receiptUrl: string | null = null;
       if (requiresReceipt && receipt) {
-        const ext = extensionDe(receipt.name) || "bin";
-        const filePath = `${orderRef}/comprobante.${ext}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("receipts")
-          .upload(filePath, receipt, { upsert: true, contentType: tipoParaGuardar(receipt) });
+        const formData = new FormData();
+        formData.append("orderRef", orderRef);
+        formData.append("file", receipt);
+        const { data: uploadData, error: uploadErr } = await supabase.functions.invoke("upload-receipt", {
+          body: formData,
+        });
         if (uploadErr) throw uploadErr;
+        if (!uploadData?.path) throw new Error("No se pudo guardar el comprobante");
         // Bucket is private; store the path. Admin viewer generates a signed URL on demand.
-        receiptUrl = filePath;
+        receiptUrl = uploadData.path;
       }
 
       const { error: orderErr } = await supabase.from("orders").insert({
