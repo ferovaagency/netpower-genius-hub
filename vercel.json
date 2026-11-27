@@ -259,7 +259,7 @@
     { "src": "/mi-cuenta", "dest": "/index.html" },
     { "src": "/contacto-digital", "dest": "/index.html" },
     { "src": "/resultado-pago", "dest": "/index.html" },
-    { "src": "/ferova", "dest": "/index.html" },
+    { "src": "/ferova", "status": 301, "headers": { "Location": "https://ferova.com.co/" } },
 
     { "src": "/producto/[^/]+", "dest": "/index.html" },
     { "src": "/categoria/[^/]+", "dest": "/index.html" },
