@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { generateSlug } from '@/lib/slug';
+import { tituloSeo } from '@/lib/seo';
 import { getParentCategory } from '@/lib/catalog';
 import { inferCategoryForBulkProduct, parseBulkImportFile, type BulkImportRow } from '@/lib/catalog-import';
 
@@ -148,7 +149,7 @@ export default function BulkProductImporter({ onCompleted }: BulkProductImporter
           short_description: row.shortDescription || row.description || aiData.short_description || null,
           description: aiData.description || row.description || row.notes || null,
           specs: aiData.specs || null,
-          meta_title: aiData.meta_title || null,
+          meta_title: tituloSeo(aiData.meta_title || row.name) || null,
           meta_description: aiData.meta_description || null,
           images: normalizedImages,
           reviews: Array.isArray(aiData.reviews) ? aiData.reviews : null,

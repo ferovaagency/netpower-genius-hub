@@ -162,6 +162,32 @@ const PRODUCT_COLUMNS = [
   "updated_at", "featured",
 ].join(",");
 
+// Igual a src/lib/schema-oferta.ts: si cambia la política, actualizar los dos.
+const OFERTA_ENVIO = {
+  // Envío: a todo Colombia, gratis en Bogotá. El costo fuera de Bogotá depende
+  // del peso y la zona (legal?tab=envios), así que no se declara una tarifa fija.
+  shippingDetails: {
+    "@type": "OfferShippingDetails",
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "CO" },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+      transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 8, unitCode: "DAY" },
+    },
+  },
+  // Devoluciones: se gestionan por garantía; aplica el retracto de ley
+  // (5 días hábiles, transporte a cargo del comprador).
+  hasMerchantReturnPolicy: {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "CO",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 5,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/ReturnShippingFees",
+    merchantReturnLink: "https://netpowerit.co/legal?tab=envios",
+  },
+};
+
 const BLOG_COLUMNS = [
   "slug", "h1", "meta_title", "meta_description", "resumen_intro",
   "imagen_portada", "imagen_alt", "autor", "fecha_publicacion",
@@ -808,14 +834,14 @@ async function main() {
       `<p>Netpower IT vende y asesora en respaldo de energía (UPS online e interactivas, baterías y estaciones portátiles), ` +
       `servidores, infraestructura de red, monitores, licencias de software y energía solar. Somos distribuidores de marcas como ` +
       `${marcas.slice(0, 5).map((b) => esc(b.name)).join(", ")}, con envío a toda Colombia, garantía de fabricante y pago con Wompi, PSE o tarjeta.</p>` +
-      `<h2>Categorías</h2><ul>` +
-      cats.map((c) => `<li><a href="/categoria/${esc(c.slug)}">${esc(c.name)}</a>${c.description ? `: ${esc(c.description)}` : ""}</li>`).join("") +
-      `</ul>` +
       (destacados.length
         ? `<h2>Productos destacados</h2><ul>` +
           destacados.map((p) => `<li><a href="/producto/${esc(p.slug)}">${esc(p.name)}</a> — ${cop(Number(p.sale_price ?? p.price))}</li>`).join("") +
           `</ul>`
         : "") +
+      `<h2>Categorías</h2><ul>` +
+      cats.map((c) => `<li><a href="/categoria/${esc(c.slug)}">${esc(c.name)}</a>${c.description ? `: ${esc(c.description)}` : ""}</li>`).join("") +
+      `</ul>` +
       `<h2>Marcas</h2><ul>` +
       marcas.map((b) => `<li><a href="/marcas/${esc(b.slug)}">${esc(b.name)}</a></li>`).join("") +
       `</ul>` +
@@ -873,6 +899,7 @@ async function main() {
               price: String(price),
               availability: disponibilidad(p.stock),
               seller: { "@type": "Organization", "@id": `${DOMAIN}/#organization`, name: "Netpower IT" },
+              ...OFERTA_ENVIO,
             },
           }
         : {}),

@@ -94,7 +94,7 @@ RESPUESTA JSON:
   "specs": {"key": "value"},
   "benefits": ["beneficio 1", "beneficio 2", ...],
   "faqs": [{"question": "...", "answer": "..."}],
-  "metaTitle": "Máx 60 chars con keyword",
+  "metaTitle": "ESTRICTAMENTE menos de 60 caracteres (máximo 59, contando espacios). Empieza por el tipo de producto, marca y modelo. Sin el nombre de la tienda.",
   "metaDesc": "Máx 160 chars orientada a conversión",
   "suggestedImageSearch": "término de búsqueda sugerido",
   "detectedBrand": "Marca detectada (APC, CDP, HP, Samsung, Logitech, Epson, Dahua, Hikvision, ADATA, AOC, Brother, Targus, Powest, Wattana, Genius, Caixun, Xkim, Microsoft, SAT, 3nStar, Dell, HPE, Kingston, Lenovo, Teltonika, Vertiv)",
@@ -171,6 +171,13 @@ Responde SOLO en formato JSON válido con esta estructura exacta.`;
       } else {
         throw new Error("No se pudo parsear la respuesta de IA");
       }
+    }
+
+    // Regla SEO: el meta titulo siempre queda por debajo de 60 caracteres.
+    if (parsed && typeof parsed.metaTitle === "string" && parsed.metaTitle.trim().length > 59) {
+      const palabras = parsed.metaTitle.replace(/\s+/g, " ").trim().slice(0, 60).split(" ");
+      if (palabras.length > 1) palabras.pop();
+      parsed.metaTitle = palabras.join(" ").replace(/[\s,;:.\-–—|/+]+$/, "").slice(0, 59);
     }
 
     return new Response(JSON.stringify({ success: true, data: parsed }), {

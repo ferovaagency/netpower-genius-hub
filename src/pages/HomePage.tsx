@@ -11,9 +11,11 @@ import SeoHead from "@/components/SeoHead";
 import TrustBadges from "@/components/TrustBadges";
 import ctaBanner from "@/assets/cta-banner.jpg";
 import bannerTienda from "@/assets/banner-tienda.jpg";
-import bannerCotizacion from "@/assets/banner-cotizacion.jpg";
-import bannerNuevaOficina from "@/assets/banner-nueva-oficina.jpg";
 import bannerForzaAtlas from "@/assets/banner-forza-atlas.jpg";
+
+// Logos de marca comprimidos (public/brand-logos, webp de 96 px de alto).
+// Si una marca no tiene copia local se usa el logo original de la base.
+const LOGOS_LOCALES = new Set(["3nstar","adata","aoc","apc","asus","attech","benq","brother","caixun","canon","cdp","dahua","dell","epson","forza","genius","hikvision","hp","hpe","huawei","kaspersky","kingston","lenovo","linksys","logitech","mercusys","microsoft","powest","samsung","sandisk","sat","targus","tp-link","viewsonic","wattana","western-digital","xkim"]);
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
@@ -28,6 +30,7 @@ type Slide = {
   titleParts: [string, string, string]; // before, highlight (text-primary), after
   subtitle: string;
   cta: SlideCTA;
+  secondaryCta?: SlideCTA;
   layout?: "default" | "forza" | "office";
 };
 
@@ -51,31 +54,14 @@ const slides: Slide[] = [
       href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
     },
   },
+  // Catálogo y cotización en un solo banner.
   {
     image: bannerTienda,
     badge: null,
-    titleParts: ["Explora nuestra ", "tienda online", " de tecnología"],
-    subtitle: "UPS, baterías, redes, energía solar y accesorios TIC con garantía oficial. Envío a todo Colombia y pago seguro.",
+    titleParts: ["Compra en línea o ", "cotiza tu proyecto", " TIC"],
+    subtitle: "UPS, baterías, servidores, redes y energía solar con garantía oficial y envío a todo Colombia. Si es un proyecto, te armamos la propuesta.",
     cta: { type: "link", label: "Ver Tienda", to: "/tienda" },
-  },
-  {
-    image: bannerCotizacion,
-    badge: null,
-    titleParts: ["¿Tienes un proyecto? ", "Cotiza con nosotros", ""],
-    subtitle: "Asesoría experta para tu infraestructura TI. Solicita tu cotización personalizada y recibe la mejor propuesta para tu empresa.",
-    cta: { type: "chat", label: "Solicitar Cotización", mode: "quote" },
-  },
-  {
-    image: bannerNuevaOficina,
-    layout: "office",
-    badge: "NUEVA OFICINA",
-    titleParts: ["¡Estrenamos oficina en ", "NorthPoint", "!"],
-    subtitle: "AK 7 #156-80 · Torre 2 · Oficina 1004 · Bogotá",
-    cta: {
-      type: "external",
-      label: "Cómo llegar",
-      href: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Bogota",
-    },
+    secondaryCta: { type: "chat", label: "Cotizar proyecto", mode: "quote" },
   },
 ];
 
@@ -117,20 +103,41 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadProducts = async () => {
+    // Destacados primero y livianos: solo 8 fichas con las columnas que usa
+    // la tarjeta. Antes se descargaba el catálogo completo con todas sus
+    // descripciones antes de pintar un solo producto.
+    const loadFeatured = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id, slug, name, short_description, price, sale_price, sku, stock, images, category, brand, featured")
         .eq("active", true)
-        .order("created_at", { ascending: false });
+        .order("featured", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(8);
 
+      if (error || !data || cancelled) return;
+
+      setFeaturedProducts(data.map((r: any) => ({
+        id: r.id, slug: r.slug, name: r.name, description: "",
+        shortDesc: r.short_description ?? "", price: Number(r.price),
+        salePrice: r.sale_price ? Number(r.sale_price) : null,
+        sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
+        categoryId: r.category ?? "", brandId: r.brand ?? "",
+        specs: {}, metaTitle: "", metaDesc: "",
+        active: true, featured: r.featured ?? false,
+      })));
+    };
+
+    // Conteo por categoría: solo la columna `category`.
+    const loadCounts = async () => {
+      const { data, error } = await supabase.from("products").select("category").eq("active", true);
       if (error || !data || cancelled) return;
 
       const nextCounts = Object.fromEntries(categories.map((category) => [category.name, 0])) as Record<string, number>;
       const categoryById = Object.fromEntries(categories.map((c) => [c.id, c.name]));
       const categoryBySlug = Object.fromEntries(categories.map((c) => [c.slug, c.name]));
 
-      data.forEach((product) => {
+      data.forEach((product: any) => {
         const raw = product.category ?? "";
         const mapped = categoryById[raw] ?? categoryBySlug[raw] ?? null;
         const normalizedCategory = mapped ?? getParentCategory(raw);
@@ -138,25 +145,10 @@ export default function HomePage() {
       });
 
       setCategoryCounts(nextCounts);
-
-      // Destacados: primero los marcados como `featured`, luego rellenamos
-      // con los más recientes hasta completar 8.
-      const featuredFirst = data.filter((r: any) => r.featured === true);
-      const rest = data.filter((r: any) => r.featured !== true);
-      const ordered = [...featuredFirst, ...rest].slice(0, 8);
-
-      setFeaturedProducts(ordered.map((r: any) => ({
-        id: r.id, slug: r.slug, name: r.name, description: r.description ?? "",
-        shortDesc: r.short_description ?? "", price: Number(r.price),
-        salePrice: r.sale_price ? Number(r.sale_price) : null,
-        sku: r.sku ?? "", stock: r.stock ?? 0, images: r.images ?? [],
-        categoryId: r.category ?? "", brandId: r.brand ?? "",
-        specs: r.specs ?? {}, metaTitle: r.meta_title ?? "", metaDesc: r.meta_description ?? "",
-        active: true, featured: r.featured ?? false,
-      })));
     };
 
-    void loadProducts();
+    void loadFeatured();
+    void loadCounts();
 
     return () => {
       cancelled = true;
@@ -182,7 +174,7 @@ export default function HomePage() {
 
 
       {/* Hero Slider */}
-      <section className="relative overflow-hidden min-h-[480px] flex items-center bg-surface-dark">
+      <section className="relative overflow-hidden min-h-[380px] md:min-h-[440px] flex items-center bg-surface-dark">
         {slides.map((slide, idx) => (
           <div
             key={idx}
@@ -258,6 +250,14 @@ export default function HomePage() {
                     {currentSlideData.cta.label} <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
+                {currentSlideData.secondaryCta?.type === "chat" && (
+                  <button
+                    onClick={() => openChat((currentSlideData.secondaryCta as { mode: "general" | "quote" }).mode)}
+                    className="inline-flex h-11 px-7 items-center gap-2 rounded-lg border border-card/40 bg-card/10 text-card font-semibold backdrop-blur-sm hover:bg-card/20 transition-all text-sm"
+                  >
+                    {currentSlideData.secondaryCta.label}
+                  </button>
+                )}
               </motion.div>
               {!isForzaSlide && (
                 <motion.div variants={fadeUp} className="mt-5">
@@ -298,6 +298,26 @@ export default function HomePage() {
         </button>
       </section>
 
+      {/* Featured Products */}
+      <section className="py-10 md:py-14 bg-card">
+        <div className="container mx-auto px-6">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Productos Destacados</h2>
+              <p className="text-muted-foreground mt-1.5 text-base">Los más vendidos con las mejores ofertas</p>
+            </div>
+            <Link to="/tienda" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+              Ver todos <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {featuredProducts.slice(0, 8).map((p: any) =>
+            <ProductCard key={p.id} product={p} />
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Trust bar */}
       <section className="bg-card border-b border-border/50">
         <div className="container mx-auto px-6 py-5">
@@ -334,26 +354,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-14 bg-card">
-        <div className="container mx-auto px-6">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Productos Destacados</h2>
-              <p className="text-muted-foreground mt-1.5 text-base">Los más vendidos con las mejores ofertas</p>
-            </div>
-            <Link to="/tienda" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-              Ver todos <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {featuredProducts.slice(0, 8).map((p: any) =>
-            <ProductCard key={p.id} product={p} />
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Banner */}
       <section className="relative py-16 overflow-hidden">
         <img src={ctaBanner} alt="Cotización empresarial" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
@@ -381,7 +381,9 @@ export default function HomePage() {
                 >
                   {brand.logo_url ? (
                     <img
-                      src={brand.logo_url}
+                      src={LOGOS_LOCALES.has(brand.slug) ? `/brand-logos/${brand.slug}.webp` : brand.logo_url}
+                      width={120}
+                      height={40}
                       alt={brand.name}
                       loading="lazy"
                       className="max-h-10 max-w-[120px] object-contain filter grayscale hover:grayscale-0 transition-all"

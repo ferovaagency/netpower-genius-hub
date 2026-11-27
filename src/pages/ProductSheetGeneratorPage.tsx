@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useProducts";
 import { ALLOWED_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_CATEGORY, getSubcategoriesFor } from "@/lib/catalog";
 import { generateSlug, ensureUniqueSlug } from "@/lib/slug";
+import { tituloSeo } from "@/lib/seo";
 import { fileToWebP } from "@/lib/image-to-webp";
 
 interface SpecEntry {
@@ -299,7 +300,7 @@ export default function ProductSheetGeneratorPage() {
           categoryId: selectedCategory.id,
           brandId: selectedBrand.id,
           specs: finalSpecs,
-          metaTitle: result.metaTitle,
+          metaTitle: tituloSeo(result.metaTitle || productName),
           metaDesc: result.metaDesc,
           // slug NO se actualiza al editar: la URL canónica permanece estable.
           active: selectedProduct.active ?? true,
@@ -330,7 +331,7 @@ export default function ProductSheetGeneratorPage() {
         categoryId: selectedCategory.id,
         brandId: selectedBrand.id,
         specs: finalSpecs,
-        metaTitle: result.metaTitle,
+        metaTitle: tituloSeo(result.metaTitle || productName),
         metaDesc: result.metaDesc,
         active: true,
         featured,

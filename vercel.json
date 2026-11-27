@@ -1,5 +1,7 @@
 {
   "routes": [
+    { "src": "/(.*)", "has": [{ "type": "host", "value": "www.netpowerit.co" }], "status": 301, "headers": { "Location": "https://netpowerit.co/$1" } },
+
     { "src": "/feed", "status": 308, "headers": { "Location": "/" } },
     { "src": "/(.*)/feed", "status": 308, "headers": { "Location": "/$1" } },
     { "src": "/(.+)/", "status": 308, "headers": { "Location": "/$1" } },

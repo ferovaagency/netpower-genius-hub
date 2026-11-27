@@ -11,6 +11,7 @@ import ProductCard from "@/components/store/ProductCard";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toRawPrice } from "@/lib/utils";
 import TrustBadges from "@/components/TrustBadges";
+import { OFERTA_ENVIO } from "@/lib/schema-oferta";
 import AccventSyndicatedContent from "@/components/product/AccventSyndicatedContent";
 
 const WHATSAPP_NUMBER = "573504609431";
@@ -209,7 +210,8 @@ export default function ProductDetailPage() {
                   "priceCurrency": "COP",
                   "price": schemaPrice,
                   "availability": product.stock !== null && product.stock !== undefined && product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                  "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" }
+                  "seller": { "@type": "Organization", "@id": "https://netpowerit.co/#organization", "name": "Netpower IT" },
+                  ...OFERTA_ENVIO,
                 }
               }
             : {}),
