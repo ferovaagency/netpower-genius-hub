@@ -113,11 +113,19 @@ export default function HomePage() {
         .eq("active", true)
         .order("featured", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
-        .limit(8);
+        .limit(40);
 
       if (error || !data || cancelled) return;
 
-      setFeaturedProducts(data.map((r: any) => ({
+      // En el home van primero las fichas que se pueden comprar ya (precio y
+      // foto); "featured" desempata. Las de "Consultar precio" quedan al final.
+      const puntaje = (r: any) =>
+        (Number(r.sale_price ?? r.price ?? 0) > 0 ? 4 : 0) +
+        (r.images?.[0] ? 2 : 0) +
+        (r.featured ? 1 : 0);
+      const elegidos = [...data].sort((a: any, b: any) => puntaje(b) - puntaje(a)).slice(0, 8);
+
+      setFeaturedProducts(elegidos.map((r: any) => ({
         id: r.id, slug: r.slug, name: r.name, description: "",
         shortDesc: r.short_description ?? "", price: Number(r.price),
         salePrice: r.sale_price ? Number(r.sale_price) : null,
