@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle, Zap, PlugZap, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, ShieldCheck, Truck, Headphones, FileText, Star, CheckCircle, Zap, PlugZap, TrendingUp } from "lucide-react";
 import { categories, products } from "@/data/store-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/contexts/ChatContext";
@@ -48,7 +48,7 @@ const slides: Slide[] = [
     cta: {
       type: "external",
       label: "Consulta con un especialista",
-      href: "https://wa.me/573020105169?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
+      href: "https://wa.me/573504609431?text=Hola,%20me%20interesa%20la%20UPS%20Online%20Forza%20Serie%20Atlas",
     },
   },
   {
@@ -83,6 +83,7 @@ export default function HomePage() {
   const { openChat } = useChat();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [homeBrands, setHomeBrands] = useState<{ id: string; slug: string; name: string; logo_url: string | null }[]>([]);
+  const [homePosts, setHomePosts] = useState<{ slug: string; h1: string; resumen_intro: string | null; industria: string | null }[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     Object.fromEntries(categories.map((category) => [category.name, category.productCount])),
@@ -95,6 +96,15 @@ export default function HomePage() {
       .eq("show_in_home", true)
       .order("display_order", { ascending: true })
       .then(({ data }) => setHomeBrands((data as any) || []));
+  }, []);
+
+  useEffect(() => {
+    (supabase.from("blogs" as any) as any)
+      .select("slug, h1, resumen_intro, industria")
+      .eq("publicado", true)
+      .order("fecha_publicacion", { ascending: false })
+      .limit(3)
+      .then(({ data }: any) => setHomePosts(data || []));
   }, []);
 
   useEffect(() => {
@@ -386,8 +396,48 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* Blog */}
+      {homePosts.length > 0 && (
+        <section className="py-14 bg-card">
+          <div className="container mx-auto px-6">
+            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+                  <BookOpen className="h-4 w-4" /> Blog
+                </p>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Guías para elegir tu equipo</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Comparativas y consejos sobre UPS, servidores y energía para empresas.</p>
+              </div>
+              <Link to="/blog" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+                Ver todos los artículos <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              {homePosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  to={`/blog/${post.slug}`}
+                  className="group flex flex-col rounded-xl border border-border bg-background p-5 transition-all hover:border-primary hover:shadow-card-hover"
+                >
+                  {post.industria && (
+                    <span className="mb-3 w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                      {post.industria}
+                    </span>
+                  )}
+                  <h3 className="mb-2 line-clamp-3 text-base font-bold leading-snug text-foreground transition-colors group-hover:text-primary">{post.h1}</h3>
+                  {post.resumen_intro && <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">{post.resumen_intro}</p>}
+                  <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                    Leer guía <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Testimonials */}
-      <section className="py-14 bg-card">
+      <section className="py-14 bg-background">
         <div className="container mx-auto px-6">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-foreground mb-8">Lo que Dicen Nuestros Clientes</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -420,7 +470,7 @@ export default function HomePage() {
               Obtener Cotización <ArrowRight className="w-4 h-4" />
             </button>
             <a
-              href="https://wa.me/573020105169?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
+              href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20empresarial"
               data-wa-origen="home_cta"
               target="_blank"
               rel="noopener noreferrer"

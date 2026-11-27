@@ -136,7 +136,7 @@ export default function ContactPage() {
           <div className="space-y-6">
             {[
               { icon: Mail, label: "Email", value: "aosorio@netpowerit.co", href: "mailto:aosorio@netpowerit.co" },
-              { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 302 010 5169", href: "tel:+573020105169" },
+              { icon: Phone, label: "Teléfono / WhatsApp", value: "+57 350 460 9431", href: "tel:+573504609431" },
               { icon: MapPin, label: "Ubicación", value: "AK 7 #156-80, NorthPoint Torre 2, Oficina 1004, Bogotá", href: "https://maps.google.com/?q=AK+7+%23156-80+NorthPoint+Torre+2+Bogota" },
               { icon: Clock, label: "Horario", value: "Lun-Vie 8am-6pm | Sáb 9am-1pm", href: undefined },
             ].map((item, i) => (
@@ -173,7 +173,7 @@ export default function ContactPage() {
               { id: "name", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
               { id: "nit_cedula", label: "NIT o Cédula", type: "text", placeholder: "900123456-7 / 1023456789" },
               { id: "email", label: "Email", type: "email", placeholder: "tu@email.com" },
-              { id: "phone", label: "Teléfono", type: "tel", placeholder: "+57 302 010 5169" },
+              { id: "phone", label: "Teléfono", type: "tel", placeholder: "+57 350 460 9431" },
               { id: "city", label: "Ciudad", type: "text", placeholder: "Bogotá" },
             ].map(f => (
               <div key={f.id}>

@@ -330,7 +330,7 @@ function blogBody(post) {
     post.frase_inicial ? `<p><strong>${esc(stripTags(post.frase_inicial))}</strong></p>` : "",
     limpiarHtml(post.contenido_html),
     limpiarHtml(post.cierre_html),
-    `<p><a href="https://wa.me/573020105169">Hablar con un asesor por WhatsApp</a> · <a href="/cotizacion">Pedir cotización</a></p>`,
+    `<p><a href="https://wa.me/573504609431">Hablar con un asesor por WhatsApp</a> · <a href="/cotizacion">Pedir cotización</a></p>`,
     `</article></main>`,
   ].join("");
 }
@@ -819,6 +819,12 @@ async function main() {
       `<h2>Marcas</h2><ul>` +
       marcas.map((b) => `<li><a href="/marcas/${esc(b.slug)}">${esc(b.name)}</a></li>`).join("") +
       `</ul>` +
+      (posts.length
+        ? `<h2>Guías y artículos</h2><ul>` +
+          [...posts].sort((x, y) => String(y.fecha_publicacion || "").localeCompare(String(x.fecha_publicacion || ""))).slice(0, 6)
+            .map((b) => `<li><a href="/blog/${esc(b.slug)}">${esc(b.h1)}</a></li>`).join("") +
+          `</ul><p><a href="/blog">Ver todos los artículos del blog</a></p>`
+        : "") +
       `<p><a href="/tienda">Ver toda la tienda</a> · <a href="/cotizacion">Cotizar un proyecto</a> · <a href="/contacto">Contacto</a></p>` +
       `</main>`;
 

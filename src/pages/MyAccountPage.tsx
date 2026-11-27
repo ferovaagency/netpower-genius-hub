@@ -137,7 +137,7 @@ export default function MyAccountPage() {
               <p className="font-semibold mb-1">¿Tienes dudas sobre tu pedido?</p>
               <p className="text-muted-foreground text-xs mb-3">Nuestro equipo te ayuda por WhatsApp</p>
               <a
-                href={`https://wa.me/573020105169?text=${encodeURIComponent(`Hola, consulto por mi pedido ${order.reference}`)}`}
+                href={`https://wa.me/573504609431?text=${encodeURIComponent(`Hola, consulto por mi pedido ${order.reference}`)}`}
                 data-wa-origen="mi_cuenta_pedido"
                 target="_blank"
                 rel="noopener noreferrer"

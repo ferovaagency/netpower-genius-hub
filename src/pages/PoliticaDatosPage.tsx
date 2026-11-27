@@ -21,7 +21,7 @@ export default function PoliticaDatosPage() {
           <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">
             aosorio@netpowerit.co
           </a>{" "}
-          · +57 302 010 5169
+          · +57 350 460 9431
         </p>
 
         <div className="space-y-8">
@@ -74,7 +74,7 @@ export default function PoliticaDatosPage() {
               <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">
                 aosorio@netpowerit.co
               </a>{" "}
-              o al teléfono +57 302 010 5169.
+              o al teléfono +57 350 460 9431.
             </p>
           </section>
 

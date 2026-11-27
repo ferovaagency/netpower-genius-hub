@@ -70,7 +70,7 @@ export default function QuotePage() {
 
           <p className="text-muted-foreground text-sm mt-8">¿Prefieres hablar con un asesor por WhatsApp?</p>
           <a
-            href="https://wa.me/573020105169?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
+            href="https://wa.me/573504609431?text=Hola,%20necesito%20cotizar%20un%20proyecto%20TIC"
             data-wa-origen="cotizador_principal"
             target="_blank"
             rel="noopener noreferrer"

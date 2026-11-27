@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { MessageCircle, Home, ShoppingBag } from "lucide-react";
 
-const WHATSAPP_NUMBER = "573020105169";
+const WHATSAPP_NUMBER = "573504609431";
 
 const NotFound = () => {
   const location = useLocation();

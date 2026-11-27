@@ -5,7 +5,7 @@ import { Product } from "@/types/store";
 import { formatCOP, getDiscountPercentage, categories } from "@/data/store-data";
 import { useCart } from "@/contexts/CartContext";
 
-const WHATSAPP_NUMBER = "573020105169";
+const WHATSAPP_NUMBER = "573504609431";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();

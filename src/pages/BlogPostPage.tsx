@@ -24,7 +24,7 @@ interface Blog {
 
 type Resumen = Pick<Blog, "slug" | "h1" | "resumen_intro" | "industria" | "imagen_portada" | "imagen_alt">;
 
-const WHATSAPP = "https://wa.me/573020105169";
+const WHATSAPP = "https://wa.me/573504609431";
 const CUERPO =
   "text-base leading-relaxed text-foreground/90 " +
   "[&_h2]:mt-12 [&_h2]:mb-4 [&_h2]:scroll-mt-28 [&_h2]:text-2xl [&_h2]:font-extrabold [&_h2]:text-foreground " +

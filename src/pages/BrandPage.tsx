@@ -161,7 +161,7 @@ export default function BrandPage() {
               Solicitar cotización
             </Link>
             <a
-              href="https://wa.me/573020105169"
+              href="https://wa.me/573504609431"
               data-wa-origen="pagina_marca"
               target="_blank"
               rel="noopener noreferrer"

@@ -133,7 +133,7 @@ export default function PaymentResult() {
                 </ol>
               </div>
               <a
-                href="https://wa.me/573020105169"
+                href="https://wa.me/573504609431"
                 data-wa-origen="resultado_pago_ok"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -160,7 +160,7 @@ export default function PaymentResult() {
                   Reintentar pago
                 </Link>
                 <a
-                  href="https://wa.me/573020105169"
+                  href="https://wa.me/573504609431"
                   data-wa-origen="resultado_pago_error"
                   target="_blank"
                   rel="noopener noreferrer"

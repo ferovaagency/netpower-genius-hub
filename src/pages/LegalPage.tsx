@@ -151,7 +151,7 @@ export default function LegalPage() {
               <h2 className="text-xl font-semibold mb-3 border-b border-border pb-2">10. Contacto</h2>
               <p className="text-muted-foreground leading-relaxed">
                 📧 <a href="mailto:aosorio@netpowerit.co" className="underline hover:text-primary">aosorio@netpowerit.co</a><br />
-                📱 WhatsApp: <a href="https://wa.me/573020105169" className="underline hover:text-primary">+57 302 010 5169</a><br data-wa-origen="pagina_legal"/>
+                📱 WhatsApp: <a href="https://wa.me/573504609431" className="underline hover:text-primary">+57 350 460 9431</a><br data-wa-origen="pagina_legal"/>
                 🕐 Horario de atención: lunes a viernes, 8:00 a.m. – 6:00 p.m.
               </p>
             </section>

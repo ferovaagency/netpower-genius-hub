@@ -71,6 +71,8 @@ export default function Header() {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  const [mobileParent, setMobileParent] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const catRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,8 @@ export default function Header() {
 
   useEffect(() => {
     setMobileOpen(false);
+    setMobileCatOpen(false);
+    setMobileParent(null);
     setSearchOpen(false);
   }, [location.pathname]);
 
@@ -137,10 +141,10 @@ export default function Header() {
         <div className="container mx-auto flex min-h-9 items-center justify-between px-4 py-1.5 text-[11px] font-medium text-surface-dark-foreground/85 md:px-6 md:text-xs">
           <span className="truncate pr-3">Envío gratis en Bogotá · Cobertura nacional · Garantía oficial</span>
           <a
-            href="tel:+573020105169"
+            href="tel:+573504609431"
             className="hidden min-h-8 items-center gap-1.5 rounded-sm font-bold text-white transition-colors duration-150 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary sm:flex"
           >
-            <Phone className="w-4 h-4" /> +57 302 010 5169
+            <Phone className="w-4 h-4" /> +57 350 460 9431
           </a>
         </div>
       </div>
@@ -356,33 +360,60 @@ export default function Header() {
                   </Link>
                 )
             )}
-              <div className="pl-4 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Categorías</p>
-                {categoryMenu.map((parent) => (
-                  <div key={parent.slug} className="mb-3">
-                    <Link
-                      to={`/categoria/${parent.categoria}`}
-                      className="block py-1.5 text-sm font-bold text-foreground hover:text-primary transition"
-                    >
-                      {parent.label}
-                    </Link>
-                    <ul className="pl-3 border-l border-border/40 mt-1">
-                      {parent.subs.map((sub) => (
-                        <li key={sub.label}>
+              {/* Categorías plegadas: en móvil abiertas ocupaban toda la pantalla. */}
+              <button
+                type="button"
+                onClick={() => setMobileCatOpen((v) => !v)}
+                aria-expanded={mobileCatOpen}
+                className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                Categorías
+                <ChevronDown className={`h-4 w-4 transition-transform ${mobileCatOpen ? "rotate-180" : ""}`} />
+              </button>
+              {mobileCatOpen && (
+                <div className="mb-1 ml-4 border-l border-border/60 pl-2">
+                  {categoryMenu.map((parent) => {
+                    const abierta = mobileParent === parent.slug;
+                    return (
+                      <div key={parent.slug}>
+                        <div className="flex items-center">
                           <Link
-                            to={`/buscar?q=${encodeURIComponent(sub.q)}`}
-                            className="block py-1 text-xs text-muted-foreground hover:text-primary transition"
+                            to={`/categoria/${parent.categoria}`}
+                            className="flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground transition hover:text-primary"
                           >
-                            {sub.label}
+                            {parent.label}
                           </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              <a href="tel:+573020105169" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
-                <Phone className="w-4 h-4" /> +57 302 010 5169
+                          <button
+                            type="button"
+                            onClick={() => setMobileParent(abierta ? null : parent.slug)}
+                            aria-expanded={abierta}
+                            aria-label={`${abierta ? "Ocultar" : "Ver"} subcategorías de ${parent.label}`}
+                            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-primary"
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform ${abierta ? "rotate-180" : ""}`} />
+                          </button>
+                        </div>
+                        {abierta && (
+                          <ul className="mb-1 pl-5">
+                            {parent.subs.map((sub) => (
+                              <li key={sub.label}>
+                                <Link
+                                  to={`/buscar?q=${encodeURIComponent(sub.q)}`}
+                                  className="block py-2 text-sm text-muted-foreground transition hover:text-primary"
+                                >
+                                  {sub.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <a href="tel:+573504609431" className="py-3 px-4 flex items-center gap-2 text-sm text-secondary font-medium">
+                <Phone className="w-4 h-4" /> +57 350 460 9431
               </a>
               <button
               onClick={() => openChat("quote")}
